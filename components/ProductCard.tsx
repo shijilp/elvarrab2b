@@ -34,9 +34,9 @@ export default function ProductCard({ product }: { product: Product }) {
           <h3 className="text-sm font-medium">{product.name}</h3>
           <span className="text-sm opacity-80">{}</span>
         </div>
-        {/* <button className="mt-3 w-full rounded-xl px-3 py-2 text-sm text-neutral-900 dark:text-neutral-900 gradient-accent">
-          Quick Add
-        </button> */}
+        <button className="mt-3 w-full rounded-xl px-3 py-2 text-sm text-neutral-900 dark:text-neutral-900 gradient-accent">
+          {/* Get Wholesale Quote */}
+        </button>
       </div>
     </div>
   );

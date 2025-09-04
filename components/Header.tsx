@@ -13,13 +13,16 @@ export default function Header() {
           </div>
           <nav className="hidden gap-8 text-sm md:flex">
             <Link className="opacity-90 hover:opacity-100" href="#collections">
-              Collections
+              Catalog
             </Link>
             <Link className="opacity-90 hover:opacity-100" href="#bestsellers">
               Bestsellers
             </Link>
             <Link className="opacity-90 hover:opacity-100" href="#about">
               About
+            </Link>
+            <Link className="opacity-90 hover:opacity-100" href="#how">
+              How it works
             </Link>
             <Link className="opacity-90 hover:opacity-100" href="#contact">
               Contact
