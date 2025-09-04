@@ -61,6 +61,7 @@ export default function Home() {
                 height={800}
                 className="h-[420px] w-full rounded-2xl object-cover"
                 priority
+                unoptimized
               />
             </div>
           </div>
