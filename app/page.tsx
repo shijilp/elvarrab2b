@@ -86,10 +86,9 @@ export default function Page() {
               <Image
                 src="/images/hero.jpg"
                 alt="Hero jewelry"
-                width={1200}
-                height={800}
+                width={640}
+                height={640}
                 className="h-[420px] w-full rounded-2xl object-cover"
-                priority
               />
             </div>
           </div>
