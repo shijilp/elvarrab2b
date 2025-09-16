@@ -1,84 +1,61 @@
 "use client";
+import SectionTitle from "@/components/SectionTitle";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useMemo } from "react";
-import SectionTitle from "@/components/SectionTitle";
+import { useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard";
-import { api } from "@/lib/api";
+import { collections } from "@/data/collections";
+import { products } from "@/data/products";
 
-export default function Page() {
-  // const [mounted, setMounted] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [products, setProducts] = useState<any[]>([]);
-  // const [category, setCategory] = useState("All");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [categories, setCategories] = useState<any[]>([]);
+export default function Home() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
 
-  useEffect(() => {
-    api
-      .get("/products/")
-      .then((res) => {
-        setProducts(res.data.results);
-      })
-      .catch((err) => console.error("Failed to fetch products:", err));
-
-    api
-      .get("/categories/")
-      .then((res) => {
-        setCategories(res.data.results);
-      })
-      .catch((err) => console.error("Failed to fetch categories:", err));
-  }, []);
-
-  const allCategories = useMemo(() => {
-    return [
-      "All",
-      ...Array.from(
-        new Set(
-          products.map((p) => p.category?.name).filter(Boolean) as string[]
-        )
-      ),
-    ];
-  }, [products]);
-  console.log(allCategories);
   return (
-    <main className="">
+    <main>
       {/* Hero */}
-      <section className="relative isolate">
-        <div className="absolute inset-0 -z-10 opacity-40 blur-3xl">
+      <section className="relative isolate  ">
+        <div className="absolute inset-0 -z-10 opacity-40 blur-3xl max-w-[100vw] overflow-hidden">
           <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
         </div>
-        <div className="container grid grid-cols-1 gap-8 py-14 lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20 mx-auto">
+        <div className="container grid grid-cols-1 gap-8 py-14 lg:grid-cols-2 lg:items-center lg:justify-center lg:gap-12 lg:py-20 mx-auto">
           <div>
             <p className="text-xs tracking-[0.25em] opacity-80">
-              NEW COLLECTION
+              B2B JEWELRY SUPPLY
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
               Where Elegance Meets Light
             </h1>
             <p className="mt-4 max-w-xl text-base text-neutral-600 dark:text-neutral-300">
-              Hand‑finished pieces in gold, silver, and stones—designed to be
-              worn every day and loved for years. Ethical sourcing. Free
-              shipping over $75.
+              MOQ from 25 units • Tiered pricing • Private‑label packaging •
+              Fast replenishment from China & India. Nickel‑safe, hypoallergenic
+              finishes with consistent plating specs.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
                 href="#bestsellers"
                 className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 gradient-accent"
               >
-                Shop Bestsellers
+                Browse Wholesale Catalog
               </a>
               <a
                 href="#collections"
                 className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
               >
-                Explore Collections
+                See Tiered Pricing
+              </a>
+              <a
+                href="/wholesale-inquiry"
+                className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
+              >
+                Request Line Sheet
               </a>
             </div>
             <div className="mt-6 flex items-center gap-4 text-xs opacity-80">
-              <span>• Free 30‑day returns</span>
-              <span>• 2‑year warranty</span>
-              <span>• Hypoallergenic</span>
+              <span>• MOQ 25 per SKU</span>
+              <span>• Lead time 7–12 days</span>
+              <span>• DDP/DAP available</span>
             </div>
           </div>
           <div className="relative">
@@ -89,7 +66,7 @@ export default function Page() {
                 width={1200}
                 height={800}
                 className="h-[420px] w-full rounded-2xl object-cover"
-                priority
+                unoptimized
               />
             </div>
           </div>
@@ -99,31 +76,31 @@ export default function Page() {
       {/* Collections */}
       <section id="collections" className="container py-12 lg:py-16 mx-auto">
         <div className="mb-6 flex items-end justify-between">
-          <SectionTitle>Featured Collections</SectionTitle>
+          <SectionTitle>Catalog by Category</SectionTitle>
           <Link
             href="#"
             className="text-sm underline opacity-80 hover:opacity-100"
           >
-            View all
+            View all SKUs
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {categories.map((c) => (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4  justify-items-center">
+          {collections.map((c) => (
             <a
               key={c.id}
               href={`#${c.id}`}
               className="group relative overflow-hidden rounded-2xl ring-1 ring-neutral-200 dark:ring-neutral-800"
             >
               <Image
-                src={c.icon}
-                alt={c.name}
+                src={c.image}
+                alt={c.title}
                 width={900}
                 height={1000}
                 className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-3 left-3 text-sm font-medium tracking-wide">
-                {c.name}
+                {c.title}
               </div>
             </a>
           ))}
@@ -133,19 +110,44 @@ export default function Page() {
       {/* Bestsellers */}
       <section id="bestsellers" className="container py-12 lg:py-16 mx-auto">
         <div className="mb-6 flex items-end justify-between">
-          <SectionTitle>Bestsellers</SectionTitle>
+          <SectionTitle>Fast‑moving SKUs</SectionTitle>
           <div className="flex items-center gap-2 text-xs">
             <button className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-              Filter
+              Request line sheet
             </button>
-            <button className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-              Sort
-            </button>
+            <button className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800"></button>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {products.map((p) => (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 justify-items-center">
+          {/* {products.map((p) => (
             <ProductCard key={p.id} product={p} />
+          ))} */}
+        </div>
+      </section>
+
+      {/* Tiered pricing summary */}
+      <section
+        id="tiers"
+        className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16"
+      >
+        <h2 className="text-2xl font-semibold">Simple tiered pricing</h2>
+        <p className={`mt-2 dark:text-neutral-300  text-neutral-600`}>
+          Sample structure (varies by SKU). Final quote shared after inquiry.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { min: 25, price: "$48" },
+            { min: 100, price: "$42" },
+            { min: 300, price: "$39" },
+            { min: 1000, price: "$35" },
+          ].map((t) => (
+            <div
+              key={t.min}
+              className={`rounded-2xl dark:ring-1 dark:ring-neutral-800 ring-1 ring-neutral-200 d dark:bg-neutral-900/70  bg-white/90 p-4 text-center`}
+            >
+              <div className="text-xs opacity-80">{t.min}+ units</div>
+              <div className="text-lg font-semibold">{t.price}</div>
+            </div>
           ))}
         </div>
       </section>
@@ -186,6 +188,45 @@ export default function Page() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section
+        id="how"
+        className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16"
+      >
+        <h2 className="text-2xl font-semibold">How wholesale works</h2>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {[
+            {
+              step: "1",
+              title: "Send inquiry",
+              desc: "Share SKUs, quantities, and packaging needs. We respond within 24h.",
+            },
+            {
+              step: "2",
+              title: "Confirm quote & lead time",
+              desc: "Tiered pricing, MOQ from 25, lead time 7–12 days in‑stock.",
+            },
+            {
+              step: "3",
+              title: "Production & ship",
+              desc: "QC per batch; ship from KSA/India with DDP/DAP options.",
+            },
+          ].map((s) => (
+            <div
+              key={s.step}
+              className={`rounded-2xl dark:ring-1 dark:ring-neutral-800 ring-1 ring-neutral-200 dark:bg-neutral-900/70 bg-white/90 p-6`}
+            >
+              <div className="text-3xl font-semibold">{s.step}</div>
+              <div className="mt-2 text-lg font-medium">{s.title}</div>
+              <p
+                className={`mt-1 text-sm dark:text-neutral-300 text-neutral-600`}
+              >
+                {s.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
       {/* Testimonials */}
       <section className="container py-12 lg:py-16 mx-auto">
         <SectionTitle>What Our Customers Say</SectionTitle>

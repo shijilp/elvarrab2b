@@ -6,6 +6,15 @@
   --accent-end: #ec4899;   /* pink-500 */
   --chip-bg: #111827;      /* neutral-900 */
   --chip-fg: #fff;
+  --elv-card: rgba(255,255,255,0.9);
+  --elv-ring: #e5e5e5;
+  --elv-subfg: #525252;
+  --elv-border: #e5e5e5;
+  --elv-bg: #fafafa;          /* neutral-50 */
+  --elv-fg: #111111;          /* neutral-900 */
+  --elv-subfg: #525252;       /* neutral-600 */
+
+
 }
 
 :root.dark {
@@ -13,18 +22,65 @@
   --accent-end: #f59e0b;   /* amber-500 */
   --chip-bg: #f59e0b;      /* amber-500 */
   --chip-fg: #111827;      /* neutral-900 */
+  --elv-card: rgba(23,23,23,0.7);
+  --elv-ring: #262626;
+  --elv-subfg: #d4d4d4;
+  --elv-border: #262626;
+  --elv-bg: #0a0a0a;          /* neutral-950 */
+  --elv-fg: #fafafa;          /* neutral-50 */
+  --elv-subfg: #d4d4d4;       /* neutral-300 */
+
 }
 
 html, body {
   height: 100%;
 }
 
-.gradient-accent {
-  background-image: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-}
 
+.el-ring {
+  background-color:var(--elv-ring) ;
+  
+}
+.el-subfg {
+  color: var(--elv-subfg);
+  
+}
+@layer utilities {
+.el-border {
+  border-color:var(--elv-border);
+  
+}
+.el-card {
+  background-color:var(--elv-card) ;
+  
+}
+.el-bg{
+  background-color: var(--elv-bg);
+}
+.el-text{
+  color: var(--elv-fg);
+}
+.el-text-sub{
+  color: var(--elv-subfg);
+}
+.el-chip{
+    background-color: var(--chip-bg);
+    color: var(--chip-fg);
+}
+}
 @layer components {
   .container {
     @apply px-4 sm:px-6 lg:px-8;
   }
+  .dark  .btn-gradient {
+    @apply bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110;
+  }
+  .btn-gradient {
+    @apply bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110;
+  }
 }
+
+.gradient-accent {
+  background-image: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+}
+

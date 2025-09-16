@@ -17,6 +17,16 @@ const nextConfig: NextConfig = {
         hostname: "elvarra.in",
         pathname: "/**",
       },
+         {
+        protocol: "https",
+        hostname: "playkopmedia.s3.ap-south-1.amazonaws.com",
+        pathname: "/**",
+      },
+         {
+        protocol: "https",
+        hostname: "playkopmedia.s3.amazonaws.com",
+        pathname: "/**",
+      },
     ],
     // Optional: if your backend serves large images and you want better device coverage
     deviceSizes: [320, 420, 768, 1024, 1200, 1536, 1920],
