@@ -45,7 +45,7 @@ export default function Page() {
     <main className="">
       {/* Hero */}
       <section className="relative isolate">
-        <div className="absolute inset-0 -z-10 opacity-40 blur-3xl">
+        <div className="absolute inset-0 -z-10 opacity-40 blur-3xl max-w-[100vw] overflow-hidden">
           <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
         </div>
         <div className="container grid grid-cols-1 gap-8 py-14 lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20 mx-auto">
@@ -219,21 +219,51 @@ export default function Page() {
                 sales.
               </p>
             </div>
-            <form className="flex gap-2">
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-neutral-200 bg-transparent px-4 py-3 text-sm outline-none placeholder:opacity-60 dark:border-neutral-800"
-              />
-              <button
-                type="submit"
-                className="rounded-xl px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 gradient-accent"
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <form className="flex w-full gap-2">
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  className="w-full rounded-xl border border-neutral-200 bg-transparent px-4 py-3 text-sm outline-none placeholder:opacity-60 dark:border-neutral-800"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 gradient-accent"
+                >
+                  Subscribe
+                </button>
+              </form>
+
+              {/* Instagram link */}
+              <Link
+                href="https://instagram.com/elvar.ra"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 px-5 py-3 text-sm font-medium hover:bg-white/5 dark:border-neutral-800"
               >
-                Subscribe
-              </button>
-            </form>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                >
+                  <path
+                    d="M7 2C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 
+      0 5-2.24 5-5V7c0-2.76-2.24-5-5-5H7zm0-2h10c3.87 
+      0 7 3.13 7 7v10c0 3.87-3.13 7-7 7H7c-3.87 
+      0-7-3.13-7-7V7c0-3.87 3.13-7 7-7zm5 
+      7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 
+      2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm4.5-3a1.5 
+      1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Follow</span>
+              </Link>
+            </div>
           </div>
         </div>
+
         <p className="mt-6 text-center text-xs text-neutral-600 dark:text-neutral-300">
           © {new Date().getFullYear()} Elvarra — All rights reserved.
         </p>

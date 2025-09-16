@@ -18,9 +18,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="dark overflow-x-clip" suppressHydrationWarning>
       <body
-        className={`min-h-dvh bg-neutral-50 text-neutral-900 dark:bg-neutral-950 overflow-x-clip    dark:text-neutral-50 antialiased `}
+        className={`min-h-dvh bg-neutral-50 text-neutral-900 dark:bg-neutral-950 overflow-x-clip     dark:text-neutral-50 antialiased `}
         suppressHydrationWarning
       >
         <ThemeProvider>
