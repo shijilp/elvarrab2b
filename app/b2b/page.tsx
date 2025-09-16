@@ -136,7 +136,7 @@ export default function Home() {
         </p>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { min: 25, price: "$48" },
+            { min: 25, price: "$49" },
             { min: 100, price: "$42" },
             { min: 300, price: "$39" },
             { min: 1000, price: "$35" },
