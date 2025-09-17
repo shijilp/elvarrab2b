@@ -9,8 +9,10 @@ import { useState } from "react";
 import { Menu, X, Home, Package, ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext"; // ✅ import cart context
+import { useTheme } from "@/context/ThemeContext";
 
 export default function Header() {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const { cartItems } = useCart(); // ✅ access cart
   const [open, setOpen] = useState(false);
@@ -38,9 +40,9 @@ export default function Header() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-1">
               <Image
-                src={"/logo.svg"}
-                width={38}
-                height={38}
+                src={theme === "dark" ? "/logow.svg" : "/logog.svg"}
+                width={25}
+                height={25}
                 alt="Elvarra Logo"
               />
               <Link href={"/"}>
@@ -66,7 +68,8 @@ export default function Header() {
               <ThemeToggle />
               <div className=" hidden md:block">
                 <CartBtnonHeader />
-
+              </div>
+              <div className=" hidden md:block">
                 {user ? (
                   <LogoutButton />
                 ) : (
