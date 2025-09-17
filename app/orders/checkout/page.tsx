@@ -92,6 +92,7 @@ export default function RetailCheckoutPage() {
     coupon: { code: string; discount: number } | null;
     clearCart: () => void;
   };
+  console.log(cartItems, "scas");
   const [shipping, setShipping] = useState<number>(0);
 
   const [placing, setPlacing] = useState(false);
@@ -410,18 +411,6 @@ export default function RetailCheckoutPage() {
   );
 }
 
-/*
-------------------------------------------------------------
-TESTS (snippets; place in tests/ or __tests__/)
-
-// tests/checkout-retail-utils.test.ts
-// If helpers are exported, test like:
-// import { computeVAT, shippingCost } from "app/checkout/retail/page";
-// it("computes VAT at 15%", () => { expect(computeVAT(100)).toBe(15); });
-// it("free shipping over threshold", () => { expect(shippingCost("standard", 200, false)).toBe(0); });
-// it("express non-free shipping", () => { expect(shippingCost("express", 50, false)).toBe(14.9); });
-//------------------------------------------------------------
-*/
 async function openRazorpayAndPay(opts: {
   rzpOrderId: string;
   orderId: string;
@@ -442,7 +431,7 @@ async function openRazorpayAndPay(opts: {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // public key
       order_id: opts.rzpOrderId, // server-created order id
       currency: opts.currency,
-      name: "PlayKop",
+      name: "Elvarra",
       description: `Order #${opts.orderId}`,
       prefill: { name: opts.name, email: opts.email, contact: opts.contact },
       theme: { color: "#0140a9" },

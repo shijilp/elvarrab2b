@@ -164,12 +164,12 @@ export default function RetailCartPage() {
               </div>
 
               <div className="mt-4 grid grid-cols-1 gap-2">
-                <a
-                  href={`/orders/checkout?total=${total.toFixed(2)}`}
+                <Link
+                  href={`/orders/checkout`}
                   className={`rounded-xl px-4 py-3 text-center text-sm font-medium btn-gradient`}
                 >
                   Proceed to Checkout
-                </a>
+                </Link>
                 <Link
                   href={`/products`}
                   className={`rounded-xl border el-border    px-4 py-3 text-sm`}
