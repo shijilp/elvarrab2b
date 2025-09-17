@@ -60,79 +60,85 @@ export default function RetailCartPage() {
                 {cartItems.map((it) => {
                   const line = it.price * it.quantity;
                   return (
-                    <div
-                      key={it.id}
-                      className={`grid grid-cols-12 gap-3 rounded-xl el-ring  el-card  p-3`}
-                    >
-                      <div className="col-span-12 md:col-span-2">
-                        <Image
-                          width={64}
-                          height={64}
-                          src={it.image}
-                          alt={it.name}
-                          className="aspect-square w-full rounded-lg object-cover"
-                        />
-                      </div>
-                      <div className="col-span-12 md:col-span-10">
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <div>
-                            <div className="text-sm font-medium">{it.name}</div>
-                            <div className={`text-xs el-subfg`}>
-                              SKU: {it.id}
-                            </div>
-                            <div className={`mt-1 text-xs el-subfg`}>
-                              Unit: {formatMoney(it.price)}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => removeFromCart(it.id)}
-                            className={`rounded-xl border el-border  px-3 py-1.5  text-xs cursor-pointer`}
-                          >
-                            Remove
-                          </button>
+                    <>
+                      <div className=" bg-black h-0.5  w-full"></div>
+                      <div
+                        key={it.id}
+                        className={`grid grid-cols-12 gap-3 rounded-xl el-ring  el-card  p-3`}
+                      >
+                        <div className="col-span-12 md:col-span-2">
+                          <Image
+                            width={64}
+                            height={64}
+                            src={it.image}
+                            alt={it.name}
+                            className="aspect-square w-full rounded-lg object-cover"
+                          />
                         </div>
+                        <div className="col-span-12 md:col-span-10">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <div className="text-sm font-medium">
+                                {it.name}
+                              </div>
+                              <div className={`text-xs el-subfg`}>
+                                SKU: {it.id}
+                              </div>
+                              <div className={`mt-1 text-xs el-subfg`}>
+                                Unit: {formatMoney(it.price)}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeFromCart(it.id)}
+                              className={`rounded-xl border el-border  px-3 py-1.5  text-xs cursor-pointer`}
+                            >
+                              Remove
+                            </button>
+                          </div>
 
-                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                          <div>
-                            <label className="mb-1 block text-xs opacity-80">
-                              Quantity
-                            </label>
-                            <input
-                              type="number"
-                              value={it.quantity}
-                              min={1}
-                              step={1}
-                              onChange={(e) =>
-                                updateQuantity(
-                                  it.id,
-                                  Number(e.target.value) || 1
-                                )
-                              }
-                              className={`w-full rounded-xl border el-border  bg-transparent px-3 py-2 text-sm outline-none`}
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-1 block text-xs opacity-80">
-                              Line total
-                            </label>
-                            <div className="rounded-xl border border-dashed px-3 py-2 text-sm">
-                              {formatMoney(line)}
+                          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            <div>
+                              <label className="mb-1 block text-xs opacity-80">
+                                Quantity
+                              </label>
+                              <input
+                                type="number"
+                                value={it.quantity}
+                                min={1}
+                                step={1}
+                                onChange={(e) =>
+                                  updateQuantity(
+                                    it.id,
+                                    Number(e.target.value) || 1
+                                  )
+                                }
+                                className={`w-full rounded-xl border el-border  bg-transparent px-3 py-2 text-sm outline-none`}
+                              />
                             </div>
-                          </div>
-                          <div className="sm:col-span-2">
-                            <label className="mb-1 block text-xs opacity-80">
-                              Gift note
-                            </label>
-                            <input
-                              placeholder="Optional gift message for this item"
-                              className={`w-full rounded-xl border el-border  bg-transparent px-3 py-2 text-sm outline-none`}
-                              value={giftNote}
-                              onChange={(e) => setGiftNote(e.target.value)}
-                            />
+                            <div>
+                              <label className="mb-1 block text-xs opacity-80">
+                                Line total
+                              </label>
+                              <div className="rounded-xl border border-dashed px-3 py-2 text-sm">
+                                {formatMoney(line)}
+                              </div>
+                            </div>
+
+                            <div className="sm:col-span-2 hidden">
+                              <label className="mb-1 block text-xs opacity-80">
+                                Gift note
+                              </label>
+                              <input
+                                placeholder="Optional gift message for this item"
+                                className={`w-full rounded-xl border el-border  bg-transparent px-3 py-2 text-sm outline-none`}
+                                value={giftNote}
+                                onChange={(e) => setGiftNote(e.target.value)}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </>
                   );
                 })}
               </div>

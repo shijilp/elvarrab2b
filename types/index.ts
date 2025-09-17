@@ -63,16 +63,15 @@ export interface Order {
   image: string
   phone: string
   pincode : string
-    country : string
-    created_at : string
-    applied_coupon_code : string
-    discount_amount : string
-    subtotal_amount : string
-    total_amount : string
- 
-    status : string
-    is_paid : string
-    razorpay_payment_id : string
+  country : string
+  created_at : string
+  applied_coupon_code : string
+  discount_amount : number
+  subtotal_amount : number
+  total_amount : number
+  status : OrderStatus
+  is_paid : string
+  razorpay_payment_id : string
 }
 
 export type RazorpayHandlerResponse = {
@@ -91,3 +90,13 @@ type VerifyPayload = {
   razorpay_payment_id: string;
   razorpay_signature: string;
 };
+
+type OrderStatus =
+  | "Pending"
+  | "Confirmed"
+  | "Shipped"
+  | "Delivered"
+  | "Cancelled"
+    "processing"
+     "new" ;
+  

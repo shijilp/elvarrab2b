@@ -1,6 +1,9 @@
 "use client";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
+import { Order } from "@/types";
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — CUSTOMER ORDERS PAGE (Retail Only)
@@ -55,43 +58,12 @@ type OrderStatus =
 type OrderRow = {
   id: string;
   createdAt: string;
-  status: OrderStatus;
+  status: string;
   items: number;
   currency: string;
   subtotal: number;
   tax: number;
 };
-
-// Mock data — replace with API for current retail customer
-const MY_RETAIL_ORDERS: OrderRow[] = [
-  {
-    id: "R-10511",
-    createdAt: "2025-08-29T16:45:00Z",
-    status: "Shipped",
-    items: 2,
-    currency: "USD",
-    subtotal: 138,
-    tax: 20.7,
-  },
-  {
-    id: "R-10488",
-    createdAt: "2025-08-08T12:10:00Z",
-    status: "Delivered",
-    items: 1,
-    currency: "USD",
-    subtotal: 89,
-    tax: 13.35,
-  },
-  {
-    id: "R-10421",
-    createdAt: "2025-07-12T18:30:00Z",
-    status: "Cancelled",
-    items: 3,
-    currency: "USD",
-    subtotal: 190,
-    tax: 28.5,
-  },
-];
 
 function money(n: number, currency = "USD") {
   try {
@@ -122,34 +94,37 @@ function statusChip(status: OrderStatus) {
 export default function CustomerOrdersPage() {
   const theme: ThemeMode = "dark";
   const palette = useMemo(() => paletteForTheme(theme), [theme]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [status, setStatus] = useState<"all" | OrderStatus>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("date-desc");
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const { user } = useAuth();
 
   const filtered = useMemo(() => {
-    let list = MY_RETAIL_ORDERS.slice();
+    let list = orders.slice();
     if (status !== "all") list = list.filter((o) => o.status === status);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((o) =>
-        [o.id, o.status].some((x) => x.toLowerCase().includes(q))
+        [o.status].some((x) => x.toLowerCase().includes(q))
       );
     }
     switch (sort) {
       case "date-asc":
-        list.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+        list.sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
         break;
       case "total-desc":
-        list.sort((a, b) => b.subtotal + b.tax - (a.subtotal + a.tax));
+        list.sort((a, b) => b.subtotal_amount - a.subtotal_amount);
         break;
       case "total-asc":
-        list.sort((a, b) => a.subtotal + a.tax - (b.subtotal + b.tax));
+        list.sort((a, b) => a.total_amount - b.total_amount);
         break;
       default:
-        list.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+        list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
     }
     return list;
   }, [status, query, sort]);
@@ -162,9 +137,25 @@ export default function CustomerOrdersPage() {
   function goto(p: number) {
     setPage(Math.min(Math.max(1, p), totalPages));
   }
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const res = await api.get("my-orders/", {
+          headers: { Authorization: `Bearer ${user?.access}` },
+        });
+        setOrders(res.data.results);
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user?.access) fetchOrders();
+    else setLoading(false); // avoid spinner forever when logged out
+  }, [user]);
 
   return (
-    <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased `}>
+    <main className={`} ${palette.fg} min-h-screen antialiased `}>
       <div className="container mx-auto pt-5  ">
         <h1 className="text-2xl font-semibold">My Orders</h1>
         <p className={`mt-1 text-sm ${palette.subfg}`}>
@@ -274,7 +265,7 @@ export default function CustomerOrdersPage() {
                   </tr>
                 ) : (
                   pageItems.map((o) => {
-                    const total = o.subtotal + o.tax;
+                    const total = o.total_amount;
                     return (
                       <tr key={o.id} className="border-t border-white/5">
                         <Link href={`/orders/${o.id}`}>
@@ -282,15 +273,14 @@ export default function CustomerOrdersPage() {
                           <td className="px-4 py-3 font-medium">{o.id}</td>
                         </Link>
                         <td className="px-4 py-3">
-                          {new Date(o.createdAt).toLocaleDateString()}
+                          {new Date(o.created_at).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-3">{o.items}</td>
+                        <td className="px-4 py-3">{}</td>
+                        {/* o.items */}
                         <td className="px-4 py-3">
-                          {money(o.tax, o.currency)}
+                          {money(o.subtotal_amount)}
                         </td>
-                        <td className="px-4 py-3">
-                          {money(total, o.currency)}
-                        </td>
+                        <td className="px-4 py-3">{money(total, "INR")}</td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-block rounded-full px-2 py-1 text-[11px] font-semibold ${statusChip(

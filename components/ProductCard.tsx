@@ -62,7 +62,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
           {/* In-cart badge */}
           {inCart && (
-            <span className="absolute right-2 top-2 rounded-full bg-emerald-500/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+            <span className="absolute hidden md:block right-2 top-2 rounded-full bg-emerald-500/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
               In cart × {qty}
             </span>
           )}

@@ -1,7 +1,9 @@
 "use client";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — RETAIL ORDER DETAILS PAGE (Robust params)
@@ -58,6 +60,14 @@ export type RetailOrderItem = {
   unit: number;
   qty: number;
 };
+type OrderStatus =
+  | "Pending"
+  | "Confirmed"
+  | "Shipped"
+  | "Delivered"
+  | "Cancelled";
+("processing");
+("new");
 
 export type RetailOrder = {
   id: string;
@@ -177,7 +187,7 @@ function money(n: number, currency = "USD") {
   }
 }
 
-function statusChip(status: RetailOrder["status"]) {
+function statusChip(status: OrderStatus) {
   switch (status) {
     case "Pending":
       return "bg-yellow-500 text-neutral-900";
@@ -191,7 +201,36 @@ function statusChip(status: RetailOrder["status"]) {
       return "bg-rose-500 text-white";
   }
 }
-
+type OrderDetail = {
+  id: number;
+  created_at: string;
+  total_amount: number;
+  status: OrderStatus;
+  is_paid: boolean;
+  full_name: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  tracking_no: string;
+  carrier: string;
+  shipping: number;
+  discount: number;
+  subtotal: number;
+  items: {
+    id: number;
+    product: {
+      name: string;
+      image: string;
+      description?: string;
+      sku: string;
+    };
+    quantity: number;
+    price: number;
+  }[];
+};
 // ------------------------------------------------------------
 // Page Component (App Router dynamic route)
 // - Accepts optional `params` and safely resolves `id`.
@@ -201,12 +240,34 @@ function statusChip(status: RetailOrder["status"]) {
 export default function RetailOrderDetailsPage({ id }: { id: string }) {
   const theme: ThemeMode = "dark";
   const palette = useMemo(() => paletteForTheme(theme), [theme]);
+  const { user } = useAuth();
+  const [order, setOrder] = useState<OrderDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const order = useMemo(
-    () => (id ? MOCK_ORDERS.find((o) => o.id === id) : undefined),
-    [id]
-  );
+  // const order = useMemo(
+  //   () => (id ? MOCK_ORDERS.find((o) => o.id === id) : undefined),
+  //   [id]
+  // );
+  useEffect(() => {
+    if (!user?.access || !id) return;
 
+    const fetchOrder = async () => {
+      try {
+        const res = await api.get(`/my-orders/${id}/`, {
+          headers: {
+            Authorization: `Bearer ${user.access}`,
+          },
+        });
+        setOrder(res.data);
+      } catch (error) {
+        console.error("Failed to fetch order:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [user, id]);
   if (!id) {
     return (
       <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
@@ -240,7 +301,7 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
     );
   }
 
-  const total = order.subtotal + order.tax + order.shipping;
+  const total = order.total_amount;
 
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
@@ -253,7 +314,7 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
           <div>
             <h1 className="text-2xl font-semibold">Order {order.id}</h1>
             <p className={`mt-1 text-sm ${palette.subfg}`}>
-              Placed on {new Date(order.createdAt).toLocaleString()}
+              Placed on {new Date(order.created_at).toLocaleString()}
             </p>
           </div>
           <span
@@ -275,26 +336,26 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
               <div className="mt-3 space-y-3 text-sm">
                 {order.items.map((it) => (
                   <div
-                    key={it.sku}
+                    key={it.product.sku}
                     className="flex items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-3">
                       <Image
                         width={64}
                         height={64}
-                        src={it.image}
-                        alt={it.title}
+                        src={it.product.image}
+                        alt={it.product.name}
                         className="h-14 w-14 rounded-lg object-cover"
                       />
                       <div>
-                        <div className="font-medium">{it.title}</div>
+                        <div className="font-medium">{it.product.name}</div>
                         <div className={`${palette.subfg}`}>
-                          SKU: {it.sku} · Qty {it.qty}
+                          SKU: {it.product.sku} · Qty {it.quantity}
                         </div>
                       </div>
                     </div>
                     <div className="font-medium">
-                      {money(it.unit * it.qty, order.currency)}
+                      {money(it.price * it.quantity, "INR")}
                     </div>
                   </div>
                 ))}
@@ -305,43 +366,40 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
             <div className={`rounded-2xl ${palette.ring} ${palette.card} p-4`}>
               <div className="text-lg font-semibold">Shipping</div>
               <div className={`mt-2 text-sm ${palette.subfg}`}>
+                <div>{order.full_name}</div>
                 <div>
-                  {order.customer.first} {order.customer.last}
+                  {order.line1}
+                  {order.line2 ? ", " + order.line2 : ""}
                 </div>
                 <div>
-                  {order.address.line1}
-                  {order.address.line2 ? ", " + order.address.line2 : ""}
+                  {order.city}, {order.state} {order.pincode}
                 </div>
-                <div>
-                  {order.address.city}, {order.address.province}{" "}
-                  {order.address.zip}
-                </div>
-                <div>{order.address.country}</div>
+                <div>{order.country}</div>
                 <div className="mt-2">
                   Method:{" "}
-                  {order.delivery.method === "express" ? "Express" : "Standard"}
+                  {/* {order.method === "express" ? "Express" : "Standard"} */}
                 </div>
-                {order.delivery.trackingId && (
+                {order.tracking_no && (
                   <div className="mt-1">
                     Tracking:{" "}
                     <a
                       className="underline"
                       href={`https://www.17track.net/en?nums=${encodeURIComponent(
-                        order.delivery.trackingId
+                        order.tracking_no
                       )}`}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      {order.delivery.trackingId}
+                      {order.tracking_no}
                     </a>{" "}
-                    ({order.delivery.carrier})
+                    ({order.carrier})
                   </div>
                 )}
               </div>
             </div>
 
             {/* Timeline */}
-            <div className={`rounded-2xl ${palette.ring} ${palette.card} p-4`}>
+            {/* <div className={`rounded-2xl ${palette.ring} ${palette.card} p-4`}>
               <div className="text-lg font-semibold">Timeline</div>
               <ol className="mt-3 space-y-2 text-sm">
                 {order.timeline.map((t, i) => (
@@ -356,7 +414,7 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
                   </li>
                 ))}
               </ol>
-            </div>
+            </div> */}
           </section>
 
           {/* RIGHT */}
@@ -367,21 +425,19 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
             <div className="mt-3 space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="opacity-80">Subtotal</span>
-                <span>{money(order.subtotal, order.currency)}</span>
+                <span>{money(order.subtotal, "INR")}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="opacity-80">Shipping</span>
-                <span>{money(order.shipping, order.currency)}</span>
+                <span>{money(order.shipping, "INR")}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="opacity-80">VAT</span>
-                <span>{money(order.tax, order.currency)}</span>
+                <span className="opacity-80">Discount</span>
+                <span>-{money(order.discount, "INR")}</span>
               </div>
               <div className="flex items-center justify-between border-t pt-2">
                 <span className="font-medium">Total</span>
-                <span className="font-semibold">
-                  {money(total, order.currency)}
-                </span>
+                <span className="font-semibold">{money(total, "INR")}</span>
               </div>
             </div>
 

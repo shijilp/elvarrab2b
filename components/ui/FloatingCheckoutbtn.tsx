@@ -48,12 +48,12 @@ export default function FloatingCheckoutButton() {
       className="
         fixed inset-x-4 bottom-4 z-[60]
         pb-[env(safe-area-inset-bottom)]
-        md:inset-x-auto md:right-6 md:bottom-6
+        md:inset-x-auto md:right-6 md:bottom-6 hidden md:block
       "
       aria-live="polite"
     >
       <Link
-        href="orders/cart"
+        href="/orders/cart"
         className="
           group flex w-full items-center justify-between gap-3
           rounded-2xl px-4 py-3 text-sm font-semibold
