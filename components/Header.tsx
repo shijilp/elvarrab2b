@@ -43,7 +43,7 @@ export default function Header() {
                 src={theme === "dark" ? "/logow.svg" : "/logog.svg"}
                 width={25}
                 height={25}
-                alt="Elvarra Logo"
+                alt="Elvarra Logo of gold"
               />
               <Link href={"/"}>
                 <span className="text-lg font-semibold tracking-wide">
