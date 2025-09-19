@@ -5,22 +5,27 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import type { Product } from "@/types";
+import type { Product, Variant } from "@/types";
 
 // Zoom needs CSS; keep it client-only
 import "react-medium-image-zoom/dist/styles.css";
 import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import TagBadge from "@/components/ui/TagBadge";
+import Link from "next/link";
+import { money } from "@/lib/money";
 
-// const product = { // id: 1, // name: "Luna Drop Earrings",
-//  // price: "$69", // images: [ // "https://images.unsplash.com/photo-1631049035182-249067d76152?q=80&w=1200&auto=format&fit=crop", //
-// "https://images.unsplash.com/photo-1603561596112-0a132b3f78a0?q=80&w=1200&auto=format&fit=crop",
-// // "https://images.unsplash.com/photo-1589924641763-c68a3abf2f40?q=80&w=1200&auto=format&fit=crop", // ],
-// // description: // "Hand‑finished earrings with 18k gold plating and cubic zirconia stones. Hypoallergenic and lightweight for daily wear.",
-// // details: [ // "18k gold plating", // "Nickel‑free & hypoallergenic", // "2‑year warranty", // "Designed in-house", // ], // };
 const Zoom = dynamic(() => import("react-medium-image-zoom"), { ssr: false });
 
 type ParamShape = { slug: string };
+function stockLabel(p: Product) {
+  if (p.in_stock) {
+    if (p.low_stock_threshold && p.inventory <= p.low_stock_threshold)
+      return "Low stock";
+    return "In stock";
+  }
+  if (!p.in_stock && p.backorder_allowed) return "Backorder available";
+  return "Out of stock";
+}
 
 const ProductPage: React.FC = () => {
   const params = useParams<ParamShape>();
@@ -30,7 +35,7 @@ const ProductPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   // Fetch
   useEffect(() => {
     if (!slug) return;
@@ -41,6 +46,8 @@ const ProductPage: React.FC = () => {
         const res = await api.get(`/products/${slug}/`);
         if (cancelled) return;
         setProduct(res.data);
+        setSelectedVariant((res.data as Product).variants?.[0] ?? null);
+
         setError(null);
       } catch (e) {
         console.error("Product load failed:", e);
@@ -113,9 +120,33 @@ const ProductPage: React.FC = () => {
       </main>
     );
   }
+  const hasCompare =
+    product.compare_at_price &&
+    Number(product.compare_at_price) > Number(product.price);
+  const currency = selectedVariant?.currency || product.currency;
 
   return (
     <main className="min-h-screen bg-elvarra text-elvarra antialiased">
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 text-xs opacity-80">
+        <ol className="flex items-center gap-2">
+          <li>
+            <Link href="/products" className="hover:opacity-80">
+              Products
+            </Link>
+          </li>
+          <li>›</li>
+          <li>
+            <Link
+              href={`/category/${product.category?.slug}`}
+              className="hover:opacity-80"
+            >
+              {product.category?.name}
+            </Link>
+          </li>
+          <li>›</li>
+          <li className="opacity-90">{product.name}</li>
+        </ol>
+      </nav>
       {/* Product */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
         <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
@@ -176,11 +207,50 @@ const ProductPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-semibold">
               {product.name}
             </h1>
-            {product.price && (
-              <p className="mt-2 text-lg sm:text-xl font-medium">
-                {product.price}
-              </p>
-            )}
+            {/* Price + compare_at_price */}
+            <div className="mt-2 flex items-baseline gap-3">
+              <span className="text-lg sm:text-xl font-medium">
+                {money(selectedVariant?.price ?? product.price, currency)}
+              </span>
+              {(selectedVariant?.compare_at_price
+                ? Number(selectedVariant.compare_at_price) >
+                  Number(selectedVariant.price)
+                : hasCompare) && (
+                <span className="text-sm line-through opacity-60">
+                  {money(
+                    selectedVariant?.compare_at_price ??
+                      product.compare_at_price!,
+                    currency
+                  )}
+                </span>
+              )}
+            </div>
+
+            {/* Stock / Inventory / Backorder */}
+            <div className="mt-2 text-sm">
+              <span
+                className={`inline-flex items-center rounded-lg px-2 py-1 ring-1 ${
+                  product.in_stock
+                    ? "ring-green-500/40 text-green-400"
+                    : product.backorder_allowed
+                    ? "ring-amber-500/40 text-amber-400"
+                    : "ring-rose-500/40 text-rose-400"
+                }`}
+                title={`Inventory: ${product.inventory}${
+                  product.backorder_allowed ? " (backorders allowed)" : ""
+                }`}
+              >
+                {stockLabel(product)}
+              </span>
+              {product.in_stock &&
+                product.low_stock_threshold &&
+                product.inventory <= product.low_stock_threshold && (
+                  <span className="ml-2 text-xs opacity-70">
+                    Only {product.inventory} left
+                  </span>
+                )}
+            </div>
+
             {product.description && (
               <p className="mt-4 text-sm leading-6 opacity-90">
                 {product.description}
@@ -206,6 +276,145 @@ const ProductPage: React.FC = () => {
               <p>• Delivery in 3–5 business days</p>
               <p>• Easy 30-day returns</p>
             </div>
+
+            {/* Attributes grid */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div className="rounded-2xl ring-1 ring-elvarra/30 p-4">
+                <h3 className="font-medium mb-2">Details</h3>
+                <ul className="space-y-1 opacity-90">
+                  <li>
+                    <span className="opacity-70">SKU:</span> {product.sku}
+                  </li>
+                  {product.brand && (
+                    <li>
+                      <span className="opacity-70">Brand:</span> {product.brand}
+                    </li>
+                  )}
+                  {product.gtin && (
+                    <li>
+                      <span className="opacity-70">GTIN:</span> {product.gtin}
+                    </li>
+                  )}
+                  {product.mpn && (
+                    <li>
+                      <span className="opacity-70">MPN:</span> {product.mpn}
+                    </li>
+                  )}
+                  <li>
+                    <span className="opacity-70">Category:</span>{" "}
+                    {product.category?.name}
+                  </li>
+                  <li>
+                    <span className="opacity-70">Currency:</span>{" "}
+                    {product.currency}
+                  </li>
+                  {product.tag && (
+                    <li>
+                      <span className="opacity-70">Tag:</span> {product.tag}
+                    </li>
+                  )}
+                  <li>
+                    <span className="opacity-70">Active:</span>{" "}
+                    {product.is_active ? "Yes" : "No"}
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl ring-1 ring-elvarra/30 p-4">
+                <h3 className="font-medium mb-2">Dimensions</h3>
+                <ul className="space-y-1 opacity-90">
+                  <li>
+                    <span className="opacity-70">Weight:</span>{" "}
+                    {product.weight_kg ?? "—"} kg
+                  </li>
+                  <li>
+                    <span className="opacity-70">Length:</span>{" "}
+                    {product.length_cm ?? "—"} cm
+                  </li>
+                  <li>
+                    <span className="opacity-70">Width:</span>{" "}
+                    {product.width_cm ?? "—"} cm
+                  </li>
+                  <li>
+                    <span className="opacity-70">Height:</span>{" "}
+                    {product.height_cm ?? "—"} cm
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Spec */}
+            {product.spec && (
+              <div className="mt-8 rounded-2xl ring-1 ring-elvarra/30 p-4 text-sm">
+                <h3 className="font-medium mb-2">Material & Finish</h3>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 opacity-90">
+                  <li>
+                    <span className="opacity-70">Base material:</span>{" "}
+                    {product.spec.base_material}
+                  </li>
+                  {product.spec.silver_fineness != null && (
+                    <li>
+                      <span className="opacity-70">Silver fineness:</span>{" "}
+                      {product.spec.silver_fineness}
+                    </li>
+                  )}
+                  {product.spec.gold_karat != null && (
+                    <li>
+                      <span className="opacity-70">Gold karat:</span>{" "}
+                      {product.spec.gold_karat}K
+                    </li>
+                  )}
+                  {product.spec.plating_type && (
+                    <li>
+                      <span className="opacity-70">Plating:</span>{" "}
+                      {product.spec.plating_type}
+                    </li>
+                  )}
+                  {product.spec.plating_thickness_microns != null && (
+                    <li>
+                      <span className="opacity-70">Plating thickness:</span>{" "}
+                      {product.spec.plating_thickness_microns}μm
+                    </li>
+                  )}
+                  {product.spec.coating && (
+                    <li>
+                      <span className="opacity-70">Coating:</span>{" "}
+                      {product.spec.coating}
+                    </li>
+                  )}
+                  {product.spec.hypoallergenic != null && (
+                    <li>
+                      <span className="opacity-70">Hypoallergenic:</span>{" "}
+                      {product.spec.hypoallergenic ? "Yes" : "No"}
+                    </li>
+                  )}
+                  {product.spec.water_resistant != null && (
+                    <li>
+                      <span className="opacity-70">Water resistant:</span>{" "}
+                      {product.spec.water_resistant ? "Yes" : "No"}
+                    </li>
+                  )}
+                  {product.spec.nickel_free != null && (
+                    <li>
+                      <span className="opacity-70">Nickel-free:</span>{" "}
+                      {product.spec.nickel_free ? "Yes" : "No"}
+                    </li>
+                  )}
+                  {product.spec.lead_free != null && (
+                    <li>
+                      <span className="opacity-70">Lead-free:</span>{" "}
+                      {product.spec.lead_free ? "Yes" : "No"}
+                    </li>
+                  )}
+                  {product.spec.cadmium_free != null && (
+                    <li>
+                      <span className="opacity-70">Cadmium-free:</span>{" "}
+                      {product.spec.cadmium_free ? "Yes" : "No"}
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </section>

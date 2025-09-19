@@ -1,7 +1,8 @@
 "use client";
+import ESpinner from "@/components/ElvarraSpinner";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
-import { Order } from "@/types";
+import { Order, OrderStatus } from "@/types";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -49,22 +50,6 @@ function paletteForTheme(theme: ThemeMode): Palette {
       };
 }
 
-type OrderStatus =
-  | "Pending"
-  | "Confirmed"
-  | "Shipped"
-  | "Delivered"
-  | "Cancelled";
-type OrderRow = {
-  id: string;
-  createdAt: string;
-  status: string;
-  items: number;
-  currency: string;
-  subtotal: number;
-  tax: number;
-};
-
 function money(n: number, currency = "USD") {
   try {
     return new Intl.NumberFormat(undefined, {
@@ -78,15 +63,15 @@ function money(n: number, currency = "USD") {
 
 function statusChip(status: OrderStatus) {
   switch (status) {
-    case "Pending":
+    case "new":
       return "bg-yellow-500 text-neutral-900";
-    case "Confirmed":
+    case "confirmed":
       return "bg-blue-500 text-white";
-    case "Shipped":
+    case "shipped":
       return "bg-amber-600 text-white";
-    case "Delivered":
+    case "delivered":
       return "bg-emerald-500 text-white";
-    case "Cancelled":
+    case "cancelled":
       return "bg-rose-500 text-white";
   }
 }
@@ -118,7 +103,7 @@ export default function CustomerOrdersPage() {
         list.sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
         break;
       case "total-desc":
-        list.sort((a, b) => b.subtotal_amount - a.subtotal_amount);
+        list.sort((a, b) => b.subtotal - a.subtotal);
         break;
       case "total-asc":
         list.sort((a, b) => a.total_amount - b.total_amount);
@@ -127,7 +112,7 @@ export default function CustomerOrdersPage() {
         list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
     }
     return list;
-  }, [status, query, sort]);
+  }, [status, query, sort, orders]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = useMemo(
@@ -154,6 +139,13 @@ export default function CustomerOrdersPage() {
     else setLoading(false); // avoid spinner forever when logged out
   }, [user]);
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white/70 dark:bg-black/70 z-50">
+        <ESpinner />
+      </div>
+    );
+  }
   return (
     <main className={`} ${palette.fg} min-h-screen antialiased `}>
       <div className="container mx-auto pt-5  ">
@@ -164,7 +156,6 @@ export default function CustomerOrdersPage() {
         <div className=" inset-0 -z-10 opacity-40 blur-3xl">
           <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
         </div>
-
         {/* Filters */}
         <section
           className={`mt-6 rounded-2xl ${palette.ring} ${palette.card} p-4`}
@@ -195,20 +186,22 @@ export default function CustomerOrdersPage() {
                   setStatus(e.target.value as any);
                   setPage(1);
                 }}
-                className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+                className={`w-full rounded-xl border ${palette.border}  px-3 py-2 bg-neutral-900  text-sm outline-none`}
               >
-                <option value="all">All</option>
+                <option value="all" className="text-sm">
+                  All
+                </option>
                 {(
                   [
-                    "Pending",
-                    "Confirmed",
-                    "Shipped",
-                    "Delivered",
-                    "Cancelled",
+                    "pending",
+                    "confirmed",
+                    "shipped",
+                    "delivered",
+                    "cancelled",
                   ] as OrderStatus[]
                 ).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                  <option key={s} value={s} className="text-sm ">
+                    {s.toLocaleUpperCase()}
                   </option>
                 ))}
               </select>
@@ -220,7 +213,7 @@ export default function CustomerOrdersPage() {
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
-                className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+                className={`w-full rounded-xl border ${palette.border} bg-neutral-900  px-3 py-2 text-sm outline-none`}
               >
                 <option value="date-desc">Newest first</option>
                 <option value="date-asc">Oldest first</option>
@@ -254,6 +247,7 @@ export default function CustomerOrdersPage() {
                   <th className="px-4 py-3">Total</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -268,18 +262,17 @@ export default function CustomerOrdersPage() {
                     const total = o.total_amount;
                     return (
                       <tr key={o.id} className="border-t border-white/5">
-                        <Link href={`/orders/${o.id}`}>
+                        <td className="px-4 py-3 font-medium">
                           {" "}
-                          <td className="px-4 py-3 font-medium">{o.id}</td>
-                        </Link>
+                          <Link href={`/orders/${o.id}`}>{o.id}</Link>
+                        </td>
+
                         <td className="px-4 py-3">
                           {new Date(o.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3">{}</td>
                         {/* o.items */}
-                        <td className="px-4 py-3">
-                          {money(o.subtotal_amount)}
-                        </td>
+                        <td className="px-4 py-3">{money(o.subtotal)}</td>
                         <td className="px-4 py-3">{money(total, "INR")}</td>
                         <td className="px-4 py-3">
                           <span

@@ -59,7 +59,7 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE}/auth/register/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/register/`,
         {
           username: email,
           password: password,

@@ -84,3 +84,19 @@ html, body {
   background-image: linear-gradient(135deg, var(--accent-start), var(--accent-end));
 }
 
+/* globals.css (or app/globals.css) */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  /* Hide anything not needed */
+  header, nav, footer, .no-print, .print:hidden { display: none !important; }
+  /* Ensure full-width printable area */
+  html, body { background: #fff !important; }
+}
+
+/* Tailwind utility for page breaks (if not already available) */
+.break-after-page {
+  break-after: page;
+}

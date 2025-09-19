@@ -7,7 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { CartItem, Product } from "@/types";
+import { CartItem, CartProduct, Product, ProductLite } from "@/types";
 import { useAuth } from "./AuthContext";
 import { api, applyCoupon, removeCoupon, validateCoupon } from "@/lib/api";
 type GuestItem = {
@@ -30,7 +30,7 @@ type GuestItem = {
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: CartProduct) => void;
   coupon: CouponState;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
@@ -113,7 +113,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   // Add or update quantity
-  const addToCart = async (product: Product) => {
+  const addToCart = async (product: CartProduct) => {
     const exists = cartItems.find((item) => item.id === product.id);
     const newItems = exists
       ? cartItems.map((item) =>

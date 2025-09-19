@@ -1,4 +1,5 @@
 "use client";
+import ESpinner from "@/components/ElvarraSpinner";
 import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import { api } from "@/lib/api";
 import { Product } from "@/types";
@@ -98,14 +99,19 @@ export default function ProductsPage() {
   const [sort, setSort] = useState<string>("relevance");
   const pageSize = 8;
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
       .get("/products/")
       .then((res) => {
         setProducts(res.data.results);
+        setLoading(false);
       })
-      .catch((err) => console.error("Failed to fetch products:", err));
+      .catch((err) => {
+        console.error("Failed to fetch products:", err);
+        setLoading(false);
+      });
   }, []);
 
   const filtered = useMemo(() => {
@@ -147,6 +153,13 @@ export default function ProductsPage() {
 
   function goto(p: number) {
     setPage(Math.min(Math.max(1, p), totalPages));
+  }
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white/70 dark:bg-black/70 z-50">
+        <ESpinner />
+      </div>
+    );
   }
 
   return (

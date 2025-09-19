@@ -1,16 +1,18 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import { OrdersTable } from "@/components/admin/OrderTable";
+import ESpinner from "@/components/ElvarraSpinner";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
+import { Order, OrderStatus } from "@/types";
+import Link from "next/link";
+import React, { useEffect, useMemo, useState } from "react";
 
 // ------------------------------------------------------------
-// Elvarra / Elvara — ORDERS PAGE (All Orders & Status)
-// Shows all orders (wholesale + retail) with filters, search, pagination
-// Theme unchanged; content adapted to B2B/B2C mixed account view
-// Save as: app/orders/page.tsx
+// Elvarra / Elvara — CUSTOMER ORDERS PAGE (Retail Only)
+// Route: app/account/orders/page.tsx
+// Shows only the signed‑in customer's **retail** orders
 // ------------------------------------------------------------
 
-// ---------------------------
-// Theme palette utilities (local)
-// ---------------------------
 type ThemeMode = "dark" | "light";
 type Palette = {
   bg: string;
@@ -49,207 +51,143 @@ function paletteForTheme(theme: ThemeMode): Palette {
       };
 }
 
-// ---------------------------
-// Types & mock data (replace with API fetch)
-// ---------------------------
-type OrderStatus =
-  | "Pending"
-  | "Confirmed"
-  | "In Production"
-  | "Shipped"
-  | "Delivered"
-  | "Cancelled";
-
-type OrderSource = "Wholesale" | "Retail";
-
-type OrderRow = {
-  id: string; // display id
-  createdAt: string; // ISO
-  source: OrderSource;
-  status: OrderStatus;
-  items: number;
-  currency: string;
-  subtotal: number;
-  freight?: number; // wholesale
-  tax?: number; // retail
-  terms?: string; // EXW/FOB/DAP/DDP for wholesale
-};
-
-const MOCK_ORDERS: OrderRow[] = [
-  {
-    id: "INV-000271",
-    createdAt: "2025-08-28T09:00:00Z",
-    source: "Wholesale",
-    status: "In Production",
-    items: 6,
-    currency: "USD",
-    subtotal: 5280,
-    freight: 280,
-    terms: "DAP",
-  },
-  {
-    id: "INV-000270",
-    createdAt: "2025-08-20T11:30:00Z",
-    source: "Wholesale",
-    status: "Shipped",
-    items: 4,
-    currency: "USD",
-    subtotal: 3120,
-    freight: 360,
-    terms: "DDP",
-  },
-  {
-    id: "R-10452",
-    createdAt: "2025-08-19T15:12:00Z",
-    source: "Retail",
-    status: "Delivered",
-    items: 3,
-    currency: "USD",
-    subtotal: 227,
-    tax: 34.05,
-  },
-  {
-    id: "R-10421",
-    createdAt: "2025-08-12T18:45:00Z",
-    source: "Retail",
-    status: "Shipped",
-    items: 1,
-    currency: "USD",
-    subtotal: 89,
-    tax: 13.35,
-  },
-  {
-    id: "INV-000256",
-    createdAt: "2025-07-30T10:05:00Z",
-    source: "Wholesale",
-    status: "Delivered",
-    items: 10,
-    currency: "USD",
-    subtotal: 9800,
-    freight: 0,
-    terms: "EXW",
-  },
-  {
-    id: "INV-000259",
-    createdAt: "2025-07-25T08:20:00Z",
-    source: "Wholesale",
-    status: "Cancelled",
-    items: 2,
-    currency: "USD",
-    subtotal: 780,
-    freight: 0,
-    terms: "FOB",
-  },
-];
-
-// ---------------------------
-// Small helpers
-// ---------------------------
-function formatMoney(num: number, currency = "USD") {
+function money(n: number, currency = "USD") {
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency,
-    }).format(num);
+    }).format(n);
   } catch {
-    return `$${num.toFixed(2)}`;
+    return `$${n.toFixed(2)}`;
   }
 }
 
-function statusClass(status: OrderStatus) {
+function statusChip(status: OrderStatus) {
   switch (status) {
-    case "Pending":
+    case "new":
       return "bg-yellow-500 text-neutral-900";
-    case "Confirmed":
+    case "confirmed":
       return "bg-blue-500 text-white";
-    case "In Production":
-      return "bg-violet-500 text-white";
-    case "Shipped":
+    case "shipped":
       return "bg-amber-600 text-white";
-    case "Delivered":
+    case "delivered":
       return "bg-emerald-500 text-white";
-    case "Cancelled":
+    case "cancelled":
       return "bg-rose-500 text-white";
   }
 }
 
-// ---------------------------
-// Default export: Orders Page
-// ---------------------------
-export default function OrdersPage() {
-  const theme: ThemeMode = "dark"; // match site
+export default function CustomerOrdersPage() {
+  const theme: ThemeMode = "dark";
   const palette = useMemo(() => paletteForTheme(theme), [theme]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  const [source, setSource] = useState<"all" | OrderSource>("all");
   const [status, setStatus] = useState<"all" | OrderStatus>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("date-desc");
   const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 10;
+  const { user } = useAuth();
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [searchQ, setSearchQ] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  function onSelect(id: number, checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
 
   const filtered = useMemo(() => {
-    let list = MOCK_ORDERS.slice();
-    if (source !== "all") list = list.filter((o) => o.source === source);
+    let list = orders.slice();
     if (status !== "all") list = list.filter((o) => o.status === status);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((o) =>
-        [o.id, o.source, o.status, o.terms ?? ""].some((s) =>
-          s.toLowerCase().includes(q)
-        )
+        [o.status].some((x) => x.toLowerCase().includes(q))
       );
     }
     switch (sort) {
       case "date-asc":
-        list.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+        list.sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
         break;
       case "total-desc":
-        list.sort(
-          (a, b) =>
-            b.subtotal +
-            (b.freight ?? 0) +
-            (b.tax ?? 0) -
-            (a.subtotal + (a.freight ?? 0) + (a.tax ?? 0))
-        );
+        list.sort((a, b) => b.subtotal - a.subtotal);
         break;
       case "total-asc":
-        list.sort(
-          (a, b) =>
-            a.subtotal +
-            (a.freight ?? 0) +
-            (a.tax ?? 0) -
-            (b.subtotal + (b.freight ?? 0) + (b.tax ?? 0))
-        );
+        list.sort((a, b) => a.total_amount - b.total_amount);
         break;
       default:
-        list.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)); // date-desc
+        list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
     }
     return list;
-  }, [source, status, query, sort]);
+  }, [status, query, sort, orders]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = useMemo(
     () => filtered.slice((page - 1) * pageSize, page * pageSize),
     [filtered, page]
   );
-
   function goto(p: number) {
     setPage(Math.min(Math.max(1, p), totalPages));
   }
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const res = await api.get("/admin/orders/", {
+          headers: { Authorization: `Bearer ${user?.access}` },
+        });
+        setOrders(res.data.results);
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user?.access) fetchOrders();
+    else setLoading(false); // avoid spinner forever when logged out
+  }, [user]);
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white/70 dark:bg-black/70 z-50">
+        <ESpinner />
+      </div>
+    );
+  }
   return (
-    <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
-      <div className="container py-8">
+    <main className={`} ${palette.fg} min-h-screen antialiased `}>
+      <div className="container mx-auto pt-5  ">
+        <nav className=" max-w-7xl px-4 sm:px-6 lg:px-1 py-4  text-xs opacity-80">
+          <ol className="flex items-center gap-2">
+            <li>
+              <Link href="/admin" className="hover:opacity-80">
+                Dashboard
+              </Link>
+            </li>
+            <li>›</li>
+
+            <li className="opacity-90">{"Orders"} </li>
+          </ol>
+        </nav>
         <h1 className="text-2xl font-semibold">My Orders</h1>
         <p className={`mt-1 text-sm ${palette.subfg}`}>
-          Track wholesale & retail orders, statuses, and totals.
+          View your retail orders and track their status.
         </p>
-
+        <div className=" inset-0 -z-10 opacity-40 blur-3xl">
+          <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
+        </div>
+        {/* <PrintAllPackingSlipsButton /> */}
         {/* Filters */}
         <section
           className={`mt-6 rounded-2xl ${palette.ring} ${palette.card} p-4`}
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div>
               <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
                 Search
@@ -260,27 +198,9 @@ export default function OrdersPage() {
                   setQuery(e.target.value);
                   setPage(1);
                 }}
-                placeholder="Order ID, status, terms..."
+                placeholder="Order ID, status..."
                 className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                Source
-              </label>
-              <select
-                value={source}
-                onChange={(e) => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setSource(e.target.value as any);
-                  setPage(1);
-                }}
-                className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
-              >
-                <option value="all">All</option>
-                <option value="Wholesale">Wholesale</option>
-                <option value="Retail">Retail</option>
-              </select>
             </div>
             <div>
               <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
@@ -293,21 +213,22 @@ export default function OrdersPage() {
                   setStatus(e.target.value as any);
                   setPage(1);
                 }}
-                className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+                className={`w-full rounded-xl border ${palette.border}  px-3 py-2 bg-neutral-900  text-sm outline-none`}
               >
-                <option value="all">All</option>
+                <option value="all" className="text-sm">
+                  All
+                </option>
                 {(
                   [
-                    "Pending",
-                    "Confirmed",
-                    "In Production",
-                    "Shipped",
-                    "Delivered",
-                    "Cancelled",
+                    "pending",
+                    "confirmed",
+                    "shipped",
+                    "delivered",
+                    "cancelled",
                   ] as OrderStatus[]
                 ).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                  <option key={s} value={s} className="text-sm ">
+                    {s.toLocaleUpperCase()}
                   </option>
                 ))}
               </select>
@@ -319,7 +240,7 @@ export default function OrdersPage() {
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
-                className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+                className={`w-full rounded-xl border ${palette.border} bg-neutral-900  px-3 py-2 text-sm outline-none`}
               >
                 <option value="date-desc">Newest first</option>
                 <option value="date-asc">Oldest first</option>
@@ -329,97 +250,24 @@ export default function OrdersPage() {
             </div>
             <div className="flex items-end">
               <a
-                href="/wholesale-inquiry"
+                href="/products"
                 className={`w-full rounded-xl px-3 py-2 text-center text-sm font-medium ${palette.button}`}
               >
-                Place Wholesale Order
+                Shop Again
               </a>
             </div>
           </div>
         </section>
 
-        {/* Table */}
+        {/* Orders table */}
         <section className="mt-6 overflow-hidden rounded-2xl">
-          <div
-            className={`min-w-full overflow-x-auto rounded-2xl ${palette.ring} ${palette.card}`}
-          >
-            <table className="min-w-full text-sm">
-              <thead className="text-left opacity-80">
-                <tr>
-                  <th className="px-4 py-3">Order</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Source</th>
-                  <th className="px-4 py-3">Items</th>
-                  <th className="px-4 py-3">Terms/Tax</th>
-                  <th className="px-4 py-3">Total</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageItems.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className={`px-4 py-6 ${palette.subfg}`}>
-                      No orders found.
-                    </td>
-                  </tr>
-                ) : (
-                  pageItems.map((o) => {
-                    const total = o.subtotal + (o.freight ?? 0) + (o.tax ?? 0);
-                    return (
-                      <tr key={o.id} className="border-t border-white/5">
-                        <td className="px-4 py-3 font-medium">{o.id}</td>
-                        <td className="px-4 py-3">
-                          {new Date(o.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3">{o.source}</td>
-                        <td className="px-4 py-3">{o.items}</td>
-                        <td className="px-4 py-3">
-                          {o.source === "Wholesale" ? (
-                            <span className="opacity-80">{o.terms ?? "—"}</span>
-                          ) : (
-                            <span className="opacity-80">
-                              VAT: {formatMoney(o.tax ?? 0, o.currency)}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {formatMoney(total, o.currency)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-block rounded-full px-2 py-1 text-[11px] font-semibold ${statusClass(
-                              o.status
-                            )}`}
-                          >
-                            {o.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            <a
-                              href={`/orders/${encodeURIComponent(o.id)}`}
-                              className={`rounded-xl border ${palette.border} px-3 py-1.5`}
-                            >
-                              View
-                            </a>
-                            {o.source === "Wholesale" && (
-                              <a
-                                href={`/invoices/${encodeURIComponent(o.id)}`}
-                                className={`rounded-xl border ${palette.border} px-3 py-1.5`}
-                              >
-                                PI/PDF
-                              </a>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+          <OrdersTable
+            rows={pageItems}
+            onSelect={onSelect}
+            selected={selected}
+            onBulk={onBulk}
+            onPrint={onPrint}
+          />
         </section>
 
         {/* Pagination */}
@@ -443,40 +291,66 @@ export default function OrdersPage() {
           </button>
         </div>
 
-        {/* Helpful notes */}
+        {/* Helpful info */}
         <section
           className={`mt-6 rounded-2xl ${palette.ring} ${palette.card} p-4 text-sm ${palette.subfg}`}
         >
-          <div className="font-medium text-current">Notes</div>
+          <div className="font-medium text-current">Tips</div>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
-              Wholesale totals include freight (if applicable) and follow
-              selected trade terms.
+              Click <em>View</em> to see tracking and item details.
             </li>
-            <li>Retail totals include VAT where applicable.</li>
+            <li>Retail orders automatically include VAT in totals.</li>
             <li>
-              Click &quot;View&quot; for tracking, item breakdown, and invoices.
+              Need to change your shipping address? Contact support before your
+              order ships.
             </li>
           </ul>
         </section>
       </div>
     </main>
   );
+
+  async function onBulk(
+    action: "processing" | "confirmed" | "shipped" | "cancelled" | "delivered"
+  ) {
+    if (selected.size === 0) return;
+    try {
+      //setBusy(true);
+      await api.post("/admin/orders/bulk-status", {
+        ids: Array.from(selected),
+        status: action,
+      });
+      // Re-fetch orders
+      const res = await api.get("/admin/orders", {
+        params: { status: statusFilter || undefined, q: searchQ || undefined },
+      });
+      setSelected(new Set());
+
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to update status. Check console/network.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPrint() {
+    if (selected.size === 0) return;
+    try {
+      setBusy(true);
+      const ids = Array.from(selected);
+      // This hits your existing bulk endpoint and then navigates to a print page that consumes it.
+      // If you want to print directly, you can open a new tab pointing to a consolidated print route.
+      const url = `/admin/orders/print/packing-slips?ids=${encodeURIComponent(
+        ids.join(",")
+      )}`; // implement this route to render slips -> window.print()
+      window.open(url, "_blank");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  }
 }
-
-/*
-------------------------------------------------------------
-TESTS (snippets; place in tests/ or __tests__/)
-
-// tests/orders-utils.test.ts
-// If you extract helpers, test them like below.
-// import { statusClass, formatMoney } from "app/orders/page";
-// it("maps statuses to class names", () => {
-//   expect(statusClass("Delivered")).toMatch(/emerald/);
-//   expect(statusClass("Cancelled")).toMatch(/rose/);
-// });
-// it("formats money", () => {
-//   expect(formatMoney(100, "USD")).toMatch(/\$/);
-// });
-//------------------------------------------------------------
-*/

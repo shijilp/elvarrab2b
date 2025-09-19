@@ -21,7 +21,6 @@ export default function Header() {
   const navLinks = [
     { href: "/products", label: "Catalog" },
     { href: "#bestsellers", label: "Bestsellers" },
-    { href: "#about", label: "About" },
     { href: "#how", label: "How it works" },
     { href: "/orders", label: "Orders" },
     { href: "#contact", label: "Contact" },
@@ -63,6 +62,13 @@ export default function Header() {
                 </Link>
               ))}
             </nav>
+            {user?.isAdmin && (
+              <nav className="hidden gap-8 text-sm md:flex">
+                <Link className="opacity-90 hover:opacity-100" href={"/admin"}>
+                  Admin
+                </Link>
+              </nav>
+            )}
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
@@ -123,7 +129,7 @@ export default function Header() {
       </header>
 
       {/* Bottom Mobile Nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-neutral-900/90 border-t border-neutral-200 dark:border-neutral-800 backdrop-blur pb-[max(env(safe-area-inset-bottom),0px)]">
+      <nav className="md:hidden print:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-neutral-900/90 border-t border-neutral-200 dark:border-neutral-800 backdrop-blur pb-[max(env(safe-area-inset-bottom),0px)]">
         <div className="flex justify-around items-center h-14 text-xs">
           <Tab href="/" label="Home" active={isActive("/")}>
             <Home className="h-5 w-5" />
