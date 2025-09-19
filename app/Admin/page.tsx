@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api"; // Axios instance you already use
@@ -22,6 +22,7 @@ import { OrdersTable } from "@/components/admin/OrderTable";
 import { ProductsTable } from "@/components/admin/ProductsTable";
 import { Spinner } from "@/components/admin/Spinner";
 import { Topbar } from "@/components/admin/TopBar";
+import { error } from "console";
 
 export type AdminStats = {
   revenue_today: number;
@@ -351,7 +352,11 @@ export default function AdminDashboardPage() {
     statusFilter,
     searchQ
   );
-  const { data: products, loading: productsLoading } = useProducts("");
+  const {
+    data: products,
+    loading: productsLoading,
+    error: prodError,
+  } = useProducts("");
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -441,7 +446,7 @@ export default function AdminDashboardPage() {
           /* you can wire this to state if you prefer */
         }}
       />
-
+      <p>{prodError}</p>
       {/* Main */}
       <main className="mx-auto w-full max-w-[1400px] px-4">
         <Topbar onSearch={(q) => setSearchQ(q)} />
