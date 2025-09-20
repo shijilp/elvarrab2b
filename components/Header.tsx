@@ -34,7 +34,7 @@ export default function Header() {
   return (
     <>
       {/* Top Header (unchanged) */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur supports-[backdrop-filter]:bg-white/5">
+      <header className="sticky top-0 z-40 w-full backdrop-blur supports-[backdrop-filter]:bg-white/5 print:hidden">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-1">
@@ -115,10 +115,13 @@ export default function Header() {
                 </Link>
               ))}
               {user ? (
-                <LogoutButton />
+                <LogoutButton setOpen={setOpen} />
               ) : (
                 <Link href={"/login"}>
-                  <button className="rounded-2xl px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-900 gradient-accent cursor-pointer">
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="rounded-2xl px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-900 gradient-accent cursor-pointer"
+                  >
                     Sign In
                   </button>
                 </Link>

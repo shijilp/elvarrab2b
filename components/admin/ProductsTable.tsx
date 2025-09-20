@@ -1,10 +1,17 @@
 import { money } from "@/lib/utils";
 import { Product } from "@/types";
 import Link from "next/link";
+import { LoadingOverlay } from "../ui/LoadingOverlay";
 
-export function ProductsTable({ rows }: { rows: Product[] }) {
+export function ProductsTable({
+  rows,
+  show,
+}: {
+  rows: Product[];
+  show: boolean;
+}) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white/90 p-3 dark:border-neutral-800 dark:bg-neutral-900/70">
+    <div className="relative rounded-2xl border border-neutral-200 bg-white/90 p-3 dark:border-neutral-800 dark:bg-neutral-900/70">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-neutral-500">
@@ -70,6 +77,7 @@ export function ProductsTable({ rows }: { rows: Product[] }) {
           </tbody>
         </table>
       </div>
+      <LoadingOverlay show={show} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — AUTH PAGES (Login & Register)
@@ -57,11 +58,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
   const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+
     try {
       await login(email, password);
       router.push("/");
@@ -130,6 +132,7 @@ export default function LoginPage() {
           </a>
         </p>
       </form>
+      <LoadingOverlay show={loading} />
     </main>
   );
 }

@@ -2,6 +2,7 @@
 import ESpinner from "@/components/ElvarraSpinner";
 import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import { api } from "@/lib/api";
+import { money } from "@/lib/money";
 import { Product } from "@/types";
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
@@ -79,10 +80,6 @@ import React, { useEffect, useMemo, useState } from "react";
     price: 69,
   },
 ]; */
-
-function formatMoney(n: number | string) {
-  return `$${Number(n).toFixed(2)}`;
-}
 
 // ---------------------------
 // Page
@@ -271,12 +268,12 @@ export default function ProductsPage() {
                   <option value="popular">Popular</option>
                 </select>
               </div>
-              <a
+              {/* <a
                 href="/checkout/retail"
                 className={`inline-block w-full rounded-xl px-3 py-2 text-center text-sm font-medium btn-gradient`}
               >
                 Checkout
-              </a>
+              </a> */}
             </div>
           </aside>
 
@@ -338,12 +335,12 @@ export default function ProductsPage() {
                         {p.compare_at_price ? (
                           <>
                             <span className="mr-1 line-through opacity-70">
-                              {formatMoney(p.compare_at_price)}
+                              {money(p.compare_at_price)}
                             </span>
-                            <span>{formatMoney(p.price)}</span>
+                            <span>{money(p.price)}</span>
                           </>
                         ) : (
-                          <span>{formatMoney(p.price)}</span>
+                          <span>{money(p.price)}</span>
                         )}
                       </div>
                       <a

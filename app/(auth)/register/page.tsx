@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import axios from "axios";
 import GoogleButton from "@/components/GoogleButton";
 import { useRouter } from "next/navigation";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 
 type ThemeMode = "dark" | "light";
 
@@ -51,16 +52,19 @@ export default function RegisterPage() {
   const palette = useMemo(() => paletteForTheme(theme), [theme]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [name, setName] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/register/`,
         {
+          first_name: name,
           username: email,
           password: password,
           email: email || undefined,
@@ -76,6 +80,8 @@ export default function RegisterPage() {
       axios.defaults.headers.common[
         "Authorization"
       ] = `Bearer ${res.data.access}`;
+      setLoading(false);
+
       router.push("/");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -85,6 +91,7 @@ export default function RegisterPage() {
           err?.message ||
           "Registration failed"
       );
+      setLoading(false);
     }
   }
 
@@ -102,7 +109,7 @@ export default function RegisterPage() {
           <div className="pointer-events-none absolute -inset-5 rounded-[100px] gradient-accent" />
         </div>
         <h1 className="text-2xl font-semibold">Register</h1>
-        {/* <div>
+        <div>
           <label className="block text-sm mb-1">Name</label>
           <input
             type="text"
@@ -111,7 +118,7 @@ export default function RegisterPage() {
             required
             className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
           />
-        </div> */}
+        </div>
         <div>
           <label className="block text-sm mb-1">Email</label>
           <input
@@ -147,6 +154,7 @@ export default function RegisterPage() {
           </a>
         </p>
       </form>
+      <LoadingOverlay show={loading} />
     </main>
   );
 }

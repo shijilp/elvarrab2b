@@ -267,6 +267,7 @@ export default function CustomerOrdersPage() {
             selected={selected}
             onBulk={onBulk}
             onPrint={onPrint}
+            show={false}
           />
         </section>
 

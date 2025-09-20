@@ -1,6 +1,7 @@
 import { money } from "@/lib/utils";
 import { Order } from "@/types";
 import Link from "next/link";
+import { LoadingOverlay } from "../ui/LoadingOverlay";
 
 // ---------- Tables ----------
 export function OrdersTable({
@@ -9,6 +10,7 @@ export function OrdersTable({
   selected,
   onBulk,
   onPrint,
+  show,
 }: {
   rows: Order[];
   onSelect: (id: number, checked: boolean) => void;
@@ -17,12 +19,13 @@ export function OrdersTable({
     action: "confirmed" | "processing" | "shipped" | "delivered" | "cancelled"
   ) => void;
   onPrint: () => void;
+  show: boolean;
 }) {
   const allChecked = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const someChecked = selected.size > 0 && !allChecked;
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white/90 p-3 dark:border-neutral-800 dark:bg-neutral-900/70">
+    <div className="relative rounded-2xl border border-neutral-200 bg-white/90 p-3 dark:border-neutral-800 dark:bg-neutral-900/70">
       <div className="mb-2 flex items-center gap-2">
         <label className="inline-flex items-center gap-2 text-sm">
           <input
@@ -146,6 +149,7 @@ export function OrdersTable({
           </tbody>
         </table>
       </div>
+      <LoadingOverlay show={show} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import ProductCard from "@/components/ProductCard";
 import { api } from "@/lib/api";
+import BtnElvarra from "@/components/ui/BtnElvarra";
 
 export default function Page() {
   // const [mounted, setMounted] = useState(false);
@@ -149,7 +150,16 @@ export default function Page() {
           ))}
         </div>
       </section>
-
+      <section className="container mx-auto md:hidden py-6">
+        <Link
+          href="/products"
+          className="inline-flex w-full items-center justify-center rounded-full px-5 py-3
+               text-sm font-medium text-neutral-900 dark:text-neutral-900 gradient-accent"
+          aria-label="Explore more products"
+        >
+          Explore our collections
+        </Link>
+      </section>
       {/* About */}
       <section id="about" className="container py-12 lg:py-16 mx-auto">
         <div className="relative overflow-hidden rounded-3xl p-8 ring-1 ring-neutral-200 dark:ring-neutral-800 bg-white/90 dark:bg-neutral-900/70">

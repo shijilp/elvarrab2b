@@ -508,6 +508,7 @@ export default function AdminDashboardPage() {
             selected={selected}
             onBulk={onBulk}
             onPrint={onPrint}
+            show={ordersLoading}
           />
         </div>
 
@@ -525,7 +526,7 @@ export default function AdminDashboardPage() {
           >
             Low Stock / Recent Products
           </SectionTitle>
-          <ProductsTable rows={products} />
+          <ProductsTable rows={products} show={productsLoading} />
         </div>
 
         <footer className="my-8 text-center text-xs opacity-60">
@@ -534,10 +535,7 @@ export default function AdminDashboardPage() {
       </main>
 
       {/* Global Busy Overlay (for bulk actions / printing) */}
-      <LoadingOverlay
-        show={busy || ordersLoading || productsLoading}
-        label={busy ? "Working..." : "Loading..."}
-      />
+      {/* <LoadingOverlay show={busy} label={busy ? "Working..." : "Loading..."} /> */}
     </div>
   );
 }

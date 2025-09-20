@@ -9,6 +9,8 @@ import {
 } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation";
+
 //import { api } from "@/lib/api"; // <-- use the single axios client
 interface JWTPayload {
   username: string;
@@ -39,7 +41,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
-
+  const router = useRouter();
   const saveUser = (u: User | null) => {
     setUser(u);
     if (u) {
@@ -96,7 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/google/`,
         { id_token: idToken }
       );
       const { access, refresh, user: profile } = res.data;
@@ -110,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         refresh,
       };
       saveUser(loggedInUser);
+      router.replace("/");
     } finally {
       setLoading(false);
     }
@@ -137,6 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    router.replace("/login");
     //setAuthToken(null);
   };
 

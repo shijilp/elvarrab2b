@@ -498,7 +498,7 @@ export default function ScanOrders() {
                   <td className="px-4 py-2">{fmtMoney(o.total_amount)}</td>
                   <td className="px-4 py-2">
                     <span className="rounded px-2 py-0.5 bg-neutral-900 text-white text-xs dark:bg-green-600 dark:text-neutral-900">
-                      {o.payment_status.toUpperCase()}
+                      {o.payment_status?.toUpperCase()}
                     </span>
                   </td>
                   <td className="px-4 py-2">

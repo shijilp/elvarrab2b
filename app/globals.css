@@ -100,3 +100,21 @@ html, body {
 .break-after-page {
   break-after: page;
 }
+
+
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      opacity: 0.6;
+      filter: drop-shadow(0 0 6px #fbbf24);
+    }
+    50% {
+      opacity: 1;
+      filter: drop-shadow(0 0 12px #f59e0b);
+    }
+  }
+}

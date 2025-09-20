@@ -1,5 +1,5 @@
 // lib/money.ts
-export function money(nLike: string | number | null | undefined, currency = "USD") {
+export function money(nLike: string | number | null | undefined, currency = "INR") {
   const n = typeof nLike === "string" ? Number(nLike) : Number(nLike ?? 0);
   try {
     return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(isFinite(n) ? n : 0);

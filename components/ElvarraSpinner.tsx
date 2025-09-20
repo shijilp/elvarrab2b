@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 
-export default function ESpinner({
-  size = 64,
+export default function ElvarraSpinner({
+  size = 140,
   color = "url(#elvarra-gold)",
   label = "Loading",
 }: {
@@ -10,16 +10,18 @@ export default function ESpinner({
   color?: string;
   label?: string;
 }) {
-  const strokeWidth = 4;
-
   return (
-    <span role="status" aria-label={label} className="inline-flex items-center">
+    <span
+      role="status"
+      aria-live="polite"
+      className="inline-flex flex-col items-center md:flex-row md:items-center"
+    >
       <svg
         width={size}
-        height={size}
-        viewBox="0 0 100 100"
+        height={size / 3}
+        viewBox="0 0 400 120"
         fill="none"
-        className="animate-spin-slow"
+        className="animate-pulse-slow"
       >
         <defs>
           <linearGradient id="elvarra-gold" x1="0" y1="0" x2="100%" y2="0">
@@ -29,33 +31,35 @@ export default function ESpinner({
           </linearGradient>
         </defs>
 
-        {/* Letter E Path */}
-        <path
-          d="M20 20 H80 M20 50 H70 M20 80 H80 M20 20 V80"
+        {/* Modern wordmark ELVARRA with stroke animation */}
+        <text
+          x="50%"
+          y="50%"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontFamily="serif"
+          fontSize="48"
+          fontWeight="700"
           stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeDasharray="260"
-          strokeDashoffset="0"
+          strokeWidth="1.5"
+          fill="transparent"
+          strokeDasharray="1000"
+          strokeDashoffset="1000"
         >
+          ELVARRA
           <animate
             attributeName="stroke-dashoffset"
-            from="260"
+            from="1000"
             to="0"
-            dur="1.5s"
+            dur="2.5s"
             repeatCount="indefinite"
           />
-        </path>
+        </text>
       </svg>
-      <span className="sr-only">{label}</span>
+
+      <span className="mt-2 text-xs opacity-75 md:mt-0 md:ml-2 md:text-sm">
+        Elegance loading…
+      </span>
     </span>
   );
 }
-
-// Add a custom slow spin animation in globals.css
-// @layer utilities {
-//   .animate-spin-slow {
-//     animation: spin 2s linear infinite;
-//   }
-// }
