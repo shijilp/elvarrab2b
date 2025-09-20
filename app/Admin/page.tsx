@@ -22,7 +22,6 @@ import { OrdersTable } from "@/components/admin/OrderTable";
 import { ProductsTable } from "@/components/admin/ProductsTable";
 import { Spinner } from "@/components/admin/Spinner";
 import { Topbar } from "@/components/admin/TopBar";
-import { error } from "console";
 
 export type AdminStats = {
   revenue_today: number;
@@ -168,7 +167,6 @@ function Sidebar({
 function useAdminStats() {
   const [data, setData] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -210,13 +208,12 @@ function useAdminStats() {
     };
   }, []);
 
-  return { data, loading, error } as const;
+  return { data, loading } as const;
 }
 
 function useOrders(statusFilter: string, q: string) {
   const [data, setData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -238,13 +235,12 @@ function useOrders(statusFilter: string, q: string) {
     };
   }, [statusFilter, q]);
 
-  return { data: data ?? [], loading, error } as const;
+  return { data: data ?? [], loading } as const;
 }
 
 function useProducts(q: string) {
   const [data, setData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -266,7 +262,7 @@ function useProducts(q: string) {
     };
   }, [q]);
 
-  return { data, loading, error } as const;
+  return { data, loading } as const;
 }
 
 // ---------- Charts ----------
@@ -352,11 +348,7 @@ export default function AdminDashboardPage() {
     statusFilter,
     searchQ
   );
-  const {
-    data: products,
-    loading: productsLoading,
-    error: prodError,
-  } = useProducts("");
+  const { data: products, loading: productsLoading } = useProducts("");
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -383,14 +375,11 @@ export default function AdminDashboardPage() {
         status: action,
       });
       // Re-fetch orders
-      const res = await api.get("/admin/orders", {
-        params: { status: statusFilter || undefined, q: searchQ || undefined },
-      });
+      // const res = await api.get("/admin/orders", {
+      //   params: { status: statusFilter || undefined, q: searchQ || undefined },
+      // });
+
       setSelected(new Set());
-      // @typescript-eslint/ban-ts-comment
-      // eslint-disable-next-line
-      // quick swap to reuse hook shape
-      // In real app you'd expose a refetch function in useOrders
       window.location.reload();
     } catch (e) {
       console.error(e);
@@ -446,7 +435,6 @@ export default function AdminDashboardPage() {
           /* you can wire this to state if you prefer */
         }}
       />
-      <p>{prodError}</p>
       {/* Main */}
       <main className="mx-auto w-full max-w-[1400px] px-4">
         <Topbar onSearch={(q) => setSearchQ(q)} />
@@ -546,7 +534,10 @@ export default function AdminDashboardPage() {
       </main>
 
       {/* Global Busy Overlay (for bulk actions / printing) */}
-      <LoadingOverlay show={busy} label={busy ? "Working..." : "Loading..."} />
+      <LoadingOverlay
+        show={busy || ordersLoading || productsLoading}
+        label={busy ? "Working..." : "Loading..."}
+      />
     </div>
   );
 }
