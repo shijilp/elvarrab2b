@@ -118,3 +118,87 @@ html, body {
     }
   }
 }
+
+
+/* === Product Label Printing === */
+
+/* A nice dense grid for labels */
+.print-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns on A4; tweak if your labels are bigger/smaller */
+  gap: 6mm;
+  padding: 8mm;
+}
+
+.label-wrapper {
+  /* Avoid labels splitting across pages */
+  break-inside: avoid;
+}
+
+/* A single label card.
+ * Change width/height to match your stock (e.g., 50x30mm, 60x40mm, Avery sizes, etc.)
+ */
+.label {
+  width: 60mm;   /* ← set to your label paper width */
+  height: 35mm;  /* ← and height */
+  box-sizing: border-box;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Print rules */
+@media print {
+  @page {
+    size: A4;
+    margin: 5mm; /* small margins — adjust to align with sheets */
+  }
+  html, body {
+    background: #fff !important;
+  }
+  header, nav, footer, .no-print, .print:hidden {
+    display: none !important;
+  }
+
+  /* On print, keep the exact sizes without Tailwind collapsing things */
+  .print-grid {
+    padding: 5mm !important;
+    gap: 4mm !important;
+  }
+}
+
+
+/* === STOCK LABEL PRINTING === */
+
+/* Grid for dense tiling */
+.stock-print-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns by default */
+  gap: 6mm;
+  padding: 8mm;
+}
+
+.stock-label-wrap { break-inside: avoid; }
+
+/* Stock label card size (change to your roll/sheet size) */
+.stock-label {
+  width: 70mm;  /* e.g., 70x25mm or 80x40mm; pick your stock */
+  height: 40mm;
+  background: #fff;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+@media print {
+  @page { size: A4; margin: 5mm; }
+  html, body { background: #fff !important; }
+  header, nav, footer, .no-print, .print:hidden { display: none !important; }
+
+  .stock-print-grid {
+    padding: 5mm !important;
+    gap: 4mm !important;
+  }
+}
