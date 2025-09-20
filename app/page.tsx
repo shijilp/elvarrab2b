@@ -193,6 +193,7 @@ export default function Page() {
         </div>
 
         {/* Visual collection grid from backend categories */}
+
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {categories.map((c) => (
             <Link
@@ -201,18 +202,18 @@ export default function Page() {
                 pathname: "/products",
                 query: { category: c.slug ?? c.id },
               }}
-              className="group relative overflow-hidden rounded-2xl ring-1 el-border"
+              className="group relative overflow-hidden rounded-xl md:rounded-2xl ring-1 el-border"
               aria-label={`Open ${c.name} collection`}
             >
               <Image
                 src={c.icon ?? "/images/about-2.jpg"}
                 alt={c.name}
                 width={900}
-                height={1000}
-                className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                height={600} // reduce height
+                className="aspect-[4/3] md:aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-3 left-3 text-sm font-medium tracking-wide text-white">
+              <div className="absolute bottom-2 md:bottom-2 left-2 md:left-3 text-xs md:text-sm sm:text-sm font-medium tracking-wide text-white">
                 {c.name}
               </div>
             </Link>
