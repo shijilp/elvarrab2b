@@ -13,6 +13,7 @@ import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import TagBadge from "@/components/ui/TagBadge";
 import Link from "next/link";
 import { money } from "@/lib/money";
+import { Metadata } from "next";
 
 const Zoom = dynamic(() => import("react-medium-image-zoom"), { ssr: false });
 
@@ -27,7 +28,7 @@ function stockLabel(p: Product) {
   return "Out of stock";
 }
 
-const ProductPage: React.FC = () => {
+const ProductPageClient: React.FC = () => {
   const params = useParams<ParamShape>();
   const router = useRouter();
   const slug = params?.slug;
@@ -151,7 +152,7 @@ const ProductPage: React.FC = () => {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
         <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
           {/* GALLERY */}
-          <div className="w-full">
+          <div className="w-full relative">
             {/* Main image */}
             {mainImage && (
               <Zoom>
@@ -168,12 +169,17 @@ const ProductPage: React.FC = () => {
                 </div>
               </Zoom>
             )}
+            {isOutOfStock && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-semibold text-sm z-10">
+                Out of Stock
+              </div>
+            )}
 
             {/* Thumbs: mobile horizontal, desktop vertical left rail */}
             {/* Desktop vertical rail */}
             {gallery.length > 1 && (
               <div className="mt-3 w-full overflow-x-auto">
-                <div className="flex gap-2 pb-1 snap-x snap-mandatory">
+                <div className="   flex gap-2 pb-1 snap-x snap-mandatory">
                   {gallery.map((img, idx) => {
                     const active = mainImage === img;
                     return (
@@ -263,12 +269,12 @@ const ProductPage: React.FC = () => {
                 outofStock={isOutOfStock}
                 className={`col-span-2 sm:col-span-1 rounded-xl px-5 py-3 text-sm font-medium bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110 dark:from-yellow-500 dark:to-amber-500 dark:text-neutral-900`}
               />
-              <button
+              {/* <button
                 type="button"
                 className="col-span-2 sm:col-span-1 rounded-xl border border-elvarra px-5 py-3 text-sm hover:bg-white/5"
               >
                 Wishlist
-              </button>
+              </button> */}
             </div>
 
             <div className="mt-6 text-xs opacity-80 space-y-1">
@@ -279,7 +285,7 @@ const ProductPage: React.FC = () => {
 
             {/* Attributes grid */}
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div className="rounded-2xl ring-1 ring-elvarra/30 p-4">
+              <div className="rounded-2xl ring-1  ring-neutral-800   p-4 bg-neutral-900/70">
                 <h3 className="font-medium mb-2">Details</h3>
                 <ul className="space-y-1 opacity-90">
                   <li>
@@ -320,7 +326,7 @@ const ProductPage: React.FC = () => {
                 </ul>
               </div>
 
-              <div className="rounded-2xl ring-1 ring-elvarra/30 p-4">
+              <div className="rounded-2xl ring-1 ring-neutral-800   p-4 bg-neutral-900/70">
                 <h3 className="font-medium mb-2">Dimensions</h3>
                 <ul className="space-y-1 opacity-90">
                   <li>
@@ -345,7 +351,7 @@ const ProductPage: React.FC = () => {
 
             {/* Spec */}
             {product.spec && (
-              <div className="mt-8 rounded-2xl ring-1 ring-elvarra/30 p-4 text-sm">
+              <div className="mt-8 rounded-2xl ring-1 p-4 text-sm ring-neutral-800   bg-neutral-900/70">
                 <h3 className="font-medium mb-2">Material & Finish</h3>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 opacity-90">
                   <li>
@@ -426,11 +432,11 @@ const ProductPage: React.FC = () => {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="rounded-2xl ring-1 ring-elvarra/30 card-elvarra p-2"
+              className="rounded-2xl ring-1 ring-neutral-800   bg-neutral-900/70 card-elvarra p-2"
             >
               <div className="relative w-full aspect-[4/5] overflow-hidden rounded-xl">
                 <Image
-                  src=""
+                  src="/images/about-1.jpg"
                   alt="Related product"
                   fill
                   sizes="(max-width:1024px) 50vw, 25vw"
@@ -449,4 +455,4 @@ const ProductPage: React.FC = () => {
   );
 };
 
-export default ProductPage;
+export default ProductPageClient;

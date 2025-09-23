@@ -6,10 +6,43 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import FloatingCheckoutButton from "@/components/ui/FloatingCheckoutbtn";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const brand = "Elvarra";
+const defaultTitle = `${brand} – Luxury Fashion Jewelry`;
+const defaultDescription =
+  "Elegant, feminine jewelry for daily wear and special moments. Hand-finished pieces in gold, silver, and stones.";
 
 export const metadata: Metadata = {
-  title: "Elvarra — Fashion Jewelry",
-  description: "Where elegance meets light.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Elvarra — Luxury Fashion Jewelry",
+    template: "%s · Elvarra",
+  },
+  description: defaultDescription,
+  applicationName: brand,
+  category: "fashion",
+  alternates: {
+    canonical: "/", // will be overridden on pages
+  },
+  openGraph: {
+    type: "website",
+    siteName: brand,
+    title: defaultTitle,
+    description: defaultDescription,
+    url: siteUrl,
+    images: ["/images/about-3.jpg"], // put a default OG image in /public/og/default.jpg
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({

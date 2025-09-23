@@ -50,9 +50,9 @@ export default function RetailCartPage() {
             {cartItems.length === 0 ? (
               <div className={`text-sm el-subfg `}>
                 Your cart is empty.{" "}
-                <a href="/products" className="underline">
+                <Link href="/products" className="underline">
                   Continue shopping
-                </a>
+                </Link>
                 .
               </div>
             ) : (

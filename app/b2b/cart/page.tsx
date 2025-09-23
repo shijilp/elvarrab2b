@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useMemo, useState } from "react";
 
 // ------------------------------------------------------------
@@ -180,9 +181,9 @@ export default function CartPage() {
             {items.length === 0 ? (
               <div className={`text-sm ${palette.subfg}`}>
                 Your list is empty.{" "}
-                <a href="/products" className="underline">
+                <Link href="/products" className="underline">
                   Browse products
-                </a>
+                </Link>
                 .
               </div>
             ) : (
@@ -364,9 +365,9 @@ export default function CartPage() {
 
         {/* Continue shopping */}
         <div className="mt-6 text-sm">
-          <a href="/products" className="underline">
+          <Link href="/products" className="underline">
             Continue shopping
-          </a>
+          </Link>
         </div>
       </div>
     </main>

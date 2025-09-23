@@ -320,18 +320,18 @@ export default function ThankYouPage() {
           {/* Empty/fallback state */}
           {!hasData && (
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <a
+              <Link
                 href="/cart/retail"
                 className={`rounded-xl border ${palette.border} px-4 py-3 text-center text-sm`}
               >
                 Return to cart
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/products"
                 className={`rounded-xl px-4 py-3 text-center text-sm ${palette.button}`}
               >
                 Continue shopping
-              </a>
+              </Link>
             </div>
           )}
         </div>

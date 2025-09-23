@@ -222,12 +222,12 @@ export default function CustomerOrdersPage() {
               </select>
             </div>
             <div className="flex items-end">
-              <a
+              <Link
                 href="/products"
                 className={`w-full rounded-xl px-3 py-2 text-center text-sm font-medium ${palette.button}`}
               >
                 Shop Again
-              </a>
+              </Link>
             </div>
           </div>
         </section>
