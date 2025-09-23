@@ -183,6 +183,8 @@ export default function RetailCheckoutPage() {
       // Verify on backend (sends signature + ids from Razorpay)
       // NOTE: we do this in the handler inside openRazorpayAndPay()
       clearCart();
+      await api.post("orders/send-shipped/", { order_id: data.order_id });
+
       router.push(`/orders/confirmation?order=${data.order_id}`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {

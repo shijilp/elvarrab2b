@@ -91,6 +91,12 @@ export default function Page() {
     }
   }, [products, activeCategory, sort]);
 
+  //const handleC = async () => {
+  //await api.post("orders/send-confirmation/", { order_id: 17 });
+  // await api.post("orders/send-shipped/", { order_id: 17 });
+  // await api.post("/orders/send-delivered/", { order_id: 17 });
+  //};
+
   return (
     <main className="">
       {/* Hero */}
@@ -100,16 +106,15 @@ export default function Page() {
         </div>
         <div className="container grid grid-cols-1 gap-8 py-14 lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20 mx-auto">
           <div>
-            <p className="text-xs tracking-[0.25em] opacity-80">
-              NEW COLLECTION
-            </p>
+            <p className="text-xs tracking-[0.25em] opacity-80">ELVARRA</p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
               Where Elegance Meets Light
             </h1>
             <p className="mt-4 max-w-xl text-base text-neutral-600 dark:text-neutral-300">
-              Hand‑finished pieces in gold, silver, and stones—designed to be
-              worn every day and loved for years. Ethical sourcing. Free
-              shipping over $75.
+              Elvarra brings you hand-finished fashion jewelry crafted in gold,
+              silver, and sparkling stones. Designed to elevate your everyday
+              style and be loved for years to come. Responsibly sourced. Always
+              affordable.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
@@ -126,9 +131,9 @@ export default function Page() {
               </a>
             </div>
             <div className="mt-6 flex items-center gap-4 text-xs opacity-80">
-              <span>• Free 30‑day returns</span>
-              <span>• 2‑year warranty</span>
-              <span>• Hypoallergenic</span>
+              <span>• Elegance in Every Detail</span>
+              <span>• Luxury, Redefined</span>
+              <span>• Crafted to Captivate</span>
             </div>
           </div>
           <div className="relative">
@@ -202,7 +207,7 @@ export default function Page() {
                 pathname: "/products",
                 query: { category: c.slug ?? c.id },
               }}
-              className="group relative overflow-hidden rounded-xl md:rounded-2xl ring-1 el-border"
+              className="group relative overflow-hidden rounded-xl md:rounded-2xl ring-1 el-border  ring-neutral-200 dark:ring-neutral-800"
               aria-label={`Open ${c.name} collection`}
             >
               <Image
@@ -272,17 +277,6 @@ export default function Page() {
             ))}
           </div>
         )}
-
-        {/* Mobile-only full-width explore CTA */}
-        <div className="md:hidden py-6">
-          <Link
-            href="/products"
-            className="inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 btn-gradient"
-            aria-label="Explore more products"
-          >
-            Explore our collections
-          </Link>
-        </div>
       </section>
       <section className="container mx-auto md:hidden py-6">
         <Link
@@ -407,70 +401,6 @@ export default function Page() {
             </div>
           </div>
         </div>
-
-        <p className="mt-6 text-center text-xs text-neutral-600 dark:text-neutral-300">
-          © {new Date().getFullYear()} Elvarra — All rights reserved.
-        </p>
-      </section>
-
-      {/* ---------------- Newsletter / Social ---------------- */}
-      <section id="contact" className="container mx-auto pb-24">
-        <div className="rounded-3xl p-8 ring-1 el-border ">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-center">
-            <div className="lg:col-span-2">
-              <h3 className="text-xl font-semibold">Join the Circle</h3>
-              <p className="mt-2 text-sm el-text-sub">
-                Get 10% off your first order. Be first to know about new drops,
-                limited editions, and private sales.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <form
-                className="flex w-full gap-2"
-                onSubmit={(e) => e.preventDefault()}
-              >
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl border border-neutral-200 bg-transparent px-4 py-3 text-sm outline-none placeholder:opacity-60 dark:border-neutral-800"
-                  aria-label="Email address"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="rounded-xl px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 btn-gradient"
-                >
-                  Subscribe
-                </button>
-              </form>
-
-              {/* Instagram link */}
-              <Link
-                href="https://instagram.com/elvar.ra"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 px-5 py-3 text-sm font-medium hover:bg-white/5 dark:border-neutral-800"
-                aria-label="Open Instagram"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  aria-hidden
-                >
-                  <path d="M7 2C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 0 5-2.24 5-5V7c0-2.76-2.24-5-5-5H7zm0-2h10c3.87 0 7 3.13 7 7v10c0 3.87-3.13 7-7 7H7c-3.87 0-7-3.13-7-7V7c0-3.87 3.13-7 7-7zm5 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm4.5-3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" />
-                </svg>
-                <span className="hidden sm:inline">Follow</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <p className="mt-6 text-center text-xs el-text-sub">
-          © {new Date().getFullYear()} Elvarra — All rights reserved.
-        </p>
       </section>
     </main>
   );
@@ -487,7 +417,7 @@ function SortSelect({
     <label className="inline-flex items-center gap-2 text-xs">
       <span className="opacity-70">Sort</span>
       <select
-        className="rounded-full border border-neutral-200 bg-transparent px-2 py-1.5 dark:border-neutral-800"
+        className="rounded-full border border-neutral-200 el-bg  px-2 py-1.5 dark:border-neutral-800"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >

@@ -172,7 +172,7 @@ export default function ThankYouPage() {
   }, []);
 
   const hasData = !!payload;
-
+  console.log(setOrderId);
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
       <div className="container py-10">

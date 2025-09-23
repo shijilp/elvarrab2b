@@ -39,7 +39,7 @@ export default function Header() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-1">
               <Image
-                src={theme === "dark" ? "/logow.svg" : "/logog.svg"}
+                src={theme === "dark" ? "/logowhite.svg" : "/logog.svg"}
                 width={25}
                 height={25}
                 alt="Elvarra Logo"

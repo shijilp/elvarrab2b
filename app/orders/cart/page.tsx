@@ -60,7 +60,7 @@ export default function RetailCartPage() {
                 {cartItems.map((it) => {
                   const line = it.price * it.quantity;
                   return (
-                    <>
+                    <div key={it.id}>
                       <div className=" bg-black h-0.5  w-full"></div>
                       <div
                         key={it.id}
@@ -138,7 +138,7 @@ export default function RetailCartPage() {
                           </div>
                         </div>
                       </div>
-                    </>
+                    </div>
                   );
                 })}
               </div>
