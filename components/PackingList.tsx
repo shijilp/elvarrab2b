@@ -4,7 +4,7 @@
 import React, { useMemo } from "react";
 
 import Image from "next/image";
-import type { Order } from "@/types"; // adjust if your Order type differs
+import type { Order, OrderItems } from "@/types"; // adjust if your Order type differs
 import Barcode from "react-barcode";
 
 interface PackingListProps {
@@ -13,6 +13,7 @@ interface PackingListProps {
 
 export default function PackingList({ order }: PackingListProps) {
   const barcodeValue = useMemo(() => String(order.id ?? order.id), [order]);
+  console.log("Printorded", order);
   return (
     <div className="w-full text-sm text-neutral-900 dark:text-neutral-900 bg-white border border-neutral-200 rounded-lg shadow-sm">
       {/* Header */}
@@ -74,21 +75,21 @@ export default function PackingList({ order }: PackingListProps) {
           <tbody>
             {order &&
               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- API response is dynamic
-              order.items?.map((item: any, i: number) => (
+              order.items?.map((item: OrderItems, i: number) => (
                 <tr key={i} className="border-b border-neutral-100">
                   <td className="p-2 flex items-center gap-2">
-                    {item.image && (
+                    {item.product && (
                       <Image
-                        src={item.image}
-                        alt={item.name}
+                        src={item.product.image}
+                        alt={item.product.name}
                         width={40}
                         height={40}
                         className="rounded"
                       />
                     )}
-                    {item.name}
+                    {item.product.name}
                   </td>
-                  <td className="p-2">{item.sku || "-"}</td>
+                  <td className="p-2">{item.product.sku || "-"}</td>
                   <td className="p-2 text-right">{item.quantity}</td>
                 </tr>
               ))}

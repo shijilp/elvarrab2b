@@ -426,7 +426,7 @@ export default function AdminAddProductPage() {
       try {
         setCatLoading(true);
         const res = await api.get("/categories/"); // adjust if your URL is different (e.g., /api/categories/)
-        if (!ignore) setCategories(res.data.results as Category[]);
+        if (!ignore) setCategories(res.data as Category[]);
       } catch (e) {
         console.error(e);
         if (!ignore) setCategories([]);
@@ -679,11 +679,12 @@ export default function AdminAddProductPage() {
                 <option value="" disabled>
                   {catLoading ? "Loading categories..." : "Select a category"}
                 </option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {categories &&
+                  categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
               </select>
               <div className="mt-1 text-xs opacity-60">
                 Loaded from backend (/categories/)

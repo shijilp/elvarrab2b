@@ -88,7 +88,7 @@ export default function CustomerOrdersPage() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("date-desc");
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 20;
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [searchQ, setSearchQ] = useState("");

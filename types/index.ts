@@ -100,7 +100,12 @@ export interface ProductTiny {
   image: string
 
 }
-
+ interface AssignedTo {
+  email: string;
+  first_name: string;
+  phone: string;
+  id: number | null;
+}
 export interface Order {
   id: number
   full_name: string
@@ -125,6 +130,7 @@ export interface Order {
   razorpay_payment_id : string
   items:OrderItems[]
   notes:any
+  assigned_to:AssignedTo
 }
 
 export type RazorpayHandlerResponse = {
@@ -212,6 +218,7 @@ export type OrderItems={
   user_id: number | null;
 }
 
+
  interface Item {
   id: number;
   product_id: number;
@@ -253,5 +260,6 @@ export interface BackOrder {
   status: "processing" | "shipped" | "delivered" | "cancelled"; // extend as needed
   total_amount: number; // could also be number if you parse it
   notes:any;
+  assigned_to:AssignedTo;
 
 }

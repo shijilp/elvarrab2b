@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="border-t border-neutral-200 dark:border-neutral-800 py-8 mt-10">
+    <footer className="border-t border-neutral-200 dark:border-neutral-800 py-8 mt-10 print:hidden">
       <div className="inset-0 -z-10 opacity-40 blur-3xl">
         <div className="pointer-events-none absolute -inset-5 rounded-[100px] gradient-accent" />
       </div>
@@ -9,7 +9,7 @@ export default function Footer() {
         <nav className="flex gap-4">
           <a href="#">Privacy</a>
           <a href="#">Terms</a>
-          <a href="#">Support</a>
+          <a href="/contact">Support</a>
         </nav>
       </div>
     </footer>

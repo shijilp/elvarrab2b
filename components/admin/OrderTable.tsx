@@ -89,6 +89,7 @@ export function OrdersTable({
               <th className="px-2 py-2">Status</th>
               <th className="px-2 py-2">Total</th>
               <th className="px-2 py-2">Date</th>
+              <th className="px-2 py-2">Assigned</th>
               <th className="px-2 py-2"></th>
             </tr>
           </thead>
@@ -125,6 +126,9 @@ export function OrdersTable({
                   </td>
                   <td className="px-2 py-2 opacity-80">
                     {new Date(o.created_at).toLocaleString()}
+                  </td>
+                  <td className="px-2 py-2 opacity-80">
+                    {o.assigned_to?.first_name || ""}
                   </td>
                   <td className="px-2 py-2 text-right">
                     <Link

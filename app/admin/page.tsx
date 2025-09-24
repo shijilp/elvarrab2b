@@ -22,6 +22,7 @@ import { OrdersTable } from "@/components/admin/OrderTable";
 import { ProductsTable } from "@/components/admin/ProductsTable";
 import { Spinner } from "@/components/admin/Spinner";
 import { Topbar } from "@/components/admin/TopBar";
+import { usePathname } from "next/navigation";
 
 export type AdminStats = {
   revenue_today: number;
@@ -118,47 +119,86 @@ function Sidebar({
   collapsed: boolean;
   onToggle: () => void;
 }) {
+  const pathname = usePathname();
+
+  const links = [
+    { href: "/admin", label: "Dashboard" },
+    { href: "/admin/orders", label: "Orders" },
+    { href: "/admin/products", label: "Products" },
+    { href: "/admin/orders/packing", label: "Packing" },
+    { href: "/admin/orders/shipping", label: "Shipping" },
+    { href: "/admin/settings", label: "Settings" },
+  ];
+  const isActive = (href: string) =>
+    pathname === href || pathname?.startsWith(href + "/");
   return (
     <aside
       className={clsx(
-        "sticky top-0 h-[100dvh] shrink-0 border-r border-neutral-200 bg-white/70 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/50",
+        // hidden on mobile (from previous fix), full-height sticky on md+
+        "hidden md:flex md:sticky md:top-0 md:h-[100vh] md:shrink-0",
+        "border-r border-neutral-200 bg-white/70 backdrop-blur",
+        "dark:border-neutral-800 dark:bg-neutral-900/50",
+        "transition-[width] duration-200 ease-out",
         collapsed ? "w-[72px]" : "w-64"
       )}
+      aria-label="Sidebar navigation"
     >
-      <div className="flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500" />
-          {!collapsed && <span className="font-semibold">Elvarra Admin</span>}
-        </Link>
-        <button
-          onClick={onToggle}
-          className="rounded-xl px-2 py-1 text-xs ring-1 ring-neutral-200 dark:ring-neutral-800"
-        >
-          {collapsed ? "›" : "‹"}
-        </button>
-      </div>
-      <nav className="mt-2 space-y-1 px-2">
-        {[
-          { href: "/admin", label: "Dashboard" },
-          { href: "/admin/orders", label: "Orders" },
-          { href: "/admin/products", label: "Products" },
-          { href: "/admin/orders/packing", label: "Packing" },
-          { href: "/admin/orders/shipping", label: "Shipping" },
-
-          { href: "/admin/settings", label: "Settings" },
-        ].map((link) => (
+      <div className="flex min-h-0 flex-1 flex-col">
+        {/* Header */}
+        <div className="flex h-16 items-center justify-between px-4">
           <Link
-            key={link.href}
-            href={link.href}
-            className={clsx(
-              "flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-neutral-700 ring-1 ring-transparent hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-900"
-            )}
+            href="/"
+            className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-500/50 rounded-xl"
           >
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-400" />
-            {!collapsed && link.label}
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500" />
+            {!collapsed && <span className="font-semibold">Elvarra Admin</span>}
           </Link>
-        ))}
-      </nav>
+          <button
+            onClick={onToggle}
+            className="rounded-xl px-2 py-1 text-xs ring-1 ring-neutral-200 hover:bg-neutral-50 dark:ring-neutral-800 dark:hover:bg-neutral-900"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? "›" : "‹"}
+          </button>
+        </div>
+
+        {/* Scrollable nav */}
+        <nav className="mt-2 flex-1 overflow-y-auto px-2 pb-4">
+          <ul className="space-y-1">
+            {links.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={clsx(
+                      "group flex items-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 ring-transparent",
+                      active
+                        ? "bg-neutral-900 text-white ring-neutral-900 dark:bg-amber-500 dark:text-neutral-900 dark:ring-amber-500"
+                        : "text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-900"
+                    )}
+                    aria-current={active ? "page" : undefined}
+                    title={collapsed ? link.label : undefined} // tooltip when collapsed
+                  >
+                    <span
+                      className={clsx(
+                        "inline-block h-1.5 w-1.5 rounded-full",
+                        active ? "bg-current" : "bg-neutral-400"
+                      )}
+                    />
+                    {!collapsed && <span>{link.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Footer (optional) */}
+        <div className="border-t border-neutral-200 p-3 text-[11px] text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+          {!collapsed ? "v1.0 • Elvarra" : "v1.0"}
+        </div>
+      </div>
     </aside>
   );
 }
@@ -223,7 +263,15 @@ function useOrders(statusFilter: string, q: string) {
         const res = await api.get("/admin/orders/", {
           params: { status: statusFilter || undefined, q: q || undefined },
         });
-        if (!ignore) setData(res.data.results as Order[]);
+        let results = res.data.results as Order[];
+        results = results.filter(
+          (o) =>
+            !["shipped", "delivered", "cancelled"].includes(
+              o.status.toLowerCase()
+            )
+        );
+
+        if (!ignore) setData(results);
       } catch (e) {
         console.error(e);
       } finally {
@@ -268,9 +316,9 @@ function useProducts(q: string) {
 // ---------- Charts ----------
 function RevenueChart({ data }: { data: { date: string; amount: number }[] }) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white/90 p-3 dark:border-neutral-800 dark:bg-neutral-900/70">
+    <div className="rounded-2xl border border-neutral-200 bg-white/90 p-3 dark:border-neutral-800 dark:bg-neutral-900/70 min-w-0">
       <SectionTitle>Revenue (7 days)</SectionTitle>
-      <div className="h-56 w-full">
+      <div className="h-56 w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={data}
@@ -331,7 +379,7 @@ function OrdersChart({ data }: { data: { date: string; count: number }[] }) {
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-
+  const [collapsed, setCollapsed] = useState(false);
   // Simple guard
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -427,16 +475,12 @@ export default function AdminDashboardPage() {
   const conversion = stats?.conversion_rate ?? 0;
 
   return (
-    <div className="flex min-h-[100dvh] bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+    <div className="flex min-h-[100svh] bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 overflow-x-hidden">
       {/* Sidebar */}
-      <Sidebar
-        collapsed={false}
-        onToggle={() => {
-          /* you can wire this to state if you prefer */
-        }}
-      />
+
+      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
       {/* Main */}
-      <main className="mx-auto w-full max-w-[1400px] px-4">
+      <main className="flex-1 min-w-0 mx-auto w-full max-w-[1400px] px-4">
         <Topbar onSearch={(q) => setSearchQ(q)} />
 
         {/* KPIs */}
@@ -501,17 +545,17 @@ export default function AdminDashboardPage() {
               </button>
             ))}
           </div>
-
-          <OrdersTable
-            rows={orders}
-            onSelect={onSelect}
-            selected={selected}
-            onBulk={onBulk}
-            onPrint={onPrint}
-            show={ordersLoading}
-          />
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <OrdersTable
+              rows={orders}
+              onSelect={onSelect}
+              selected={selected}
+              onBulk={onBulk}
+              onPrint={onPrint}
+              show={ordersLoading}
+            />
+          </div>
         </div>
-
         {/* Products */}
         <div className="mt-6">
           <SectionTitle
@@ -526,7 +570,9 @@ export default function AdminDashboardPage() {
           >
             Low Stock / Recent Products
           </SectionTitle>
-          <ProductsTable rows={products} show={productsLoading} />
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <ProductsTable rows={products} show={productsLoading} />
+          </div>
         </div>
 
         <footer className="my-8 text-center text-xs opacity-60">
