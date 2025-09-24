@@ -204,15 +204,16 @@ export default function ProductsClient() {
           <div>
             <h1 className="text-2xl font-semibold">Shop All</h1>
             <p className="mt-1 text-sm el-text-sub">
-              Free shipping over $150 • 30-day returns • 2-year warranty
+              Free shipping over {money(1000)} • 30-day returns • 2-year
+              warranty
             </p>
           </div>
-          <a
+          {/* <a
             href="/cart/retail"
             className="rounded-xl px-4 py-2 text-sm font-medium btn-gradient"
           >
             View Cart
-          </a>
+          </a> */}
         </div>
       </div>
 
@@ -220,7 +221,7 @@ export default function ProductsClient() {
       <section className="container mx-auto pb-16">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
           {/* Sidebar filters */}
-          <aside className="h-max rounded-2xl ring-1 el-ring el-card p-4">
+          <aside className="h-max rounded-2xl ring-1 ring-gray-900 el-ring el-card p-4">
             <div className="space-y-4 text-sm">
               <div>
                 <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
@@ -361,11 +362,11 @@ export default function ProductsClient() {
                 <button
                   onClick={() => goto(page - 1)}
                   disabled={page <= 1}
-                  className="rounded-xl border el-border px-3 py-1.5 disabled:opacity-40"
+                  className="rounded-xl border el-bordern px-3 el-text-sub py-1.5 disabled:opacity-50"
                 >
                   Prev
                 </button>
-                <div className="px-1 py-1.5">
+                <div className="px-1 py-1.5 el-text-sub">
                   Page {page} / {totalPages}
                 </div>
                 <button
@@ -395,7 +396,7 @@ export default function ProductsClient() {
                 {pageItems.map((p) => (
                   <div
                     key={p.slug}
-                    className="relative group rounded-2xl ring-1 el-ring el-card p-2"
+                    className="relative group rounded-2xl ring-1 ring-gray-900 el-ring el-card p-2"
                   >
                     <Link
                       href={`/products/${p.slug}`}

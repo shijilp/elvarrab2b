@@ -264,7 +264,7 @@ export default function Page() {
             />
           </div>
         )}
-        {loading ? (
+        {!loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
@@ -417,7 +417,7 @@ function SortSelect({
     <label className="inline-flex items-center gap-2 text-xs">
       <span className="opacity-70">Sort</span>
       <select
-        className="rounded-full border border-neutral-200 el-bg  px-2 py-1.5 dark:border-neutral-800"
+        className="rounded-full border border-neutral-200 el-bgn  px-2 py-1.5 dark:border-neutral-800"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >

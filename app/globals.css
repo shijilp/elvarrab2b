@@ -22,7 +22,7 @@
   --accent-end: #f59e0b;   /* amber-500 */
   --chip-bg: #f59e0b;      /* amber-500 */
   --chip-fg: #111827;      /* neutral-900 */
-  --elv-card: rgba(23,23,23,0.7);
+  --elv-card: #171717b3;
   --elv-ring: #262626;
   --elv-subfg: #d4d4d4;
   --elv-border: #262626;
@@ -36,7 +36,18 @@ html, body {
   height: 100%;
 }
 
-
+.el-bgn{
+  background-color: #111111;;
+}
+.el-cardn {
+  background-color:#171717b3 ;
+  
+}
+.el-ringn {
+  background-color:#262626 ;
+  
+  
+}
 .el-ring {
   background-color:var(--elv-ring) ;
   
@@ -48,6 +59,10 @@ html, body {
 @layer utilities {
 .el-border {
   border-color:var(--elv-border);
+  
+}
+.el-bordern {
+  border-color:#262626;;
   
 }
 .el-card {

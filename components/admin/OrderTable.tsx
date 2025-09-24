@@ -1,7 +1,8 @@
 import { money } from "@/lib/utils";
-import { Order } from "@/types";
+import { AssignedUser, Order } from "@/types";
 import Link from "next/link";
 import { LoadingOverlay } from "../ui/LoadingOverlay";
+import { useState } from "react";
 
 // ---------- Tables ----------
 export function OrdersTable({
@@ -9,20 +10,25 @@ export function OrdersTable({
   onSelect,
   selected,
   onBulk,
+  onBulkAssign,
   onPrint,
   show,
+  admins,
 }: {
   rows: Order[];
   onSelect: (id: number, checked: boolean) => void;
+  onBulkAssign: (userId: number) => void;
   selected: Set<number>;
   onBulk: (
     action: "confirmed" | "processing" | "shipped" | "delivered" | "cancelled"
   ) => void;
   onPrint: () => void;
   show: boolean;
+  admins: AssignedUser[];
 }) {
   const allChecked = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const someChecked = selected.size > 0 && !allChecked;
+  const [assignUserId, setAssignUserId] = useState<number | "">("");
 
   return (
     <div className="relative rounded-2xl border border-neutral-200 bg-white/90 p-3 dark:border-neutral-800 dark:bg-neutral-900/70">
@@ -40,6 +46,7 @@ export function OrdersTable({
           />
           <span>Select all</span>
         </label>
+
         <div className="ml-auto flex gap-2">
           <button
             onClick={() => onBulk("confirmed")}
@@ -69,6 +76,32 @@ export function OrdersTable({
           >
             Mark Delivered
           </button>
+
+          {/* NEW: Bulk assign UI */}
+          <div className="flex items-center gap-2">
+            <select
+              value={assignUserId}
+              onChange={(e) => setAssignUserId(Number(e.target.value))}
+              className="rounded-xl border px-3 py-1.5 bg-neutral-900 text-xs text-white outline-none dark:border-neutral-800"
+            >
+              <option value="">Assign to…</option>
+              {admins &&
+                admins.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.first_name || u.email || `User ${u.id}`}
+                  </option>
+                ))}
+            </select>
+            <button
+              onClick={() => {
+                if (assignUserId !== "") onBulkAssign(assignUserId as number);
+              }}
+              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs text-white hover:brightness-110 disabled:opacity-50"
+              disabled={selected.size === 0 || assignUserId === ""}
+            >
+              Assign
+            </button>
+          </div>
           <button
             onClick={onPrint}
             className="rounded-xl bg-neutral-900 px-3 py-1.5 text-xs text-white hover:brightness-110 dark:bg-amber-500 dark:text-neutral-900"

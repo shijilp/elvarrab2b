@@ -553,6 +553,8 @@ export default function AdminDashboardPage() {
               onBulk={onBulk}
               onPrint={onPrint}
               show={ordersLoading}
+              admins={[]}
+              onBulkAssign={() => void {}}
             />
           </div>
         </div>

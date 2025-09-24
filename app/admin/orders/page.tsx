@@ -3,7 +3,7 @@ import { OrdersTable } from "@/components/admin/OrderTable";
 import ESpinner from "@/components/ElvarraSpinner";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
-import { Order, OrderStatus } from "@/types";
+import { AssignedUser, Order, OrderStatus } from "@/types";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -51,17 +51,6 @@ function paletteForTheme(theme: ThemeMode): Palette {
       };
 }
 
-function money(n: number, currency = "USD") {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-    }).format(n);
-  } catch {
-    return `$${n.toFixed(2)}`;
-  }
-}
-
 function statusChip(status: OrderStatus) {
   switch (status) {
     case "new":
@@ -83,8 +72,10 @@ export default function CustomerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [adminUsers, setAdminUsers] = useState<AssignedUser[]>([]);
 
   const [status, setStatus] = useState<"all" | OrderStatus>("all");
+
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("date-desc");
   const [page, setPage] = useState(1);
@@ -142,7 +133,11 @@ export default function CustomerOrdersPage() {
         const res = await api.get("/admin/orders/", {
           headers: { Authorization: `Bearer ${user?.access}` },
         });
+
         setOrders(res.data.results);
+        const admn = await api.get("admins/");
+
+        setAdminUsers(admn.data);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
       } finally {
@@ -160,6 +155,7 @@ export default function CustomerOrdersPage() {
       </div>
     );
   }
+
   return (
     <main className={`} ${palette.fg} min-h-screen antialiased `}>
       <div className="container mx-auto pt-5  ">
@@ -268,6 +264,8 @@ export default function CustomerOrdersPage() {
             onBulk={onBulk}
             onPrint={onPrint}
             show={false}
+            onBulkAssign={onBulkAssign}
+            admins={adminUsers}
           />
         </section>
 
@@ -350,6 +348,38 @@ export default function CustomerOrdersPage() {
       window.open(url, "_blank");
     } catch (e) {
       console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onBulkAssign(userId: number) {
+    if (selected.size === 0) return;
+    try {
+      setBusy(true);
+      await api.post("/admin/orders/bulk-assign", {
+        ids: Array.from(selected),
+        user_id: userId,
+      });
+
+      // Option A: re-fetch (simple & consistent)
+      const res = await api.get("/admin/orders/", {
+        headers: { Authorization: `Bearer ${user?.access}` },
+      });
+      setOrders(res.data.results);
+
+      // Option B (optional): optimistic UI update
+      // setOrders(prev =>
+      //   prev.map(o => selected.has(o.id)
+      //     ? { ...o, assigned_to: { id: userId, first_name: adminUsers.find(u => u.id === userId)?.first_name || o.assigned_to?.first_name || "" } }
+      //     : o
+      //   )
+      // );
+
+      setSelected(new Set());
+    } catch (err) {
+      console.error(err);
+      alert("Failed to assign. See console/network tab.");
     } finally {
       setBusy(false);
     }
