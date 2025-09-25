@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import ProductCard from "@/components/ProductCard";
 import { api } from "@/lib/api";
-import BtnElvarra from "@/components/ui/BtnElvarra";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import { Product } from "@/types";
 
@@ -110,7 +109,7 @@ export default function Page() {
             <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
               Where Elegance Meets Light
             </h1>
-            <p className="mt-4 max-w-xl text-base text-neutral-600 dark:text-neutral-300">
+            <p className="mt-4 max-w-xl text-base text-neutral-300">
               Elvarra brings you hand-finished fashion jewelry crafted in gold,
               silver, and sparkling stones. Designed to elevate your everyday
               style and be loved for years to come. Responsibly sourced. Always
@@ -290,11 +289,11 @@ export default function Page() {
       </section>
       {/* About */}
       <section id="about" className="container py-12 lg:py-16 mx-auto">
-        <div className="relative overflow-hidden rounded-3xl p-8 ring-1 ring-neutral-200 dark:ring-neutral-800 bg-white/90 dark:bg-neutral-900/70">
+        <div className="relative overflow-hidden rounded-3xl p-8 ring-1 ring-neutral-800 bg-neutral-900/70">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center">
             <div>
               <SectionTitle>Our Story</SectionTitle>
-              <p className="mt-3 text-neutral-600 dark:text-neutral-300">
+              <p className="mt-3  text-neutral-300">
                 We craft pieces that celebrate light, form, and everyday luxury.
                 Designed in-house and produced in small batches with ethical
                 partners. Every collection is a love letter to modern
@@ -335,11 +334,9 @@ export default function Page() {
           ].map((quote, i) => (
             <figure
               key={i}
-              className="rounded-2xl p-5 ring-1 ring-neutral-200 dark:ring-neutral-800 bg-white/90 dark:bg-neutral-900/70"
+              className="rounded-2xl p-5 ring-1 ring-neutral-800 bg-neutral-900/70"
             >
-              <blockquote className="text-neutral-600 dark:text-neutral-300">
-                “{quote}”
-              </blockquote>
+              <blockquote className="text-neutral-300">“{quote}”</blockquote>
               <figcaption className="mt-3 text-sm">— Verified Buyer</figcaption>
             </figure>
           ))}
@@ -348,11 +345,11 @@ export default function Page() {
 
       {/* Newsletter */}
       <section id="contact" className="container pb-24 mx-auto">
-        <div className="rounded-3xl p-8 ring-1 ring-neutral-200 dark:ring-neutral-800 bg-white/90 dark:bg-neutral-900/70">
+        <div className="rounded-3xl p-8 ring-1 ring-neutral-800 bg-neutral-900/70">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-center">
             <div className="lg:col-span-2">
               <h3 className="text-xl font-semibold">Join the Circle</h3>
-              <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+              <p className="mt-2 text-sm text-neutral-300">
                 Be first to know about new drops, limited editions, and private
                 sales.
               </p>
@@ -363,7 +360,7 @@ export default function Page() {
                 <input
                   type="email"
                   placeholder="you@example.com"
-                  className="w-full rounded-xl border border-neutral-200 bg-transparent px-4 py-3 text-sm outline-none placeholder:opacity-60 dark:border-neutral-800"
+                  className="w-full rounded-xl border  bg-transparent px-4 py-3 text-sm outline-none placeholder:opacity-60 border-neutral-800"
                 />
                 <button
                   type="submit"
@@ -378,7 +375,7 @@ export default function Page() {
                 href="https://instagram.com/elvar.ra"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 px-5 py-3 text-sm font-medium hover:bg-white/5 dark:border-neutral-800"
+                className="flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-medium hover:bg-white/5 border-neutral-800"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

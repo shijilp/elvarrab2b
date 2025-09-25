@@ -267,7 +267,7 @@ const ProductPageClient: React.FC = () => {
               <AddToCartBtn
                 product={product}
                 outofStock={isOutOfStock}
-                className={`col-span-2 sm:col-span-1 rounded-xl px-5 py-3 text-sm font-medium bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110 dark:from-yellow-500 dark:to-amber-500 dark:text-neutral-900`}
+                className={`col-span-2 sm:col-span-1 rounded-xl px-5 py-3 text-sm font-medium bg-gradient-to-r from-rose-400 to-pink-500hover:brightness-110 dark:from-yellow-500 dark:to-amber-500 `}
               />
               {/* <button
                 type="button"

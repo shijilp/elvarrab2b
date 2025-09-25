@@ -23,7 +23,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="rounded-2xl border border-neutral-200 dark:border-neutral-800 px-3 py-1.5 text-xs uppercase tracking-wider hover:opacity-90"
+      className="rounded-2xl border border-neutral-800 px-3 py-1.5 text-xs uppercase tracking-wider hover:opacity-90"
       aria-label="Toggle theme"
     >
       {theme === "dark" ? "Chic Light" : "Luxury Dark"}

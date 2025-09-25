@@ -20,6 +20,7 @@ async function getProduct(slug: string) {
     "http://localhost:8000";
   const res = await fetch(`${API_BASE}/products/${slug}/`, {
     next: { revalidate: 300 },
+    cache: "no-store",
   });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Product fetch failed: ${res.status}`);

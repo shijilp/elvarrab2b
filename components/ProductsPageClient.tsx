@@ -186,7 +186,7 @@ export default function ProductsClient() {
   if (loading && page === 1 && data.results.length === 0) {
     // full-screen spinner on first load
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 dark:bg-black/70">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70">
         <ESpinner />
       </div>
     );
