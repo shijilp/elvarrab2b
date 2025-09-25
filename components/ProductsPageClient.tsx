@@ -403,8 +403,8 @@ export default function ProductsClient() {
                       className="relative block"
                     >
                       <Image
-                        width={64}
-                        height={64}
+                        width={640}
+                        height={640}
                         src={p.image}
                         alt={p.name}
                         className="aspect-[4/5] w-full rounded-xl object-cover"
