@@ -264,7 +264,7 @@ export default function Page() {
             />
           </div>
         )}
-        {!loading ? (
+        {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
