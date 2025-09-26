@@ -56,6 +56,10 @@ html, body {
   color: var(--elv-subfg);
   
 }
+.el-subfgn {
+  color: #d4d4d4;
+  
+}
 @layer utilities {
 .el-border {
   border-color:var(--elv-border);
@@ -75,13 +79,21 @@ html, body {
 .el-text{
   color: var(--elv-fg);
 }
+.el-textn{
+  color: #fafafa; ;
+}
 .el-text-sub{
   color: var(--elv-subfg);
+}
+.el-text-subn{
+  color: #d4d4d4;
 }
 .el-chip{
     background-color: var(--chip-bg);
     color: var(--chip-fg);
 }
+
+
 }
 @layer components {
   .container {
@@ -93,6 +105,13 @@ html, body {
   .btn-gradient {
     @apply bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110;
   }
+   .dark  .el-btn {
+    @apply bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110;
+  }
+  .el-btn {
+    @apply bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110;
+   
+}
 }
 
 .gradient-accent {
@@ -164,10 +183,10 @@ html, body {
 }
 
 /* Print rules */
-@media print {
+ @media print {
   @page {
     size: A4;
-    margin: 5mm; /* small margins — adjust to align with sheets */
+    margin: 5mm; 
   }
   html, body {
     background: #fff !important;
@@ -176,12 +195,12 @@ html, body {
     display: none !important;
   }
 
-  /* On print, keep the exact sizes without Tailwind collapsing things */
+ 
   .print-grid {
     padding: 5mm !important;
     gap: 4mm !important;
   }
-}
+} 
 
 
 /* === STOCK LABEL PRINTING === */
@@ -207,7 +226,7 @@ html, body {
   justify-content: flex-start;
 }
 
-@media print {
+ @media print {
   @page { size: A4; margin: 5mm; }
   html, body { background: #fff !important; }
   header, nav, footer, .no-print, .print:hidden { display: none !important; }
@@ -216,4 +235,32 @@ html, body {
     padding: 5mm !important;
     gap: 4mm !important;
   }
+} 
+
+/* === END PRODUCT LABEL PRINTING === */
+
+
+.mini-label-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 38mm); /* fixed column widths */
+  gap: 2mm;                                /* ↓ from 4mm */
+  padding: 0;                               /* no extra padding */
+}
+
+.mini-label {
+  width: 38mm;
+  height: 25mm;
+  box-sizing: border-box;                   /* include border in width */
+  border: 0.2mm solid #d4d4d4;              /* thin border */
+  padding: 1.5mm;                           /* keep it small */
+}
+
+.mini-label-wrap { break-inside: avoid; }
+
+/* Keep SVG sharp when printing */
+@media print {
+  @page { size: A4; margin: 5mm; }          /* inner width = 200mm */
+  header, nav, footer, .print:hidden { display: none !important; }
+  .mini-label-grid { gap: 2mm !important; padding: 0 !important; }
+  svg { shape-rendering: crispEdges; text-rendering: optimizeSpeed; }
 }

@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { loadRazorpay } from "@/lib/razorpay";
 import ApplyCoupon from "@/components/ApplyCoupon";
 import Image from "next/image";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 
 // Theme palette utilities (local)
 type ThemeMode = "dark" | "light";
@@ -83,7 +84,7 @@ function formatMoney(n: unknown) {
 // ---------------------------
 // Default export: Retail Checkout Page
 // ---------------------------
-export default function RetailCheckoutPage() {
+export default function CheckoutPage() {
   const theme: ThemeMode = "dark"; // match site mode
   const palette = useMemo(() => paletteForTheme(theme), [theme]);
   const router = useRouter();
@@ -127,8 +128,13 @@ export default function RetailCheckoutPage() {
         const field = issue.path[0] as string;
         errors[field] = issue.message;
       }
-
-      return first?.message ?? "Invalid input 1";
+      const customMessages =
+        first?.message === "Invalid input: expected object, received null"
+          ? "Please enter a valid Address."
+          : null;
+      return customMessages
+        ? customMessages
+        : first?.message ?? "Invalid input 1";
     }
     return cartItems.length === 0 ? "Your cart is empty." : null;
   };
@@ -183,7 +189,7 @@ export default function RetailCheckoutPage() {
       // Verify on backend (sends signature + ids from Razorpay)
       // NOTE: we do this in the handler inside openRazorpayAndPay()
       clearCart();
-      await api.post("orders/send-shipped/", { order_id: data.order_id });
+      //await api.post("orders/send-shipped/", { order_id: data.order_id });
 
       router.push(`/orders/confirmation?order=${data.order_id}`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -409,6 +415,7 @@ export default function RetailCheckoutPage() {
           </aside>
         </div>
       </div>
+      <LoadingOverlay show={placing} />
     </main>
   );
 }

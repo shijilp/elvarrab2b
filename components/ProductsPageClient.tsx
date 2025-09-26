@@ -1,6 +1,5 @@
 "use client";
 
-import ESpinner from "@/components/ElvarraSpinner";
 import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import { api } from "@/lib/api";
 import { money } from "@/lib/money";
@@ -26,12 +25,18 @@ const DEFAULTS = {
   sort: "relevance",
   page: 1,
   occasion: "all",
+  tags: [] as string[],
 };
 
 export default function ProductsClient() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+
+  const urlTags = (searchParams.get("tags") || "")
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
 
   // ---------- derive UI state from URL (so links are shareable) ----------
   const urlCategory = (
@@ -54,7 +59,7 @@ export default function ProductsClient() {
   const [sort, setSort] = useState<string>(urlSort);
   const [page, setPage] = useState<number>(urlPage);
   const [occasion, setOccasion] = useState<string>(urlOccasion);
-
+  const [tags, setTags] = useState<string[]>(urlTags);
   // data
   const pageSize = 8;
   const [loading, setLoading] = useState(true);
@@ -74,6 +79,16 @@ export default function ProductsClient() {
     if (urlMax !== maxPrice) setMaxPrice(urlMax);
     if (urlSort !== sort) setSort(urlSort);
     if (urlPage !== page) setPage(urlPage);
+
+    const freshTags = (searchParams.get("tags") || "")
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean);
+    const same =
+      freshTags.length === tags.length &&
+      freshTags.every((t, i) => t === tags[i]);
+    if (!same) setTags(freshTags);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlQuery, urlCategory, urlOccasion, urlMin, urlMax, urlSort, urlPage]);
 
@@ -94,6 +109,7 @@ export default function ProductsClient() {
     sort !== DEFAULTS.sort ||
     page !== DEFAULTS.page ||
     occasion !== DEFAULTS.occasion;
+  tags.length > 0;
 
   function resetFilters() {
     setCategory(DEFAULTS.category);
@@ -103,6 +119,7 @@ export default function ProductsClient() {
     setSort(DEFAULTS.sort);
     setPage(DEFAULTS.page);
     setOccasion(DEFAULTS.occasion);
+    setTags([]);
     router.replace(pathname, { scroll: false });
   }
 
@@ -122,10 +139,11 @@ export default function ProductsClient() {
       min_price: minPrice || undefined,
       max_price: maxPrice || undefined,
       ordering,
+      tags: tags.length ? tags.join(",") : undefined, // 👈 HERE
     };
 
     api
-      .get<APIList<Product>>("/fproducts/", { params }) // << keep your path
+      .get<APIList<Product>>("/portfolio/", { params }) // << keep your path
       .then((res) => {
         if (!cancelled) setData(res.data);
       })
@@ -156,6 +174,7 @@ export default function ProductsClient() {
       max: number;
       sort: string;
       page: number;
+      tags: string[];
     }>
   ) {
     const p = new URLSearchParams(searchParams.toString()); // important: clone from RO params
@@ -172,7 +191,11 @@ export default function ProductsClient() {
     if (next.max !== undefined) write("max", next.max);
     if (next.sort !== undefined) write("sort", next.sort);
     if (next.page !== undefined) write("page", next.page);
-
+    if (next.tags !== undefined) {
+      const v = (next.tags || []).filter(Boolean).join(",");
+      if (!v) p.delete("tags");
+      else p.set("tags", v);
+    }
     const qstr = p.toString();
     router.replace(qstr ? `${pathname}?${qstr}` : pathname, { scroll: false });
   }
@@ -183,14 +206,14 @@ export default function ProductsClient() {
     setURL({ page: clamped });
   }
 
-  if (loading && page === 1 && data.results.length === 0) {
-    // full-screen spinner on first load
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70">
-        <ESpinner />
-      </div>
-    );
-  }
+  // if (loading && page === 1 && data.results.length === 0) {
+  //   // full-screen spinner on first load
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70">
+  //       <ESpinner />
+  //     </div>
+  //   );
+  // }
 
   return (
     <main className="el-text min-h-screen antialiased">
@@ -441,12 +464,12 @@ export default function ProductsClient() {
                             <span>{money(p.price as number)}</span>
                           )}
                         </div>
-                        <a
+                        <Link
                           href={`/product/${p.slug}`}
-                          className="rounded-xl border el-border px-3 py-1.5 text-xs"
+                          className="rounded-xl border el-border px-3 py-1.5 text-xs  hidden md:block"
                         >
                           Details
-                        </a>
+                        </Link>
                       </div>
 
                       <AddToCartBtn product={p} />

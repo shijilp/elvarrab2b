@@ -1,11 +1,11 @@
 "use client";
 import { OrdersTable } from "@/components/admin/OrderTable";
-import ESpinner from "@/components/ElvarraSpinner";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { AssignedUser, Order, OrderStatus } from "@/types";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
+import { AdminStats } from "../page";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — CUSTOMER ORDERS PAGE (Retail Only)
@@ -24,7 +24,31 @@ type Palette = {
   ring: string;
   chip: string;
 };
-
+function StatCard({
+  title,
+  value,
+  sub,
+}: {
+  title: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-neutral-200 bg-white/90 p-5 dark:border-neutral-800 dark:bg-neutral-900/70">
+      <div className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        {title}
+      </div>
+      <div className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+        {value}
+      </div>
+      {sub ? (
+        <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          {sub}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 function paletteForTheme(theme: ThemeMode): Palette {
   return theme === "dark"
     ? {
@@ -84,6 +108,7 @@ export default function CustomerOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [searchQ, setSearchQ] = useState("");
   const [busy, setBusy] = useState(false);
+  const { data: stats, loading: statsLoading } = useAdminStats();
 
   function onSelect(id: number, checked: boolean) {
     setSelected((prev) => {
@@ -148,13 +173,13 @@ export default function CustomerOrdersPage() {
     else setLoading(false); // avoid spinner forever when logged out
   }, [user]);
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white/70 dark:bg-black/70 z-50">
-        <ESpinner />
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="fixed inset-0 flex items-center justify-center bg-white/70 dark:bg-black/70 z-50">
+  //       <ESpinner />
+  //     </div>
+  //   );
+  // }
 
   return (
     <main className={`} ${palette.fg} min-h-screen antialiased `}>
@@ -180,6 +205,29 @@ export default function CustomerOrdersPage() {
         </div>
         {/* <PrintAllPackingSlipsButton /> */}
         {/* Filters */}
+        {/* KPIs */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="New Orders"
+            value={statsLoading ? "—" : String(stats?.orders_new ?? 0)}
+            sub="awaiting processing"
+          />
+          <StatCard
+            title="Processing"
+            value={statsLoading ? "—" : String(stats?.orders_processing ?? 0)}
+            sub="packing "
+          />
+          <StatCard
+            title="Packed"
+            value={statsLoading ? "—" : String(stats?.orders_packed ?? 0)}
+            sub="ready to ship"
+          />
+          <StatCard
+            title="Shipped Today"
+            value={statsLoading ? "—" : String(stats?.shipped_today ?? 0)}
+            sub="completed orders"
+          />
+        </div>
         <section
           className={`mt-6 rounded-2xl ${palette.ring} ${palette.card} p-4`}
         >
@@ -263,7 +311,7 @@ export default function CustomerOrdersPage() {
             selected={selected}
             onBulk={onBulk}
             onPrint={onPrint}
-            show={false}
+            show={loading}
             onBulkAssign={onBulkAssign}
             admins={adminUsers}
           />
@@ -291,7 +339,7 @@ export default function CustomerOrdersPage() {
         </div>
 
         {/* Helpful info */}
-        <section
+        {/* <section
           className={`mt-6 rounded-2xl ${palette.ring} ${palette.card} p-4 text-sm ${palette.subfg}`}
         >
           <div className="font-medium text-current">Tips</div>
@@ -305,7 +353,7 @@ export default function CustomerOrdersPage() {
               order ships.
             </li>
           </ul>
-        </section>
+        </section> */}
       </div>
     </main>
   );
@@ -314,8 +362,8 @@ export default function CustomerOrdersPage() {
     action: "processing" | "confirmed" | "shipped" | "cancelled" | "delivered"
   ) {
     if (selected.size === 0) return;
+    setLoading(true);
     try {
-      //setBusy(true);
       await api.post("/admin/orders/bulk-status", {
         ids: Array.from(selected),
         status: action,
@@ -329,9 +377,11 @@ export default function CustomerOrdersPage() {
       window.location.reload();
     } catch (e) {
       console.error(e);
+      setLoading(false);
       alert("Failed to update status. Check console/network.");
     } finally {
       setBusy(false);
+      setLoading(false);
     }
   }
 
@@ -355,6 +405,7 @@ export default function CustomerOrdersPage() {
 
   async function onBulkAssign(userId: number) {
     if (selected.size === 0) return;
+    setLoading(true);
     try {
       setBusy(true);
       await api.post("/admin/orders/bulk-assign", {
@@ -379,9 +430,62 @@ export default function CustomerOrdersPage() {
       setSelected(new Set());
     } catch (err) {
       console.error(err);
+      setLoading(false);
       alert("Failed to assign. See console/network tab.");
     } finally {
       setBusy(false);
+      setLoading(false);
     }
   }
+}
+
+// ---------- Data hooks ----------
+function useAdminStats() {
+  const [data, setData] = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/admin/stats");
+        if (!ignore) setData(res.data);
+      } catch (e) {
+        console.error(e);
+        // Fallback demo data
+        if (!ignore)
+          setData({
+            revenue_today: 820,
+            revenue_month: 18250,
+            orders_new: 7,
+            conversion_rate: 0.026,
+            shipped_today: 5,
+            orders_processing: 12,
+            orders_packed: 8,
+            charts: {
+              revenue7: Array.from({ length: 7 }).map((_, i) => ({
+                date: new Date(Date.now() - (6 - i) * 864e5)
+                  .toISOString()
+                  .slice(5, 10),
+                amount: 800 + i * 120,
+              })),
+              orders7: Array.from({ length: 7 }).map((_, i) => ({
+                date: new Date(Date.now() - (6 - i) * 864e5)
+                  .toISOString()
+                  .slice(5, 10),
+                count: 6 + (i % 3),
+              })),
+            },
+          });
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  return { data, loading } as const;
 }

@@ -64,12 +64,19 @@ export default function Header() {
             {user?.isAdmin && (
               <nav className="hidden gap-8 text-sm md:flex">
                 <Link className="opacity-90 hover:opacity-100" href={"/admin"}>
-                  Admin
+                  Admin{user?.isAdmin ? ` (${user?.role})` : ""}
                 </Link>
               </nav>
             )}
 
             <div className="flex items-center gap-2">
+              {user && (
+                <div className=" hidden md:block">
+                  <span className="text-sm opacity-90">
+                    Hello, {user.first_name ? user.first_name : user.username}!
+                  </span>
+                </div>
+              )}
               <ThemeToggle />
               <div className=" hidden md:block">
                 <CartBtnonHeader />
@@ -140,7 +147,11 @@ export default function Header() {
             <Package className="h-5 w-5" />
           </Tab>
           {/* ✅ Cart with badge */}
-          <Tab href="/orders/cart" label="Cart" active={isActive("/cart")}>
+          <Tab
+            href="/orders/cart"
+            label="Cart"
+            active={isActive("/orders/cart")}
+          >
             <div className="relative">
               <ShoppingCart className="h-5 w-5" />
               {cartItems.length > 0 && (

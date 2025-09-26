@@ -7,6 +7,7 @@ import ProductCard from "@/components/ProductCard";
 import { api } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import { Product } from "@/types";
+import OccassionTab from "@/components/OccassionTab";
 
 export default function Page() {
   // const [mounted, setMounted] = useState(false);
@@ -99,6 +100,7 @@ export default function Page() {
   return (
     <main className="">
       {/* Hero */}
+      {/* <PromoBanner id="promo1" message="Discover our latest collection!" /> */}
       <section className="relative isolate">
         <div className="absolute inset-0 -z-10 opacity-40 blur-3xl max-w-[100vw] overflow-hidden">
           <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
@@ -322,6 +324,8 @@ export default function Page() {
           </div>
         </div>
       </section>
+
+      <OccassionTab />
 
       {/* Testimonials */}
       <section className="container py-12 lg:py-16 mx-auto">

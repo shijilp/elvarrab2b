@@ -10,20 +10,16 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth(); // your AuthContext should return user info + role
+  const { user, loading, initialized } = useAuth(); // your AuthContext should return user info + role
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.replace("/login"); // not logged in
-      } else if (!user.isAdmin) {
-        router.replace("/"); // logged in but not admin
-      }
-    }
-  }, [user, loading, router]);
+    if (!initialized) return;
+    if (!user) router.replace("/login?next=/admin");
+    else if (!user.isAdmin) router.replace("/");
+  }, [initialized, user, router]);
 
-  if (loading) return <p>Loading...</p>;
+  if (!initialized) return <p>Loading...</p>;
 
   return <>{children}</>;
 }

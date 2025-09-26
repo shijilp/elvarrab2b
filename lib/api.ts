@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
 
 // const api = axios.create({
 //   baseURL: process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api/',
@@ -29,22 +29,30 @@ api.interceptors.request.use((config) => {
 // OPTIONAL: auto-refresh on 401 if you store refresh
 let isRefreshing = false;
 let queue: Array<(t: string) => void> = [];
+type RetriableConfig = (InternalAxiosRequestConfig | AxiosRequestConfig) & { _retry?: boolean };
 
 api.interceptors.response.use(
   (r) => r,
   async (err: AxiosError) => {
-    if (err.response?.status !== 401) throw err;
-
+     const res = err.response;
+     const original = err.config as RetriableConfig | undefined;
+     if (!res || !original) return Promise.reject(err);
+      // Only handle 401s; avoid infinite loop if we've retried already
+    if (res.status !== 401 || original._retry) {
+      return Promise.reject(err);
+    }
+      // Do not try to refresh the refresh endpoint itself
+    if (typeof original.url === "string" && original.url.includes("/token/refresh")) {
+      return Promise.reject(err);
+    }
+     original._retry = true;
+    // Avoid looping on refresh endpoint itself
     if (isRefreshing) {
       // wait for the refresh to finish
       return new Promise((resolve) => {
-        queue.push((newAccess) => {
-          if (err.config) {
-            if (err.config.headers) {
-              err.config.headers.set('Authorization', `Bearer ${newAccess}`);
-            }
-            resolve(api.request(err.config));
-          }
+        queue.push((newAccess:string) => {
+        const headers = { ...(original.headers || {}), Authorization: `Bearer ${newAccess}` };
+       resolve(api.request({ ...original, headers }));
         });
       });
     }
@@ -53,23 +61,25 @@ api.interceptors.response.use(
     try {
       const saved = localStorage.getItem("user");
       const u = saved ? JSON.parse(saved) : null;
-      if (!u?.refresh) throw err;
+       const refresh: string | undefined = u?.refresh;
+        if (!refresh) {
+        throw err; // no refresh token -> fail fast
+      }
 
-      const res = await axios.post(`${API_BASE}/token/refresh/`, { refresh: u.refresh });
-      const access = res.data.access;
+      const res = await axios.post(`${API_BASE}/token/refresh/`, { refresh });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const access: string | undefined = (res.data as any)?.access;
+       if (!access) throw err;
       localStorage.setItem("user", JSON.stringify({ ...u, access }));
 
       // flush queue
       queue.forEach((cb) => cb(access));
       queue = [];
-
-      if (err.config) {
-        if (err.config.headers) {
-          err.config.headers.set('Authorization', `Bearer ${access}`);
-        }
-        return api.request(err.config);
-      }
-      throw err;
+      // Retry the original request with the new token
+      const headers = { ...(original.headers || {}), Authorization: `Bearer ${access}` };
+      return api.request({ ...original, headers });
+   
+     
     } finally {
       isRefreshing = false;
     }

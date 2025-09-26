@@ -3,9 +3,7 @@ import SectionTitle from "@/components/SectionTitle";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import ProductCard from "@/components/ProductCard";
 import { collections } from "@/data/collections";
-import { products } from "@/data/products";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);

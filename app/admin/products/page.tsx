@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -461,7 +461,7 @@ export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sort, setSort] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [labelCopies, setLabelCopies] = useState<number>(1);
 
   const { data, loading } = useProducts({
     q,
@@ -533,6 +533,18 @@ export default function AdminProductsPage() {
     } finally {
       setBusy(false);
     }
+  }
+  function printMiniLabels() {
+    const ids = Array.from(selected);
+    if (!ids.length) {
+      alert("Select products to print labels.");
+      return;
+    }
+    const q = new URLSearchParams({
+      ids: ids.join(","),
+      copies: String(Math.max(1, Math.min(200, Number(labelCopies) || 1))),
+    });
+    router.push(`/admin/products/print/mini-labels?${q.toString()}`);
   }
 
   async function onSaveEdit() {
@@ -791,6 +803,32 @@ export default function AdminProductsPage() {
         >
           Export CSV
         </button>
+        <div className="ml-auto flex items-center gap-2">
+          <input
+            type="number"
+            min={1}
+            max={200}
+            value={labelCopies}
+            onChange={(e) => setLabelCopies(Number(e.target.value || 1))}
+            className="w-20 rounded-xl border border-neutral-200 bg-transparent px-2 py-1.5 text-xs outline-none dark:border-neutral-800"
+            title="Copies per product"
+          />
+          <button
+            onClick={printMiniLabels}
+            disabled={selected.size === 0}
+            className="rounded-xl bg-neutral-900 px-3 py-1.5 text-xs text-white disabled:opacity-50 dark:bg-amber-500 dark:text-neutral-900"
+          >
+            Print mini labels
+          </button>
+
+          {/* keep Export CSV where it was */}
+          <button
+            onClick={exportCSV}
+            className="rounded-xl px-3 py-1.5 text-xs ring-1 ring-neutral-200 dark:ring-neutral-800"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Table */}

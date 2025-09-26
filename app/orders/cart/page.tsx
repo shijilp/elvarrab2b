@@ -37,8 +37,8 @@ export default function RetailCartPage() {
         <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
       </div> */}
       <div className="container py-8 mx-auto ">
-        <h1 className="text-2xl el-text-sub font-semibold">Your Cart</h1>
-        <p className={`mt-1 text-sm el-text-sub `}>
+        <h1 className="text-2xl el-text-subn font-semibold">Your Cart</h1>
+        <p className={`mt-1 text-sm el-text-subn `}>
           Free shipping over $150 • Easy returns • 2‑year warranty
         </p>
         <div className=" inset-0 -z-10 opacity-30 blur-3xl">
@@ -46,7 +46,7 @@ export default function RetailCartPage() {
         </div>
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
           {/* Items */}
-          <section className={`rounded-2xl el-ring el-card p-4`}>
+          <section className={`rounded-2xl el-ringn l el-cardn  p-4`}>
             {cartItems.length === 0 ? (
               <div className={`text-sm el-subfg `}>
                 Your cart is empty.{" "}
@@ -61,15 +61,15 @@ export default function RetailCartPage() {
                   const line = it.price * it.quantity;
                   return (
                     <div key={it.id}>
-                      <div className=" bg-black h-0.5  w-full"></div>
+                      <div className="  h-0.5  w-full"></div>
                       <div
                         key={it.id}
-                        className={`grid grid-cols-12 gap-3 rounded-xl el-ring  el-card  p-3`}
+                        className={`grid grid-cols-12 gap-3 rounded-xl el-ringn el-textn  el-card    p-3`}
                       >
                         <div className="col-span-12 md:col-span-2">
                           <Image
-                            width={64}
-                            height={64}
+                            width={240}
+                            height={240}
                             src={it.image}
                             alt={it.name}
                             className="aspect-square w-full rounded-lg object-cover"
@@ -77,14 +77,14 @@ export default function RetailCartPage() {
                         </div>
                         <div className="col-span-12 md:col-span-10">
                           <div className="flex flex-wrap items-start justify-between gap-2">
-                            <div>
-                              <div className="text-sm font-medium">
+                            <div className="el-textn">
+                              <div className="text-sm el-textn font-medium">
                                 {it.name}
                               </div>
-                              <div className={`text-xs el-subfg`}>
+                              <div className={`text-xs el-subfgn`}>
                                 SKU: {it.id}
                               </div>
-                              <div className={`mt-1 text-xs el-subfg`}>
+                              <div className={`mt-1 text-xs el-subfgn`}>
                                 Unit: {formatMoney(it.price)}
                               </div>
                             </div>

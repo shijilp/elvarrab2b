@@ -50,28 +50,28 @@ export function OrdersTable({
         <div className="ml-auto flex gap-2">
           <button
             onClick={() => onBulk("confirmed")}
-            className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs text-white hover:brightness-110"
+            className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs text-white hover:brightness-110 disabled:opacity-30"
             disabled={selected.size === 0}
           >
             Mark Confirmed
           </button>
           <button
             onClick={() => onBulk("processing")}
-            className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs text-white hover:brightness-110"
+            className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs text-white hover:brightness-110 disabled:opacity-30"
             disabled={selected.size === 0}
           >
             Mark Processing
           </button>
           <button
             onClick={() => onBulk("shipped")}
-            className="rounded-xl bg-cyan-600 px-3 py-1.5 text-xs text-white hover:brightness-110"
+            className="rounded-xl bg-cyan-600 px-3 py-1.5 text-xs text-white hover:brightness-110 disabled:opacity-30"
             disabled={selected.size === 0}
           >
             Mark Shipped
           </button>
           <button
             onClick={() => onBulk("delivered")}
-            className="rounded-xl bg-cyan-900 px-3 py-1.5 text-xs text-white hover:brightness-110"
+            className="rounded-xl bg-cyan-900 px-3 py-1.5 text-xs text-white hover:brightness-110 disabled:opacity-30"
             disabled={selected.size === 0}
           >
             Mark Delivered
@@ -82,7 +82,7 @@ export function OrdersTable({
             <select
               value={assignUserId}
               onChange={(e) => setAssignUserId(Number(e.target.value))}
-              className="rounded-xl border px-3 py-1.5 bg-neutral-900 text-xs text-white outline-none dark:border-neutral-800"
+              className="rounded-xl border px-3 py-1.5 bg-neutral-900 text-xs text-white outline-none dark:border-neutral-800 "
             >
               <option value="">Assign to…</option>
               {admins &&
@@ -96,7 +96,7 @@ export function OrdersTable({
               onClick={() => {
                 if (assignUserId !== "") onBulkAssign(assignUserId as number);
               }}
-              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs text-white hover:brightness-110 disabled:opacity-50"
+              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs text-white hover:brightness-110 disabled:opacity-30 "
               disabled={selected.size === 0 || assignUserId === ""}
             >
               Assign
@@ -104,7 +104,7 @@ export function OrdersTable({
           </div>
           <button
             onClick={onPrint}
-            className="rounded-xl bg-neutral-900 px-3 py-1.5 text-xs text-white hover:brightness-110 dark:bg-amber-500 dark:text-neutral-900"
+            className="rounded-xl bg-neutral-900 px-3 py-1.5 text-xs text-white hover:brightness-110 dark:bg-amber-500 dark:text-neutral-900 disabled:opacity-30"
             disabled={selected.size === 0}
           >
             Print Packing Lists

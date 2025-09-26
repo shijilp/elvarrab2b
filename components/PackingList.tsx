@@ -74,7 +74,7 @@ export default function PackingList({ order }: PackingListProps) {
           </thead>
           <tbody>
             {order &&
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- API response is dynamic
+              //  -- API response is dynamic
               order.items?.map((item: OrderItems, i: number) => (
                 <tr key={i} className="border-b border-neutral-100">
                   <td className="p-2 flex items-center gap-2">
