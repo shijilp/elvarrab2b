@@ -43,12 +43,12 @@ const OccassionTab = () => {
               Find the perfect piece for every moment.
             </p>
           </div>
-          <Link
+          {/* <Link
             href="/products"
             className={`hidden sm:inline-block rounded-xl px-3 py-1.5 text-sm el-btn`}
           >
             Shop all
-          </Link>
+          </Link> */}
         </header>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

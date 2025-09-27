@@ -120,7 +120,7 @@ export default function Page() {
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
                 href="#bestsellers"
-                className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 gradient-accent"
+                className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 btn-gradient-accent"
               >
                 Shop Bestsellers
               </a>

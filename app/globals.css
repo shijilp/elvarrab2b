@@ -4,6 +4,9 @@
 :root {
   --accent-start: #f472b6; /* rose-400 */
   --accent-end: #ec4899;   /* pink-500 */
+    --btn-start: oklch(86.9% 0.022 252.894); /* rose-400 */
+  --btn-end: oklch(55.1% 0.027 264.364);   /* pink-500 */
+
   --chip-bg: #111827;      /* neutral-900 */
   --chip-fg: #fff;
   --elv-card: rgba(255,255,255,0.9);
@@ -20,6 +23,9 @@
 :root.dark {
   --accent-start: #eab308; /* yellow-500 */
   --accent-end: #f59e0b;   /* amber-500 */
+    --btn-start: #eab308; /* yellow-500 */
+  --btn-end: #f59e0b;   /* amber-500 */
+
   --chip-bg: #f59e0b;      /* amber-500 */
   --chip-fg: #111827;      /* neutral-900 */
   --elv-card: #171717b3;
@@ -103,7 +109,8 @@ html, body {
     @apply bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110;
   }
   .btn-gradient {
-    @apply bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110;
+    /* @apply bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110;*/
+     @apply bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110; 
   }
    .dark  .el-btn {
     @apply bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110;
@@ -116,6 +123,10 @@ html, body {
 
 .gradient-accent {
   background-image: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+}
+
+.btn-gradient-accent {
+  background-image: linear-gradient(135deg, var(--btn-start), var(--btn-end));
 }
 
 /* globals.css (or app/globals.css) */

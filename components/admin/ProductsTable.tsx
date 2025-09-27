@@ -55,7 +55,7 @@ export function ProductsTable({
                       Edit
                     </Link>
                     <Link
-                      href={`/product/${p.slug || p.id}`}
+                      href={`/products/${p.slug || p.id}`}
                       className="rounded-lg px-2 py-1 text-xs ring-1 ring-neutral-200 dark:ring-neutral-800"
                     >
                       View

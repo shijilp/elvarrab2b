@@ -27,7 +27,7 @@ const CartBtnonHeader = () => {
       {" "}
       <Link href={"/orders/cart"}>
         <button
-          className={`rounded-2xl px-3 py-1.5 text-xs   text-neutral-900 dark:text-neutral-900 gradient-accent cursor-pointer  `}
+          className={`rounded-2xl px-3 py-1.5 text-xs   text-neutral-900 dark:text-neutral-900 btn-gradient-accent cursor-pointer  `}
         >
           Cart ({count})
         </button>

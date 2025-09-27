@@ -36,7 +36,7 @@ const AddToCartBtn = ({ product, className, outofStock }: Props) => {
         <button
           onClick={() => addToCart(product)}
           disabled={outofStock}
-          className={`mt-3 w-full rounded-xl px-3 py-2 text-sm text-neutral-900  gradient-accent ${className} ${
+          className={`mt-3 w-full rounded-xl px-3 py-2 text-sm text-neutral-900  btn-gradient-accent ${className} ${
             outofStock ? "opacity-30" : ""
           } `}
         >

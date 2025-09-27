@@ -86,7 +86,7 @@ export default function Header() {
                   <LogoutButton />
                 ) : (
                   <Link href={"/login"}>
-                    <button className="rounded-2xl px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-900 gradient-accent cursor-pointer">
+                    <button className="rounded-2xl px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-900 btn-gradient-accent cursor-pointer">
                       Sign In
                     </button>
                   </Link>
@@ -126,7 +126,7 @@ export default function Header() {
                 <Link href={"/login"}>
                   <button
                     onClick={() => setOpen(false)}
-                    className="rounded-2xl px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-900 gradient-accent cursor-pointer"
+                    className="rounded-2xl px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-900 btn-gradient-accent cursor-pointer"
                   >
                     Sign In
                   </button>

@@ -31,6 +31,7 @@ export type Product = {
   name: string;
   slug?: string;
   sku?: string;
+  tag?: string; // optional custom field
   price: number;
   image_url?: string;
   inventory?: number;
@@ -380,7 +381,7 @@ function ProductsTable({
                       Edit
                     </button>
                     <Link
-                      href={`/product/${p.slug || p.id}`}
+                      href={`/products/${p.slug || p.id}`}
                       className="rounded-lg px-2 py-1 text-xs ring-1 ring-neutral-200 dark:ring-neutral-800"
                     >
                       View
@@ -480,7 +481,7 @@ export default function AdminProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<{
     price: number;
-    sku?: string;
+    tag?: string;
     inventory?: number;
     is_active?: boolean;
   }>({ price: 0 });
@@ -498,7 +499,7 @@ export default function AdminProductsPage() {
     setEditing(p);
     setForm({
       price: p.price ?? 0,
-      sku: p.sku,
+      tag: p.sku,
       inventory: p.inventory ?? 0,
       is_active: p.is_active,
     });
@@ -557,7 +558,7 @@ export default function AdminProductsPage() {
       (data.results || []).forEach((row) => {
         if (row.id === editing.id) {
           row.price = form.price;
-          row.sku = form.sku;
+          row.tag = form.tag;
           row.inventory = form.inventory;
           row.is_active = form.is_active;
         }
@@ -900,10 +901,10 @@ export default function AdminProductsPage() {
             />
           </label>
           <label className="text-sm">
-            <div className="mb-1 opacity-70">SKU</div>
+            <div className="mb-1 opacity-70">TAG</div>
             <input
-              value={form.sku || ""}
-              onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
+              value={form.tag || ""}
+              onChange={(e) => setForm((f) => ({ ...f, tag: e.target.value }))}
               className="w-full rounded-xl border border-neutral-200 bg-transparent px-3 py-2 outline-none dark:border-neutral-800"
             />
           </label>
