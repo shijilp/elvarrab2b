@@ -395,7 +395,7 @@ export default function ScanOrders() {
         <button
           disabled={!buffer || loading}
           onClick={() => submitCode(buffer.trim())}
-          className="rounded-xl px-4 py-2 text-sm font-medium bg-yellow-400 text-blue-900 disabled:opacity-50"
+          className="rounded-xl px-4 py-2 text-sm font-medium btn-gradient-accent text-blue-900 disabled:opacity-50"
         >
           {loading ? "Updating…" : "Update"}
         </button>

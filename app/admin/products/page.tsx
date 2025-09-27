@@ -659,7 +659,7 @@ export default function AdminProductsPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/admin/products/new"
-            className="rounded-xl bg-neutral-900 px-4 py-2 text-sm text-white dark:bg-amber-500 dark:text-neutral-900"
+            className="rounded-xl  px-4 py-2 text-sm text-white btn-gradient-accent dark:text-neutral-900"
           >
             + Add Product
           </Link>
@@ -720,7 +720,7 @@ export default function AdminProductsPage() {
                 className={clsx(
                   "rounded-full px-3 py-1 text-xs ring-1",
                   status === v
-                    ? "bg-neutral-900 text-white ring-neutral-900 dark:bg-amber-500 dark:text-neutral-900"
+                    ? " text-white ring-neutral-900 btn-gradient-accent dark:text-neutral-900"
                     : "ring-neutral-200 dark:ring-neutral-800"
                 )}
               >
@@ -742,7 +742,7 @@ export default function AdminProductsPage() {
                 className={clsx(
                   "rounded-full px-3 py-1 text-xs ring-1",
                   stock === v
-                    ? "bg-neutral-900 text-white ring-neutral-900 dark:bg-amber-500 dark:text-neutral-900"
+                    ? " text-white ring-neutral-900 btn-gradient-accent dark:text-neutral-900"
                     : "ring-neutral-200 dark:ring-neutral-800"
                 )}
               >

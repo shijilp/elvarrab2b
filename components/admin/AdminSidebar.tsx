@@ -43,7 +43,7 @@ export function Sidebar({
             href="/"
             className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-500/50 rounded-xl"
           >
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500" />
+            <div className="h-8 w-8 rounded-xl btn-gradient-accent" />
             {!collapsed && <span className="font-semibold">Elvarra Admin</span>}
           </Link>
           <button
@@ -67,7 +67,7 @@ export function Sidebar({
                     className={clsx(
                       "group flex items-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 ring-transparent",
                       active
-                        ? "bg-neutral-900 text-white ring-neutral-900 dark:bg-amber-500 dark:text-neutral-900 dark:ring-amber-500"
+                        ? " text-white ring-neutral-900 btn-gradient-accent dark:text-neutral-900 "
                         : "text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-900"
                     )}
                     aria-current={active ? "page" : undefined}

@@ -373,7 +373,7 @@ export default function AdminDashboardPage() {
     <div className="flex gap-2">
       <Link
         href="/admin/products/new"
-        className="rounded-xl bg-neutral-900 px-3 py-1.5 text-xs text-white dark:bg-amber-500 dark:text-neutral-900"
+        className="rounded-xl bg-neutral-900 px-3 py-1.5 text-xs text-white btn-gradient-accent dark:text-neutral-900"
       >
         + Add Product
       </Link>
@@ -451,7 +451,7 @@ export default function AdminDashboardPage() {
                 className={clsx(
                   "rounded-full px-3 py-1 text-xs ring-1",
                   statusFilter === val
-                    ? "bg-neutral-900 text-white ring-neutral-900 dark:bg-amber-500 dark:text-neutral-900 dark:ring-amber-500"
+                    ? " text-white ring-neutral-900 btn-gradient-accent dark:text-neutral-900 "
                     : "ring-neutral-200 dark:ring-neutral-800"
                 )}
               >

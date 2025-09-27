@@ -419,7 +419,7 @@ export default function ProductsClient() {
                 {pageItems.map((p) => (
                   <div
                     key={p.slug}
-                    className="relative group rounded-2xl ring-1 ring-gray-900 el-ring el-card p-2"
+                    className="relative group rounded-2xl ring-1 z-10   el-ring el-card p-2"
                   >
                     <Link
                       href={`/products/${p.slug}`}
@@ -443,7 +443,7 @@ export default function ProductsClient() {
                         Out of Stock
                       </div>
                     )}
-                    <div className="p-2">
+                    <div className="p-2 ">
                       <div className="text-sm font-medium">{p.name}</div>
                       {p.sku && (
                         <div className="mt-1 text-xs el-text-sub">
@@ -464,6 +464,7 @@ export default function ProductsClient() {
                             <span>{money(p.price as number)}</span>
                           )}
                         </div>
+
                         <Link
                           href={`/product/${p.slug}`}
                           className="rounded-xl border el-border px-3 py-1.5 text-xs  hidden md:block"

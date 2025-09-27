@@ -102,7 +102,7 @@ export default function Page() {
       {/* Hero */}
       {/* <PromoBanner id="promo1" message="Discover our latest collection!" /> */}
       <section className="relative isolate">
-        <div className="absolute inset-0 -z-10 opacity-40 blur-3xl max-w-[100vw] overflow-hidden">
+        <div className="absolute inset-0 -z-10 opacity-40 blur-3xl  max-w-[100vw] overflow-hidden">
           <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
         </div>
         <div className="container grid grid-cols-1 gap-8 py-14 lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20 mx-auto">
@@ -283,7 +283,7 @@ export default function Page() {
         <Link
           href="/products"
           className="inline-flex w-full items-center justify-center rounded-full px-5 py-3
-               text-sm font-medium text-neutral-900 dark:text-neutral-900 gradient-accent"
+               text-sm font-medium text-neutral-900 dark:text-neutral-900 btn-gradient-accent"
           aria-label="Explore more products"
         >
           Explore our collections
@@ -368,7 +368,7 @@ export default function Page() {
                 />
                 <button
                   type="submit"
-                  className="rounded-xl px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 gradient-accent"
+                  className="rounded-xl px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 btn-gradient-accent"
                 >
                   Subscribe
                 </button>

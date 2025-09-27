@@ -38,7 +38,7 @@ export function Topbar({
           />
           <button
             onClick={() => onSearch(q)}
-            className="rounded-xl bg-neutral-900 px-3 py-1.5 text-xs text-white dark:bg-amber-500 dark:text-neutral-900"
+            className="rounded-xl  px-3 py-1.5 text-xs text-white btn-gradient-accent dark:text-neutral-900"
           >
             {pending ? <Spinner size={14} /> : "Search"}
           </button>

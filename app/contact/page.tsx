@@ -282,7 +282,7 @@ export default function SupportPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`rounded-xl px-4 py-2 text-sm font-medium ${palette.button} disabled:opacity-60`}
+                    className={`rounded-xl px-4 py-2 text-sm font-medium btn-gradient-accent disabled:opacity-60`}
                   >
                     {loading ? "Sending…" : "Send message"}
                   </button>

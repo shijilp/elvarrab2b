@@ -54,6 +54,11 @@ html, body {
   
   
 }
+.el-ringt {
+  background-color:#00000000 ;
+  
+  
+}
 .el-ring {
   background-color:var(--elv-ring) ;
   

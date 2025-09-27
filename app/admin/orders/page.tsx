@@ -295,7 +295,7 @@ export default function CustomerOrdersPage() {
             <div className="flex items-end">
               <Link
                 href="/products"
-                className={`w-full rounded-xl px-3 py-2 text-center text-sm font-medium ${palette.button}`}
+                className={`w-full rounded-xl px-3 py-2 text-center text-sm font-medium btn-gradient-accent`}
               >
                 Shop Again
               </Link>

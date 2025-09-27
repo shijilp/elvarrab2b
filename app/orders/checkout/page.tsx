@@ -390,7 +390,7 @@ export default function CheckoutPage() {
             <BtnElvarra
               disabled={placing || cartItems.length === 0}
               onClick={placeOrder}
-              className={` w-full px-5 py-3 text-sm font-medium btn-gradient `}
+              className={` w-full px-5 py-3 text-sm font-medium btn-gradient-accent `}
             >
               {" "}
               {placing ? "Processing…" : "Pay securely"}

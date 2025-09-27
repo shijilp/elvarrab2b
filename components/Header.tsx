@@ -192,7 +192,7 @@ function Tab({
       className={[
         "relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition",
         active
-          ? "text-neutral-900 dark:text-neutral-900 bg-gradient-to-r from-yellow-500 to-amber-500/90 shadow-sm"
+          ? "text-neutral-900 dark:text-neutral-900 btn-gradient-accent shadow-sm"
           : "opacity-90 hover:opacity-100",
       ].join(" ")}
     >

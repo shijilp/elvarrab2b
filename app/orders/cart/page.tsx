@@ -166,7 +166,7 @@ export default function RetailCartPage() {
               <div className="mt-4 grid grid-cols-1 gap-2">
                 <Link
                   href={`/orders/checkout`}
-                  className={`rounded-xl px-4 py-3 text-center text-sm font-medium btn-gradient`}
+                  className={`rounded-xl px-4 py-3 text-center text-sm font-medium btn-gradient-accent`}
                 >
                   Proceed to Checkout
                 </Link>
