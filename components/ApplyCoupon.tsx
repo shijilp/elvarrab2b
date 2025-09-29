@@ -7,9 +7,11 @@ import { useCart } from "@/context/CartContext";
 export default function ApplyCoupon({ email }: { email?: string }) {
   const { validateAndSetCoupon, clearCoupon, coupon } = useCart() as {
     validateAndSetCoupon: (code: string, email?: string) => Promise<void>;
+
     clearCoupon: () => Promise<void> | void;
     coupon: { code: string; discount: number } | null;
   };
+
   const [code, setCode] = useState("");
 
   const onApply = async () => {

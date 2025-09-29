@@ -63,7 +63,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           });
 
           // product may be an ID (number) OR a nested object (if you later change serializer)
-          const items = (res.data.results || []).map((item: any) => {
+          const items = (res.data || []).map((item: any) => {
             const p = typeof item.product === "object" ? item.product : null;
             const productId = p?.id ?? item.product;
             return {

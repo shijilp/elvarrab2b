@@ -132,6 +132,7 @@ html, body {
 
 .btn-gradient-accent {
   background-image: linear-gradient(135deg, var(--btn-start), var(--btn-end));
+  color: #111111
 }
 
 /* globals.css (or app/globals.css) */
