@@ -231,8 +231,6 @@ export default function CartPage() {
           </div>
         )}
       </section>
-
-      <Footer />
     </main>
   );
 }
