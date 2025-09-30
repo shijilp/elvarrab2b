@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
-import ProductsClient from "@/components/ProductsPageClient";
+import ProductsCatalogClient from "@/components/ProductsCatalogClient";
 
 function PageFallback() {
   return (
@@ -17,7 +17,7 @@ function PageFallback() {
 export default function ProductsPage() {
   return (
     <Suspense fallback={<PageFallback />}>
-      <ProductsClient />
+      <ProductsCatalogClient />
     </Suspense>
   );
 }

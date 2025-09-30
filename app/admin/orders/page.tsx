@@ -6,6 +6,7 @@ import { AssignedUser, Order, OrderStatus } from "@/types";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { AdminStats } from "../page";
+import BulkDelhiveryButton from "@/components/ui/ShippingDelhBtn";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — CUSTOMER ORDERS PAGE (Retail Only)
@@ -180,6 +181,148 @@ export default function CustomerOrdersPage() {
   //     </div>
   //   );
   // }
+  async function createShipments() {
+    if (!selected.size) return;
+    setBusy(true);
+    try {
+      const ids = Array.from(selected);
+      const res = await api.post("/shipments/bulk-create/", {
+        ids,
+        package: {
+          // adjust defaults per your WH
+          weight: 0.5,
+          length: 10,
+          breadth: 5,
+          height: 6,
+          pickup_location: "MANJERI",
+          seller_name: "FALCONTREE SOLUTIONS LLP",
+          seller_add: "Manjeri Rajeev Gandhi By Pass Road, Manjeri, Kerala",
+          seller_gst: "32AAKFF6810D1ZU",
+        },
+      });
+
+      // Simple feedback
+      const created = res.data?.created?.length ?? 0;
+      const failed = res.data?.failed?.length ?? 0;
+      const skipped = res.data?.skipped?.length ?? 0;
+      alert(
+        `Shipments — Created: ${created}, Failed: ${failed}, Skipped: ${skipped}`
+      );
+
+      // Refresh orders so table shows waybills/status changes
+      const fresh = await api.get("/admin/orders/", {
+        headers: { Authorization: `Bearer ${user?.access}` },
+      });
+      setOrders(fresh.data.results);
+      setSelected(new Set());
+    } catch (e) {
+      console.error(e);
+      alert("Bulk create failed. See console/network.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function markShipped() {
+    if (!selected.size) return;
+    setBusy(true);
+    try {
+      const ids = Array.from(selected);
+      const res = await api.post("/shipments/bulk-mark-shipped/", { ids });
+      alert(`Marked shipped: ${res.data?.updated ?? 0}`);
+
+      const fresh = await api.get("/admin/orders/", {
+        headers: { Authorization: `Bearer ${user?.access}` },
+      });
+      setOrders(fresh.data.results);
+      setSelected(new Set());
+    } catch (e) {
+      console.error(e);
+      alert("Mark shipped failed. See console/network.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Gets waybills for the selected orders.
+   * Strategy:
+   *  - Try to read from current list (if your serializer includes shipment.waybill)
+   *  - Fallback: call a helper API that returns waybills for order IDs
+   *    Here we use /shipments/bulk-track with ids to keep backend minimal.
+   */
+  async function getWaybillsForSelection(): Promise<string[]> {
+    const ids = Array.from(selected);
+
+    // Try to read from client-side order data if present
+    const wbLocal = orders
+      .filter((o) => ids.includes(o.id))
+      // @ts-expect-error optional if your type doesn’t include it
+      .map((o) => o?.shipment?.waybill as string | undefined)
+      .filter(Boolean) as string[];
+
+    if (wbLocal.length === ids.length) return wbLocal;
+
+    // Fallback: ask backend
+    try {
+      const tr = await api.post("/shipments/bulk-track/", { ids });
+      // Delhivery track response usually nests under "ShipmentData" or similar; normalize:
+      const waybills = new Set<string>(wbLocal);
+      const shipmentsArr =
+        tr.data?.ShipmentData ?? tr.data?.shipments ?? tr.data?.packages ?? [];
+
+      for (const s of shipmentsArr) {
+        // Common shapes:
+        const wb =
+          s?.Shipment?.WayBillNo ||
+          s?.waybill ||
+          s?.awb ||
+          s?.waybill_no ||
+          s?.Waybill;
+        if (wb) waybills.add(String(wb));
+      }
+      return Array.from(waybills);
+    } catch (e) {
+      console.error("track/bulk failed", e);
+      return wbLocal; // best-effort
+    }
+  }
+
+  async function printLabels() {
+    if (!selected.size) return;
+    setBusy(true);
+    try {
+      const waybills = await getWaybillsForSelection();
+      if (!waybills.length) {
+        alert("No waybills found for selection.");
+        return;
+      }
+      const qs = encodeURIComponent(waybills.join(","));
+      const url = `/shipments/labels.pdf?waybills=${qs}`;
+      window.open(url, "_blank");
+    } catch (e) {
+      console.error(e);
+      alert("Printing labels failed. See console/network.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function trackShipments() {
+    if (!selected.size) return;
+    setBusy(true);
+    try {
+      const ids = Array.from(selected);
+      const res = await api.post("/shipments/bulk-track/", { ids });
+      console.log("Track result:", res.data);
+      alert("Tracking fetched. Check console for details.");
+    } catch (e) {
+      console.error(e);
+      alert("Tracking failed. See console/network.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <main className={`} ${palette.fg} min-h-screen antialiased `}>
@@ -228,6 +371,44 @@ export default function CustomerOrdersPage() {
             sub="completed orders"
           />
         </div>
+        <BulkDelhiveryButton selectedIds={Array.from(selected)} />
+        <section className="mt-6 rounded-2xl border border-neutral-800/50 bg-neutral-900/60 p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm opacity-80">
+              Selected: <b>{selected.size}</b>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                disabled={!selected.size || busy}
+                onClick={createShipments}
+                className="rounded-xl px-3 py-2 bg-black text-white disabled:opacity-40"
+              >
+                Create Shipments
+              </button>
+              <button
+                disabled={!selected.size || busy}
+                onClick={markShipped}
+                className="rounded-xl px-3 py-2 border border-neutral-700 disabled:opacity-40"
+              >
+                Mark Shipped
+              </button>
+              <button
+                disabled={!selected.size || busy}
+                onClick={printLabels}
+                className="rounded-xl px-3 py-2 border border-neutral-700 disabled:opacity-40"
+              >
+                Print Labels (PDF)
+              </button>
+              <button
+                disabled={!selected.size || busy}
+                onClick={trackShipments}
+                className="rounded-xl px-3 py-2 border border-neutral-700 disabled:opacity-40"
+              >
+                Track
+              </button>
+            </div>
+          </div>
+        </section>
         <section
           className={`mt-6 rounded-2xl ${palette.ring} ${palette.card} p-4`}
         >

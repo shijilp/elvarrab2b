@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
+import { InvoiceDownloadButton } from "./InvoicePDF";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — RETAIL ORDER DETAILS PAGE (Robust params)
@@ -448,6 +449,7 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
               >
                 Download Invoice (PDF)
               </a>
+
               <a
                 href="/support"
                 className={`rounded-xl px-4 py-2 text-center text-sm ${palette.button}`}
@@ -455,8 +457,44 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
                 Need Help?
               </a>
             </div>
+
+            <InvoiceDownloadButton
+              order={{
+                id: order.id,
+                created_at: order.created_at,
+                full_name: order.full_name,
+                line1: order.line1,
+                line2: order.line2,
+                city: order.city,
+                state: order.state,
+                pincode: order.pincode,
+                country: order.country,
+                subtotal: order.subtotal,
+                shipping: order.shipping,
+                discount: order.discount,
+                total_amount: order.total_amount,
+                currency: "INR",
+                // (optional) tax if you track it:
+                // tax_amount: order.tax_amount,
+                // tax_label: "GST (18%)",
+                items: order.items.map((it) => ({
+                  product: { sku: it.product.sku, name: it.product.name },
+                  quantity: it.quantity,
+                  price: it.price,
+                })),
+                brand: {
+                  name: "ELVARRA",
+                  tagline: "Luxury Fashion Jewelry",
+                  // logoUrl: "https://your-cdn/logo.png", // optional
+                },
+                invoice_no: `INV-${order.id}`,
+                paid: order.is_paid,
+                status: order.status,
+              }}
+            />
           </aside>
         </div>
+        <InvoiceDownloadButton order={order} />
       </div>
     </main>
   );

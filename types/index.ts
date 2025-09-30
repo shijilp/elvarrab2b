@@ -29,7 +29,7 @@ export interface Product {
   image: string
   images: Array<ProductImage | string>
   in_stock: boolean
-  tag?: 'new' | 'bestseller' | 'deal' | 'premiume'|null
+  tag?: 'new' | 'bestseller' | 'deal' | 'premium'|null
   rating?: number
   sku?: string
   brand?: string

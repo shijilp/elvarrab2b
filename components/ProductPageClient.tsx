@@ -314,11 +314,11 @@ const ProductPageClient: React.FC = () => {
                     <span className="opacity-70">Currency:</span>{" "}
                     {product.currency}
                   </li>
-                  {product.tag && (
+                  {/* {product.tag && (
                     <li>
                       <span className="opacity-70">Tag:</span> {product.tag}
                     </li>
-                  )}
+                  )} */}
                   <li>
                     <span className="opacity-70">Active:</span>{" "}
                     {product.is_active ? "Yes" : "No"}

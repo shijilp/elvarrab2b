@@ -6,8 +6,7 @@ import { api } from "@/lib/api";
 import { Order, OrderItems, OrderStatus } from "@/types";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { money } from "@/lib/utils";
 
 /**
  * Customer Orders — layout adapted to match the "first page" style
@@ -20,16 +19,6 @@ import Footer from "@/components/Footer";
  */
 
 // ------- helpers (kept, small tweaks) -------
-function money(n: number, currency = "USD") {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-    }).format(n);
-  } catch {
-    return `$${n?.toFixed?.(2) ?? n}`;
-  }
-}
 
 function statusPillClass(status: OrderStatus) {
   switch (status) {
@@ -79,9 +68,7 @@ export default function CustomerOrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await api.get("my-orders/", {
-          headers: { Authorization: `Bearer ${user?.access}` },
-        });
+        const res = await api.get("my-orders/");
         setOrders(res.data.results ?? []);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -325,9 +312,11 @@ export default function CustomerOrdersPage() {
                             className="h-14 w-14 rounded-l-xl object-cover"
                           />
                           <div className="min-w-0">
-                            <div className="line-clamp-1 text-sm text-zinc-200">
-                              {i?.product.name ?? "Item"}
-                            </div>
+                            <Link href={`/products/${i?.product.slug}`}>
+                              <div className="line-clamp-1 text-sm text-zinc-200">
+                                {i?.product.name ?? "Item"}
+                              </div>
+                            </Link>
                             <div className="text-xs text-zinc-400">
                               Qty {i?.quantity ?? i?.quantity ?? 1}
                             </div>

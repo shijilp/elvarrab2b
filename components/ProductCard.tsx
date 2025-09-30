@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import AddToCartBtn from "./ui/AddToCartBtn";
 import { Crown } from "lucide-react"; // install lucide-react if not already
+import { money } from "@/lib/utils";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { cartItems } = useCart();
@@ -38,18 +39,18 @@ export default function ProductCard({ product }: { product: Product }) {
             <span
               className={` flex items-center gap-1 absolute left-2 top-2 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full overflow-hidden
       ${
-        product.tag === "premiume"
+        product.tag === "premium"
           ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-md ring-1 ring-yellow-400"
           : "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
       }`}
             >
-              {product.tag === "premiume" && (
+              {product.tag === "premium" && (
                 <Crown className="w-4 h-4 text-yellow-200 drop-shadow-sm" />
               )}
-              {product.tag === "premiume" ? "Premium" : product.tag}
+              {product.tag === "premium" ? "Premium" : product.tag}
 
               {/* Glossy highlight overlay */}
-              {product.tag === "premiume" && (
+              {product.tag === "premium" && (
                 <span className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent rounded-full" />
               )}
             </span>
@@ -70,12 +71,26 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
 
       <div className="p-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">{product.name}</h3>
+        <div className="flex-col items-center justify-between">
+          <h3 className="text-sm font-medium text-nowrap overflow-hidden text-ellipsis">
+            {product.name}
+          </h3>
           {/* price if you have it */}
-          <span className="text-sm opacity-80">
-            {(product as Product).price ?? ""}
-          </span>
+
+          <div className="mt-2 flex items-center justify-between">
+            <div className="text-sm font-semibold">
+              {(product as Product).compare_at_price ? (
+                <>
+                  <span className="mr-1 line-through opacity-50">
+                    {money((product as Product).compare_at_price)}
+                  </span>
+                  <span>{money(product.price as number)}</span>
+                </>
+              ) : (
+                <span>{money(product.price as number)}</span>
+              )}
+            </div>
+          </div>
         </div>
 
         <AddToCartBtn product={product} outofStock={isOutOfStock} />

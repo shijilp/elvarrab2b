@@ -118,18 +118,18 @@ export default function Page() {
               affordable.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <a
+              <Link
                 href="#bestsellers"
                 className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 btn-gradient-accent"
               >
                 Shop Bestsellers
-              </a>
-              <a
-                href="#collections"
+              </Link>
+              <Link
+                href="/products"
                 className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
               >
                 Explore Collections
-              </a>
+              </Link>
             </div>
             <div className="mt-6 flex items-center gap-4 text-xs opacity-80">
               <span>• Elegance in Every Detail</span>
@@ -189,7 +189,7 @@ export default function Page() {
       {/* --------------- Collections --------------- */}
       <section id="collections" className="container mx-auto py-12 lg:py-16">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <SectionTitle>Featured Categories</SectionTitle>
+          <SectionTitle>Categories</SectionTitle>
           <Link
             href="/products"
             className="text-sm underline opacity-80 hover:opacity-100"
@@ -367,7 +367,7 @@ export default function Page() {
                   className="w-full rounded-xl border  bg-transparent px-4 py-3 text-sm outline-none placeholder:opacity-60 border-neutral-800"
                 />
                 <button
-                  type="submit"
+                  type="button"
                   className="rounded-xl px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 btn-gradient-accent"
                 >
                   Subscribe
@@ -448,7 +448,7 @@ function CategoryChips({
           onClick={() => onChange(c)}
           className={`rounded-full border px-3 py-1.5 text-xs transition ${
             current === c
-              ? "btn-gradient border-transparent"
+              ? "btn-gradient-accent border-transparent"
               : "border-neutral-200 dark:border-neutral-800 hover:bg-white/5"
           }`}
           aria-pressed={current === c}

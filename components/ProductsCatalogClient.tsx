@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import Link from "next/link";
+import { Crown } from "lucide-react";
 
 type APIList<T> = {
   count: number;
@@ -28,7 +29,7 @@ const DEFAULTS = {
   tags: [] as string[],
 };
 
-export default function ProductsClient() {
+export default function ProductsCatalogClient() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -60,8 +61,11 @@ export default function ProductsClient() {
   const [page, setPage] = useState<number>(urlPage);
   const [occasion, setOccasion] = useState<string>(urlOccasion);
   const [tags, setTags] = useState<string[]>(urlTags);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [categories, setCategories] = useState<any[]>([]);
+
   // data
-  const pageSize = 8;
+  const pageSize = 20;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<APIList<Product>>({
     count: 0,
@@ -161,6 +165,21 @@ export default function ProductsClient() {
     };
   }, [category, occasion, query, minPrice, maxPrice, ordering, page]);
 
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([api.get("/categories/")])
+      .then(([pRes]) => {
+        if (!mounted) return;
+
+        setCategories(pRes.data.results ?? pRes.data ?? []);
+      })
+      .catch((err) => console.error("Failed to fetch:", err))
+      .finally(() => setLoading(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const totalPages = Math.max(1, Math.ceil((data?.count || 0) / pageSize));
   const pageItems = data?.results || [];
 
@@ -214,6 +233,13 @@ export default function ProductsClient() {
   //     </div>
   //   );
   // }
+
+  const allCategoryNames = useMemo(() => {
+    return [
+      "All",
+      ...Array.from(new Set(categories.map((c) => c.name).filter(Boolean))),
+    ];
+  }, [categories]);
 
   return (
     <main className="el-text min-h-screen antialiased">
@@ -380,6 +406,16 @@ export default function ProductsClient() {
           {/* Results grid */}
           <div>
             <div className="flex items-center justify-between text-sm">
+              {/* Category chips (filter bestsellers below) */}
+              {allCategoryNames.length > 1 && (
+                <div className="mb-6">
+                  <CategoryChips
+                    categories={allCategoryNames}
+                    current={category}
+                    onChange={setCategory}
+                  />
+                </div>
+              )}
               <div className="el-text-sub">{data.count} products</div>
               <div className="hidden gap-2 sm:flex">
                 <button
@@ -432,9 +468,29 @@ export default function ProductsClient() {
                         alt={p.name}
                         className="aspect-[4/5] w-full rounded-xl object-cover"
                       />
-                      {p.tag && (
+                      {p.tag === "bestseller" && (
                         <span className="absolute left-2 top-2 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider el-chip">
                           Bestseller
+                        </span>
+                      )}
+                      {p.tag && (
+                        <span
+                          className={` flex items-center gap-1 absolute left-2 top-2 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full overflow-hidden
+      ${
+        p.tag === "premium"
+          ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-md ring-1 ring-yellow-400"
+          : "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
+      }`}
+                        >
+                          {p.tag === "premium" && (
+                            <Crown className="w-4 h-4 text-yellow-200 drop-shadow-sm" />
+                          )}
+                          {p.tag === "premium" ? "Premium" : p.tag}
+
+                          {/* Glossy highlight overlay */}
+                          {p.tag === "premium" && (
+                            <span className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent rounded-full" />
+                          )}
                         </span>
                       )}
                     </Link>
@@ -443,11 +499,13 @@ export default function ProductsClient() {
                         Out of Stock
                       </div>
                     )}
-                    <div className="p-2 ">
-                      <div className="text-sm font-medium">{p.name}</div>
+                    <div className="p-2  ">
+                      <div className="text-sm font-medium text-nowrap overflow-hidden text-ellipsis">
+                        {p.name}
+                      </div>
                       {p.sku && (
                         <div className="mt-1 text-xs el-text-sub">
-                          SKU: {p.sku}
+                          {p.category?.name}
                         </div>
                       )}
 
@@ -504,5 +562,34 @@ export default function ProductsClient() {
         </div>
       </section>
     </main>
+  );
+}
+
+function CategoryChips({
+  categories,
+  current,
+  onChange,
+}: {
+  categories: string[];
+  current: string;
+  onChange: (c: string) => void;
+}) {
+  return (
+    <div className="flex w-full flex-wrap gap-2">
+      {categories.map((c) => (
+        <button
+          key={c}
+          onClick={() => onChange(c)}
+          className={`rounded-full border px-3 py-1.5 text-xs transition ${
+            current === c
+              ? "btn-gradient-accent border-transparent"
+              : "border-neutral-200 dark:border-neutral-800 hover:bg-white/5"
+          }`}
+          aria-pressed={current === c}
+        >
+          {c}
+        </button>
+      ))}
+    </div>
   );
 }

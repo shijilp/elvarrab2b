@@ -6,27 +6,6 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api"; // Axios instance
 import { useAuth } from "@/context/AuthContext";
 
-// ------------------------------------------------------------
-// Elvarra — Admin Add Product Page
-// Route: app/admin/products/new/page.tsx
-// Features:
-//  - Superuser guard
-//  - Form fields: name, slug (auto from name), SKU, price, description,
-//    category (free text), inventory, low stock threshold, active toggle
-//  - Tags input with chips
-//  - Image uploader (drag & drop + file input) with previews & remove
-//  - Optional variations (client-side; sends variants_json as JSON)
-//  - Client-side validation & disabled submit until valid
-//  - Two CTAs: Save as Draft, Save & Publish
-//  - Centered loading overlay + spinner
-// Backend expectations (adjust to your DRF):
-//  - POST /admin/products  (multipart/form-data)
-//    fields: name, slug, sku, price, description, category,
-//            inventory, low_stock_threshold, is_active,
-//            tags_json (JSON array), variants_json (JSON array, optional),
-//            images (multiple files)
-// ------------------------------------------------------------
-
 // ---------- Helpers ----------
 function clsx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(" ");
@@ -115,6 +94,105 @@ export type Category = {
   name: string;
   slug?: string;
 };
+
+export type Occasion = {
+  id: number;
+  name: string;
+  slug?: string;
+  icon?: string;
+};
+
+function OccasionsPicker({
+  selectedIds,
+  setSelectedIds,
+}: {
+  selectedIds: number[];
+  setSelectedIds: (ids: number[]) => void;
+}) {
+  const [options, setOptions] = React.useState<Occasion[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [q, setQ] = React.useState("");
+
+  React.useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/occasions/"); // adjust if your URL differs
+        if (!ignore) setOptions(res.data?.results ?? res.data ?? []);
+      } catch {
+        if (!ignore) setOptions([]);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  function toggle(id: number) {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((x) => x !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  }
+
+  const filtered = options.filter(
+    (o) => !q || o.name.toLowerCase().includes(q.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-medium">Occasions</div>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search occasions…"
+          className="rounded-xl border border-neutral-200 bg-transparent px-3 py-1.5 text-sm outline-none dark:border-neutral-800"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-neutral-200 p-2 dark:border-neutral-800">
+        {loading ? (
+          <div className="p-3 text-sm opacity-70">Loading…</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-3 text-sm opacity-70">No matches</div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+            {filtered.map((o) => {
+              const checked = selectedIds.includes(o.id);
+              return (
+                <label
+                  key={o.id}
+                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm cursor-pointer ${
+                    checked
+                      ? "border-neutral-900 bg-neutral-900 text-white dark:bg-amber-500 dark:text-neutral-900"
+                      : "border-neutral-200 dark:border-neutral-800"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="accent-current"
+                    checked={checked}
+                    onChange={() => toggle(o.id)}
+                  />
+                  <span className="truncate">{o.name}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {selectedIds.length > 0 && (
+        <div className="text-xs opacity-70">Selected: {selectedIds.length}</div>
+      )}
+    </div>
+  );
+}
 
 // ---------- Image Uploader ----------
 function ImageUploader({
@@ -420,6 +498,7 @@ export default function AdminAddProductPage() {
   const [category, setCategory] = useState<Category | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [catLoading, setCatLoading] = useState(true);
+  const [occasionIds, setOccasionIds] = useState<number[]>([]);
   useEffect(() => {
     let ignore = false;
     (async () => {
@@ -490,7 +569,9 @@ export default function AdminAddProductPage() {
       if (useVariants) {
         fd.append("variants_json", JSON.stringify(variants || []));
       }
-
+      for (const id of occasionIds) {
+        fd.append("occasion_ids", String(id));
+      }
       for (const f of files) fd.append("images", f, f.name);
 
       await api.post("/admin/products/", fd, {
@@ -693,6 +774,12 @@ export default function AdminAddProductPage() {
             <label className="mt-3 block text-sm">
               <div className="mb-1 opacity-70">Tags</div>
               <TagsInput value={tags} onChange={setTags} />
+            </label>
+            <label className="mt-3 block">
+              <OccasionsPicker
+                selectedIds={occasionIds}
+                setSelectedIds={setOccasionIds}
+              />
             </label>
           </div>
 
