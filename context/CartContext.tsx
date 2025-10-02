@@ -21,7 +21,7 @@ type GuestItem = {
   slug?: string;
   description?: string;
   category?: string;
-  in_stock?: boolean;
+  // in_stock?: boolean;
   inventory?: number;
   low_stock_threshold?: number;
   backorder_allowed?: boolean;
@@ -76,7 +76,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               slug: p?.slug || "", // add slug with default value
               description: p?.description || "", // add description with default value
               category: p?.category || "", // add category with default value
-              in_stock: p?.in_stock || false, // add in_stock with default value
+              // in_stock: p?.in_stock || false, // add in_stock with default value
             };
           });
 
@@ -102,7 +102,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             slug: x.slug || "", // add slug with default value
             description: x.description || "", // add description with default value
             category: x.category || "", // add category with default value
-            in_stock: x.in_stock || false, // add in_stock with default value
+            // in_stock: x.in_stock || false, // add in_stock with default value
           }));
           setCartItems(items);
         }

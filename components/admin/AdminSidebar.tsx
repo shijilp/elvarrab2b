@@ -20,7 +20,7 @@ export function Sidebar({
     { href: "/admin/products", label: "Products" },
     { href: "/admin/orders/packing", label: "Packing" },
     { href: "/admin/orders/shipping", label: "Shipping" },
-    { href: "/admin/settings", label: "Settings" },
+    { href: "/admin/inventory", label: "Inventory" },
   ];
   const isActive = (href: string) =>
     pathname === href || pathname?.startsWith(href + "/");

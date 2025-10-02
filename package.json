@@ -18,6 +18,7 @@
     "next": "15.5.2",
     "react": "19.1.0",
     "react-barcode": "^1.6.1",
+    "react-datepicker": "^8.7.0",
     "react-dom": "19.1.0",
     "react-medium-image-zoom": "^5.3.0",
     "recharts": "^3.2.1",

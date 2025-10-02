@@ -493,12 +493,13 @@ export default function ProductsCatalogClient() {
                           )}
                         </span>
                       )}
+
+                      {p.stock < 1 && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-semibold text-sm z-10">
+                          Out of Stock
+                        </div>
+                      )}
                     </Link>
-                    {!p.in_stock && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-semibold text-sm z-10">
-                        Out of Stock
-                      </div>
-                    )}
                     <div className="p-2  ">
                       <div className="text-sm font-medium text-nowrap overflow-hidden text-ellipsis">
                         {p.name}

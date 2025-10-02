@@ -18,7 +18,7 @@ export default function ProductCard({ product }: { product: Product }) {
   );
   const qty = line?.quantity ?? 0;
   const inCart = qty > 0;
-  const isOutOfStock = !product.in_stock;
+  const isOutOfStock = product.stock < 1 ? true : false;
 
   return (
     <div className="group rounded-2xl p-2 transition-transform hover:-translate-y-0.5 ring-1 ring-neutral-200 dark:ring-neutral-800 bg-white/90 dark:bg-neutral-900/70">

@@ -9,6 +9,7 @@ import type { Product, Variant } from "@/types";
 
 // Zoom needs CSS; keep it client-only
 import "react-medium-image-zoom/dist/styles.css";
+
 import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import TagBadge from "@/components/ui/TagBadge";
 import Link from "next/link";
@@ -19,12 +20,12 @@ const Zoom = dynamic(() => import("react-medium-image-zoom"), { ssr: false });
 
 type ParamShape = { slug: string };
 function stockLabel(p: Product) {
-  if (p.in_stock) {
-    if (p.low_stock_threshold && p.inventory <= p.low_stock_threshold)
+  if (p.stock > 0) {
+    if (p.low_stock_threshold && p.stock <= p.low_stock_threshold)
       return "Low stock";
     return "In stock";
   }
-  if (!p.in_stock && p.backorder_allowed) return "Backorder available";
+  if (p.stock < 1 && p.backorder_allowed) return "Backorder available";
   return "Out of stock";
 }
 
@@ -101,7 +102,7 @@ const ProductPageClient: React.FC = () => {
       </div>
     );
   }
-  const isOutOfStock = product ? !product.in_stock : true;
+  const isOutOfStock = product ? product.stock < 1 : false;
 
   // Soft 404 in client (avoid server-only notFound())
   if (!product || error) {
@@ -236,23 +237,23 @@ const ProductPageClient: React.FC = () => {
             <div className="mt-2 text-sm">
               <span
                 className={`inline-flex items-center rounded-lg px-2 py-1 ring-1 ${
-                  product.in_stock
+                  product.stock > 0
                     ? "ring-green-500/40 text-green-400"
                     : product.backorder_allowed
                     ? "ring-amber-500/40 text-amber-400"
                     : "ring-rose-500/40 text-rose-400"
                 }`}
-                title={`Inventory: ${product.inventory}${
+                title={`Inventory: ${product.stock}${
                   product.backorder_allowed ? " (backorders allowed)" : ""
                 }`}
               >
                 {stockLabel(product)}
               </span>
-              {product.in_stock &&
+              {product.stock > 0 &&
                 product.low_stock_threshold &&
-                product.inventory <= product.low_stock_threshold && (
+                product.stock <= product.low_stock_threshold && (
                   <span className="ml-2 text-xs opacity-70">
-                    Only {product.inventory} left
+                    Only {product.stock} left
                   </span>
                 )}
             </div>

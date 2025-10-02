@@ -6,24 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api"; // your Axios instance
 import { useAuth } from "@/context/AuthContext"; // should expose user + is_superuser
-
-// ------------------------------------------------------------
-// Elvarra — Admin Products Page
-// Route suggestion: app/admin/products/page.tsx
-// Features:
-//  - Search + filters (Active/Disabled, Stock: All/Low/Out)
-//  - Table with image, name, SKU, price, inventory, status
-//  - Row actions: Edit, View, Toggle Active
-//  - Bulk actions: Activate, Deactivate, Delete, Export CSV
-//  - Pagination & basic sorting (client-side fallback if API lacks it)
-//  - Global centered loading overlay + spinner
-//  - Superuser guard
-// API shape expected (adjust to your backend):
-//   GET  /admin/products?q=&status=&stock=&page=&page_size=&sort=
-//   PATCH /admin/products/{id}  (for quick edits: price, sku, inventory, is_active)
-//   POST /admin/products/bulk  (optional; else we loop PATCH)
-//   DELETE /admin/products/{id}
-// ------------------------------------------------------------
+import { money } from "@/lib/utils";
 
 // ---------- Types (align these with your Django serializers) ----------
 export type Product = {
@@ -35,8 +18,10 @@ export type Product = {
   price: number;
   image_url?: string;
   inventory?: number;
+  stock: number;
+
   low_stock_threshold?: number;
-  in_stock?: boolean; // optional helper from backend
+  // in_stock?: boolean; // optional helper from backend
   is_active?: boolean;
   tags?: string[];
   created_at?: string;
@@ -51,16 +36,6 @@ export type Paged<T> = {
 };
 
 // ---------- Utilities ----------
-function money(n: number, currency = "USD") {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-    }).format(n ?? 0);
-  } catch {
-    return `$${Number(n ?? 0).toFixed(2)}`;
-  }
-}
 
 function clsx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(" ");
@@ -188,6 +163,7 @@ function useProducts(params: {
                 inventory: 24,
                 low_stock_threshold: 6,
                 is_active: true,
+                stock: 24,
               },
               {
                 id: 12,
@@ -198,6 +174,7 @@ function useProducts(params: {
                 inventory: 3,
                 low_stock_threshold: 6,
                 is_active: true,
+                stock: 3,
               },
               {
                 id: 13,
@@ -208,6 +185,7 @@ function useProducts(params: {
                 inventory: 0,
                 low_stock_threshold: 4,
                 is_active: false,
+                stock: 0,
               },
             ],
             count: 3,
@@ -355,17 +333,19 @@ function ProductsTable({
                       )}
                     </div>
                     <div>
-                      <div className="font-medium">{p.name}</div>
+                      <div className="font-medium text-nowrap text-ellipsis">
+                        {p.name}
+                      </div>
                       <div className="text-xs opacity-70">#{p.id}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-2 py-2">{p.sku || "—"}</td>
                 <td className="px-2 py-2">{money(p.price)}</td>
-                <td className="px-2 py-2">{p.inventory ?? 0}</td>
+                <td className="px-2 py-2">{p.stock ?? 0}</td>
                 <td className="px-2 py-2">
                   <StockPill
-                    inv={p.inventory ?? 0}
+                    inv={p.stock ?? 0}
                     low={p.low_stock_threshold ?? 0}
                   />
                 </td>
@@ -618,7 +598,7 @@ export default function AdminProductsPage() {
         p.name,
         p.sku || "",
         p.price,
-        p.inventory ?? 0,
+        p.stock ?? 0,
         p.is_active ? "1" : "0",
       ].join(",")
     );

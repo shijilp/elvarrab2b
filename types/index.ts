@@ -7,12 +7,13 @@ export interface ProductLite {
   price: number
   image: string
   images?: Array<ProductImage | string>
-  in_stock: boolean
+ // in_stock: boolean
   tag?: 'new' | 'bestseller' | 'deal' | 'premiume'|null
   rating?: number
   sku?: string
   brand?: string
-  inventory: number
+ // inventory: number
+  stock: number
   low_stock_threshold: number
   backorder_allowed: boolean
   is_active: boolean
@@ -28,12 +29,13 @@ export interface Product {
   compare_at_price:number
   image: string
   images: Array<ProductImage | string>
-  in_stock: boolean
+ // in_stock: boolean
   tag?: 'new' | 'bestseller' | 'deal' | 'premium'|null
   rating?: number
   sku?: string
   brand?: string
-  inventory: number
+//  inventory: number
+  stock: number
   gtin:string
   mpn:string
   low_stock_threshold: number
@@ -60,7 +62,7 @@ export interface CartProduct   {
   name: string
   slug: string
   price: number
-  in_stock: boolean
+ // in_stock: boolean
     description: string
       image: string
   category:   Category | null
@@ -78,7 +80,7 @@ export interface CartItem   {
   price: number
   image: string
   images?: { id: number; image: string }[]
-  in_stock: boolean
+  //in_stock: boolean
 }
 
 export interface Category {
@@ -96,7 +98,7 @@ export interface ProductTiny {
   description: string
   category:   Category | null
   price: number
-  in_stock: boolean
+ // in_stock: boolean
   image: string
 
 }

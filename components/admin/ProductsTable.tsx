@@ -33,7 +33,7 @@ export function ProductsTable({
                 <td className="px-2 py-2 font-medium">{p.name}</td>
                 <td className="px-2 py-2">{p.sku || "—"}</td>
                 <td className="px-2 py-2">{money(p.price)}</td>
-                <td className="px-2 py-2">{p.inventory ?? "—"}</td>
+                <td className="px-2 py-2">{p.stock ?? "—"}</td>
                 <td className="px-2 py-2">
                   <span
                     className={clsx(
