@@ -58,13 +58,13 @@ const OccassionTab = () => {
               href={it.href}
               className={`group relative overflow-hidden rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70`}
             >
-              <Image
+              {/* <Image
                 width={400}
                 height={500}
                 src={it.img}
                 alt={it.title}
                 className="aspect-[4/5] w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+              /> */}
               <div className="absolute inset-x-0 bottom-0 p-3">
                 <div className="rounded-xl bg-black/40 p-2 backdrop-blur">
                   <div className="text-sm font-medium text-white">

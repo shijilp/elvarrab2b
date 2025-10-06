@@ -213,9 +213,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const res = await api.get("cart/", {
           headers: { Authorization: `Bearer ${user.access}` },
         });
-
         await Promise.all(
-          res.data.results.map((item: any) =>
+          res.data.map((item: any) =>
             api.delete(`cart/${item.product.id}/remove/`, {
               headers: { Authorization: `Bearer ${user.access}` },
             })

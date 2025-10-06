@@ -35,6 +35,17 @@ type PincodeCheck = {
   charge?: number;
   delivery_days?: number | null;
 };
+
+type WalletSummary = {
+  balance: number;
+  // (optional) if you later expose recent transactions
+  // transactions?: Array<{ id: number; amount: number; type: "credit"|"debit"; created_at: string }>
+};
+function toNumber(n: unknown) {
+  const v = typeof n === "number" ? n : parseFloat(String(n ?? 0));
+  return Number.isFinite(v) ? v : 0;
+}
+
 function paletteForTheme(theme: ThemeMode): Palette {
   return theme === "dark"
     ? {
@@ -95,6 +106,9 @@ export default function CheckoutPage() {
   };
   console.log(cartItems, "scas");
   const [shipping, setShipping] = useState<number>(0);
+  const [wallet, setWallet] = useState<WalletSummary | null>(null);
+  const [walletWillUse, setWalletWillUse] = useState<number>(0);
+  const [payableNow, setPayableNow] = useState<number>(0);
 
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +132,30 @@ export default function CheckoutPage() {
   //   if (subtotal === 0) setShipping(0);
   //   else if (subtotal >= 999) setShipping(0);
   // }, [subtotal]);
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const r = await api.get("/wallet/"); // expects { balance, transactions: [...] }
+        if (!ignore) {
+          setWallet({ balance: toNumber(r.data?.balance ?? 0) });
+        }
+      } catch {
+        // ignore for guests / errors
+        setWallet(null);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+  useEffect(() => {
+    // front-end estimate; final source of truth is backend response
+    const gross = Math.max(0, subtotal - discount + shipping);
+    const canUse = Math.min(wallet?.balance ?? 0, gross);
+    setWalletWillUse(canUse);
+    setPayableNow(Math.max(0, gross - canUse));
+  }, [subtotal, discount, shipping, wallet]);
   const validate = (): string | null => {
     const res = AddressSchema.safeParse(addr);
     if (!res.success) {
@@ -175,6 +213,19 @@ export default function CheckoutPage() {
         return;
       const { data } = await api.post("checkout/", payload);
       // Expected response: { order_id, razorpay_order_id, total_amount, currency, ... }
+      const finalPayable = toNumber(data?.net_amount ?? 0);
+      const walletUsedServer = toNumber(data?.wallet_used ?? 0);
+      if (walletUsedServer > 0) setWalletWillUse(walletUsedServer);
+      setPayableNow(finalPayable);
+      // 🔹 ZERO-AMOUNT PATH (skip Razorpay)
+      if (!finalPayable || finalPayable <= 0) {
+        // Minimal backend endpoint to mark paid due to wallet
+        // Implement tiny view: takes order_id, sets is_paid=True, status='confirmed'
+        await api.post("/payment/zero/", { order_id: data.order_id });
+        clearCart();
+        router.push(`/orders/confirmation?order=${data.order_id}`);
+        return;
+      }
       const ok = await openRazorpayAndPay({
         rzpOrderId: data.razorpay_order_id,
         orderId: String(data.order_id),
@@ -379,9 +430,26 @@ export default function CheckoutPage() {
                   <span className="opacity-80">VAT (15%)</span>
                   <span>{formatMoney(vat)}</span>
                 </div> */}
+
                 <div className="flex items-center justify-between border-t pt-2">
                   <span className="font-medium">Total</span>
                   <span className="font-semibold">{formatMoney(total)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="opacity-80">Wallet balance</span>
+                  <span>{formatMoney(wallet?.balance ?? 0)}</span>
+                </div>
+
+                {/* Show only if anything will be used */}
+                {(walletWillUse ?? 0) > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="opacity-80">Wallet applied</span>
+                    <span>-{formatMoney(walletWillUse)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-b pt-2">
+                  <span className="opacity-80">Payable now</span>
+                  <span className="font-medium">{formatMoney(payableNow)}</span>
                 </div>
               </div>
 

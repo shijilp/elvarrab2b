@@ -1,4 +1,4 @@
-import RetailOrderDetailsPage from "@/components/RetailOrderDetailsPage ";
+import OrderDetailsPage from "@/components/OrderDetailsPage ";
 import { notFound } from "next/navigation";
 
 export default async function Page({
@@ -8,5 +8,5 @@ export default async function Page({
 }) {
   const { id } = await params;
   if (!id) notFound();
-  return <RetailOrderDetailsPage id={id} />;
+  return <OrderDetailsPage id={id} />;
 }

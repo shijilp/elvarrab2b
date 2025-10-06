@@ -1,5 +1,7 @@
 "use client";
 
+import { api } from "@/lib/api";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 // ------------------------------------------------------------
@@ -30,6 +32,11 @@ export type Address = {
   country: string;
   isDefault?: boolean;
 };
+type WalletSummary = { balance: number };
+function asNumber(v: unknown, def = 0): number {
+  const n = Number(v);
+  return isNaN(n) ? def : n;
+}
 
 // ---------------------------------
 // Helpers
@@ -185,7 +192,20 @@ async function apiChangePassword(current: string, nextPass: string) {
     );
   return true;
 }
-
+async function apiGetWallet(): Promise<WalletSummary> {
+  // Try /api/wallet/ → /wallet/ → /account/wallet/
+  const tryUrls = ["/api/wallet/", "/wallet/", "/account/wallet/"];
+  for (const url of tryUrls) {
+    try {
+      const r = await api.get(url);
+      if (r.data) {
+        const data = await r.data;
+        return { balance: asNumber(data?.balance, 0) };
+      }
+    } catch {}
+  }
+  return { balance: 0 };
+}
 export default function AccountSettingsPage() {
   // Password
   const [cur, setCur] = useState("");
@@ -195,6 +215,8 @@ export default function AccountSettingsPage() {
   const [pwErr, setPwErr] = useState<string | null>(null);
   const [pwOk, setPwOk] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+  const [wallet, setWallet] = useState<WalletSummary | null>(null);
+  const [walletErr, setWalletErr] = useState<string | null>(null);
 
   // Addresses
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -205,6 +227,19 @@ export default function AccountSettingsPage() {
     (async () => {
       const list = await apiListAddresses();
       setAddresses(list);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const w = await apiGetWallet();
+        setWallet(w);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        setWalletErr("Unable to load wallet");
+        setWallet({ balance: 0 });
+      }
     })();
   }, []);
 
@@ -473,16 +508,64 @@ export default function AccountSettingsPage() {
                 Manage your password and shipping addresses.
               </p>
             </div>
-            <div className="flex gap-2 sm:justify-end">
-              <a
-                href="/account/orders/retail"
+            <div className="flex flex-col items-stretch gap-2 sm:items-end">
+              <Link
+                href="/orders"
                 className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm hover:bg-zinc-800"
               >
                 My orders
-              </a>
+              </Link>
             </div>
           </div>
         </div>
+        {/* Wallet */}
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 mt-6  ">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">My wallet</h2>
+            <div className="text-xs text-zinc-400">
+              {walletErr ? walletErr : "Auto-applied at checkout"}
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+              <div className="text-xs uppercase tracking-wider text-zinc-400">
+                Current balance
+              </div>
+              <div className="mt-1 text-2xl font-semibold">
+                ₹{(wallet?.balance ?? 0).toFixed(2)}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+              <div className="text-xs uppercase tracking-wider text-zinc-400">
+                Status
+              </div>
+              <div className="mt-1 text-sm">Active</div>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+              <div className="text-xs uppercase tracking-wider text-zinc-400">
+                How it works
+              </div>
+              <p className="mt-1 text-xs text-zinc-300">
+                If an order is cancelled before shipping, the refundable amount
+                goes to your wallet. At checkout, your wallet is auto-applied;
+                any remainder is paid via Razorpay.
+              </p>
+            </div>
+          </div>
+
+          {/* (Optional) a link to a transactions page if you add one later */}
+          {/* <div className="mt-4">
+              <a
+                href="/account/wallet/transactions"
+                className="text-sm text-zinc-300 underline-offset-4 hover:underline"
+              >
+                View transactions
+              </a>
+            </div> */}
+        </section>
 
         {/* Main grid */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1fr]">

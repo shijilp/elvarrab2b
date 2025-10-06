@@ -71,11 +71,14 @@ export default function Header() {
 
             <div className="flex items-center gap-2">
               {user && (
-                <div className=" hidden md:block">
-                  <span className="text-sm opacity-90">
-                    Hello, {user.first_name ? user.first_name : user.username}!
-                  </span>
-                </div>
+                <Link href="/account">
+                  <div className=" hidden md:block">
+                    <span className="text-sm opacity-90">
+                      Hello, {user.first_name ? user.first_name : user.username}
+                      !
+                    </span>
+                  </div>
+                </Link>
               )}
               <ThemeToggle />
               <div className=" hidden md:block">

@@ -19,7 +19,7 @@ type APIList<T> = {
 };
 
 const DEFAULTS = {
-  category: "all",
+  category: "All",
   q: "",
   min: 0,
   max: 0,
@@ -138,7 +138,7 @@ export default function ProductsCatalogClient() {
       page,
       page_size: pageSize,
       search: query || undefined,
-      category: category !== "all" ? category : undefined,
+      category: category !== "All" ? category : undefined,
       occasion: occasion !== "all" ? occasion : undefined,
       min_price: minPrice || undefined,
       max_price: maxPrice || undefined,
@@ -202,7 +202,7 @@ export default function ProductsCatalogClient() {
       else p.set(k, String(v));
     };
     if (next.category !== undefined)
-      write("category", next.category === "all" ? "" : next.category);
+      write("category", next.category === "All" ? "" : next.category);
     if (next.occasion !== undefined)
       write("occasion", next.occasion === "all" ? "" : next.occasion);
     if (next.q !== undefined) write("q", next.q);
@@ -240,7 +240,6 @@ export default function ProductsCatalogClient() {
       ...Array.from(new Set(categories.map((c) => c.name).filter(Boolean))),
     ];
   }, [categories]);
-
   return (
     <main className="el-text min-h-screen antialiased">
       <div className="inset-0 -z-10 opacity-30 blur-3xl">
@@ -251,8 +250,8 @@ export default function ProductsCatalogClient() {
       <div className="container mx-auto py-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">Shop All</h1>
-            <p className="mt-1 text-sm el-text-sub">
+            <h1 className="text-2xl font-semibold el-textn">Shop All</h1>
+            <p className="mt-1 text-sm el-text-subn">
               Free shipping over {money(1000)} • 30-day returns • 2-year
               warranty
             </p>
@@ -303,7 +302,7 @@ export default function ProductsCatalogClient() {
                   }}
                   className="w-full rounded-xl border el-border bg-transparent px-3 py-2 text-sm outline-none"
                 >
-                  <option value="all">All</option>
+                  <option value="All">All</option>
                   <option value="necklaces">Necklaces</option>
                   <option value="earrings">Earrings</option>
                   <option value="rings">Rings</option>
@@ -416,22 +415,22 @@ export default function ProductsCatalogClient() {
                   />
                 </div>
               )}
-              <div className="el-text-sub">{data.count} products</div>
+              <div className=" el-text-subn">{data.count} products</div>
               <div className="hidden gap-2 sm:flex">
                 <button
                   onClick={() => goto(page - 1)}
                   disabled={page <= 1}
-                  className="rounded-xl border el-bordern px-3 el-text-sub py-1.5 disabled:opacity-50"
+                  className="rounded-xl border el-bordern el-text-subn px-3  py-1.5 disabled:opacity-50"
                 >
                   Prev
                 </button>
-                <div className="px-1 py-1.5 el-text-sub">
+                <div className="px-1 py-1.5 el-text-subn ">
                   Page {page} / {totalPages}
                 </div>
                 <button
                   onClick={() => goto(page + 1)}
                   disabled={page >= totalPages}
-                  className="rounded-xl border el-border px-3 py-1.5 disabled:opacity-40"
+                  className="rounded-xl border el-bordern el-text-subn px-3 py-1.5 disabled:opacity-40"
                 >
                   Next
                 </button>
@@ -581,10 +580,10 @@ function CategoryChips({
         <button
           key={c}
           onClick={() => onChange(c)}
-          className={`rounded-full border px-3 py-1.5 text-xs transition ${
+          className={`rounded-full  border px-3 py-1.5 text-xs transition ${
             current === c
               ? "btn-gradient-accent border-transparent"
-              : "border-neutral-200 dark:border-neutral-800 hover:bg-white/5"
+              : "border-neutral-800  bg-neutral-900 el-text-subn hover:bg-white/5"
           }`}
           aria-pressed={current === c}
         >

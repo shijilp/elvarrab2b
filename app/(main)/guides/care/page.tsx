@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import React, { useMemo } from "react";
-import { ca } from "zod/locales";
 
 // ==================================================================
 // Elvarra / Elvara — Guides (4 pages in one file for preview)

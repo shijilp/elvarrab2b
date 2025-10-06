@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceDownloadButton } from "./InvoicePDF";
+import { StatusPill } from "./ui/StatusPill";
+import { OrderStatus } from "@/types";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — RETAIL ORDER DETAILS PAGE (Robust params)
@@ -61,19 +63,11 @@ export type RetailOrderItem = {
   unit: number;
   qty: number;
 };
-type OrderStatus =
-  | "Pending"
-  | "Confirmed"
-  | "Shipped"
-  | "Delivered"
-  | "Cancelled";
-("processing");
-("new");
 
 export type RetailOrder = {
   id: string;
   createdAt: string; // ISO
-  status: "Pending" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
+  status: "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
   currency: string;
   subtotal: number;
   tax: number; // VAT
@@ -188,20 +182,6 @@ function money(n: number, currency = "USD") {
   }
 }
 
-function statusChip(status: OrderStatus) {
-  switch (status) {
-    case "Pending":
-      return "bg-yellow-500 text-neutral-900";
-    case "Confirmed":
-      return "bg-blue-500 text-white";
-    case "Shipped":
-      return "bg-amber-600 text-white";
-    case "Delivered":
-      return "bg-emerald-500 text-white";
-    case "Cancelled":
-      return "bg-rose-500 text-white";
-  }
-}
 type OrderDetail = {
   id: number;
   created_at: string;
@@ -220,6 +200,8 @@ type OrderDetail = {
   shipping: number;
   discount: number;
   subtotal: number;
+  wallet_used: number;
+  net_amount: number;
   items: {
     id: number;
     product: {
@@ -238,7 +220,7 @@ type OrderDetail = {
 // - Fallbacks: try window.location pathname when params are missing.
 // ------------------------------------------------------------
 
-export default function RetailOrderDetailsPage({ id }: { id: string }) {
+export default function OrderDetailsPage({ id }: { id: string }) {
   const theme: ThemeMode = "dark";
   const palette = useMemo(() => paletteForTheme(theme), [theme]);
   const { user } = useAuth();
@@ -319,11 +301,10 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
             </p>
           </div>
           <span
-            className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${statusChip(
-              order.status
-            )}`}
+            className={`inline-block rounded-full px-3 py-1 text-xs font-semibold 
+            `}
           >
-            {order.status}
+            <StatusPill status={order.status} />
           </span>
         </div>
 
@@ -436,9 +417,20 @@ export default function RetailOrderDetailsPage({ id }: { id: string }) {
                 <span className="opacity-80">Discount</span>
                 <span>-{money(order.discount, "INR")}</span>
               </div>
+
               <div className="flex items-center justify-between border-t pt-2">
                 <span className="font-medium">Total</span>
                 <span className="font-semibold">{money(total, "INR")}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="opacity-80">Wallet used</span>
+                <span>-{money(order.wallet_used, "INR")}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Net Paid</span>
+                <span className="font-medium">
+                  {money(order.net_amount, "INR")}
+                </span>
               </div>
             </div>
 

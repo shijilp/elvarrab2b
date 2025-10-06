@@ -307,7 +307,7 @@ export default function ThankYouPage() {
                     Print receipt
                   </button>
                   <a
-                    href={`/account/orders/${encodeURIComponent(orderId)}`}
+                    href={`/orders/${encodeURIComponent(orderId)}`}
                     className={`rounded-xl px-4 py-2 text-center text-sm font-medium ${palette.button}`}
                   >
                     View order
@@ -321,7 +321,7 @@ export default function ThankYouPage() {
           {!hasData && (
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Link
-                href="/cart/retail"
+                href="/orders/cart"
                 className={`rounded-xl border ${palette.border} px-4 py-3 text-center text-sm`}
               >
                 Return to cart
@@ -341,7 +341,7 @@ export default function ThankYouPage() {
           <Link href="/" className="underline">
             Home
           </Link>
-          <Link href="/account/orders" className="underline">
+          <Link href="/orders" className="underline">
             My orders
           </Link>
         </div>

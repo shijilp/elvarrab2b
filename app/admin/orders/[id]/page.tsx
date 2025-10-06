@@ -112,6 +112,7 @@ const statusChipColors: Record<Order["status"], string> = {
   shipped: "bg-cyan-500/15 text-cyan-400 ring-1 ring-cyan-500/30",
   delivered: "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30",
   cancelled: "bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30",
+  pending: "",
 };
 
 function Spinner({ size = 18 }: { size?: number }) {

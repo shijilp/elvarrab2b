@@ -3,6 +3,7 @@ import { AssignedUser, Order } from "@/types";
 import Link from "next/link";
 import { LoadingOverlay } from "../ui/LoadingOverlay";
 import { useState } from "react";
+import { StatusPill } from "../ui/StatusPill";
 
 // ---------- Tables ----------
 export function OrdersTable({
@@ -145,17 +146,10 @@ export function OrdersTable({
                   </td>
                   <td className="px-2 py-2">{o.full_name || o.email || "-"}</td>
                   <td className="px-2 py-2">
-                    <span
-                      className={clsx(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs",
-                        statusChipColors[o.status]
-                      )}
-                    >
-                      {o.status}
-                    </span>
+                    <StatusPill status={o.status} />
                   </td>
                   <td className="px-2 py-2">
-                    {money(o.total_amount, o.country || "USD")}
+                    {money(o.total_amount, o.country || "INR")}
                   </td>
                   <td className="px-2 py-2 opacity-80">
                     {new Date(o.created_at).toLocaleString()}
@@ -194,12 +188,3 @@ export function OrdersTable({
 function clsx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(" ");
 }
-
-const statusChipColors: Record<Order["status"], string> = {
-  new: "bg-amber-500/15 text-amber-500 ring-1 ring-amber-500/30",
-  processing: "bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30",
-  confirmed: "bg-indigo-500/15 text-indigo-400 ring-1 ring-indigo-500/30",
-  shipped: "bg-cyan-500/15 text-cyan-400 ring-1 ring-cyan-500/30",
-  delivered: "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30",
-  cancelled: "bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30",
-};

@@ -7,6 +7,7 @@ import { Order, OrderItems, OrderStatus } from "@/types";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { money } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/StatusPill";
 
 /**
  * Customer Orders — layout adapted to match the "first page" style
@@ -19,36 +20,6 @@ import { money } from "@/lib/utils";
  */
 
 // ------- helpers (kept, small tweaks) -------
-
-function statusPillClass(status: OrderStatus) {
-  switch (status) {
-    case "new":
-      return "text-amber-300";
-    case "confirmed":
-      return "text-sky-300";
-    case "shipped":
-      return "text-amber-300";
-    case "delivered":
-      return "text-emerald-300";
-    case "cancelled":
-      return "text-rose-300";
-    default:
-      return "text-zinc-300";
-  }
-}
-
-function StatusPill({ status }: { status: OrderStatus }) {
-  const label = status[0].toUpperCase() + status.slice(1);
-  return (
-    <span
-      className={`rounded-full border border-zinc-800 bg-zinc-900/70 px-2 py-0.5 text-xs ${statusPillClass(
-        status
-      )}`}
-    >
-      {label}
-    </span>
-  );
-}
 
 export default function CustomerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -275,10 +246,46 @@ export default function CustomerOrdersPage() {
                 </div>
 
                 {/* right: total + CTA */}
-                <div className="flex items-center gap-2 sm:justify-end">
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                   <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm">
                     Total: {money(o.total_amount ?? 0)}
                   </div>
+
+                  {/* Cancel button (only for cancellable statuses) */}
+                  {["new", "confirmed", "processing", "packed"].includes(
+                    o.status
+                  ) && (
+                    <button
+                      onClick={async () => {
+                        const ok = window.confirm(
+                          "Are you sure you want to cancel this order?"
+                        );
+                        if (!ok) return;
+
+                        try {
+                          await api.post(`orders/${o.id}/cancel/`);
+                          alert(
+                            "Order cancelled successfully. Amount credited to wallet."
+                          );
+                          // Refresh orders
+                          const res = await api.get("my-orders/");
+                          setOrders(res.data.results ?? []);
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        } catch (err: any) {
+                          console.error("Cancel failed:", err);
+                          const msg =
+                            err?.response?.data?.error ||
+                            err?.response?.data?.detail ||
+                            "Unable to cancel order.";
+                          alert(msg);
+                        }
+                      }}
+                      className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-rose-400 hover:bg-zinc-800"
+                    >
+                      Cancel
+                    </button>
+                  )}
+
                   <Link
                     href={`/orders/${encodeURIComponent(String(o.id))}`}
                     className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--text-dark)]"

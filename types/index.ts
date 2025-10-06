@@ -127,6 +127,7 @@ export interface Order {
   shipping:number
   subtotal : number
   total_amount : number
+  net_amount: number
   status : OrderStatus
   is_paid : string
   razorpay_payment_id : string
@@ -158,7 +159,9 @@ export type OrderStatus =
   | "processing"
   | "shipped"
   | "delivered"
-  | "cancelled";
+  | "cancelled"
+  | "pending";
+
 
   
 export type ProductSpec = {
@@ -254,6 +257,7 @@ export interface BackOrder {
   currency?: string;
   subtotal : number
   discount : number
+  net_amount: number
   items: Item[];
   meta: Meta;
   shipping:number;
