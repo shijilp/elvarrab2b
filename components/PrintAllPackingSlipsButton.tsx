@@ -15,9 +15,9 @@ export default function PrintAllPackingSlipsButton() {
       setLoading(true);
       // TODO: adjust API path/params to match your backend
       const res = await api.get("/my-orders", {});
-      const newItems = res.data?.results.filter(
-        (item: Order) => item.status === "new"
-      );
+      // const newItems = res.data?.results.filter(
+      //   (item: Order) => item.status === "new"
+      // );
       const ids: number[] = (res.data?.results ?? res.data ?? [])
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((o: any) => o.id)

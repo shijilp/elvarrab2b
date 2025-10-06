@@ -14,7 +14,6 @@ import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import TagBadge from "@/components/ui/TagBadge";
 import Link from "next/link";
 import { money } from "@/lib/money";
-import { Metadata } from "next";
 
 const Zoom = dynamic(() => import("react-medium-image-zoom"), { ssr: false });
 

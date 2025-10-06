@@ -84,6 +84,19 @@ export default function InventoryDashboard() {
     })();
   }, []);
 
+  const computeStock = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const whParam = await api.post(`recompute-balances/`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      setErr(e?.response?.data?.detail || "Failed to compute stock.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     setErr(null);
@@ -159,6 +172,9 @@ export default function InventoryDashboard() {
           </select>
           <button onClick={loadData} className={btn}>
             Refresh
+          </button>
+          <button onClick={computeStock} className={btn}>
+            Compute
           </button>
         </div>
       </div>

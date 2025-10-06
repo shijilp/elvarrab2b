@@ -76,21 +76,6 @@ function paletteForTheme(theme: ThemeMode): Palette {
       };
 }
 
-function statusChip(status: OrderStatus) {
-  switch (status) {
-    case "new":
-      return "bg-yellow-500 text-neutral-900";
-    case "confirmed":
-      return "bg-blue-500 text-white";
-    case "shipped":
-      return "bg-amber-600 text-white";
-    case "delivered":
-      return "bg-emerald-500 text-white";
-    case "cancelled":
-      return "bg-rose-500 text-white";
-  }
-}
-
 export default function CustomerOrdersPage() {
   const theme: ThemeMode = "dark";
   const palette = useMemo(() => paletteForTheme(theme), [theme]);
