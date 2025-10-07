@@ -1,6 +1,6 @@
 // Server Component (no "use client")
 
-import CustomerDetailClient from "@/components/admin/CustomerDetailClient";
+import CustomerDetailClient from "@/components/admin/customer/CustomerDetailClient";
 
 export const dynamic = "force-dynamic";
 

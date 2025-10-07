@@ -23,6 +23,7 @@ import { ProductsTable } from "@/components/admin/ProductsTable";
 import { Spinner } from "@/components/admin/Spinner";
 import { Topbar } from "@/components/admin/TopBar";
 import { Sidebar } from "@/components/admin/AdminSidebar";
+import AdminWalletAdjustCard from "@/components/admin/customer/AdminWalletAdjustCard";
 
 export type AdminStats = {
   revenue_today: number;
@@ -490,10 +491,9 @@ export default function AdminDashboardPage() {
             <ProductsTable rows={products} show={productsLoading} />
           </div>
         </div>
-
-        <footer className="my-8 text-center text-xs opacity-60">
-          © {new Date().getFullYear()} Elvarra — Admin
-        </footer>
+        <div className="mt-6">
+          <AdminWalletAdjustCard />
+        </div>
       </main>
 
       {/* Global Busy Overlay (for bulk actions / printing) */}

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import FloatingCheckoutButton from "@/components/ui/FloatingCheckoutbtn";
+import { ReferralListener } from "@/components/ReferralLitsner";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const brand = "Elvarra";
 const defaultTitle = `${brand} – Luxury Fashion Jewelry`;
@@ -60,6 +61,7 @@ export default function RootLayout({
           <AuthProvider>
             <CartProvider>
               <Header />
+              <ReferralListener />
               {children}
               <FloatingCheckoutButton />
               <Footer />

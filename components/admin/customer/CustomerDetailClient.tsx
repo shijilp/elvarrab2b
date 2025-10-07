@@ -26,6 +26,13 @@ type Order = {
   items: OrderItem[];
 };
 
+type Conversion = {
+  order_id: number;
+  amount: string;
+  status: string;
+  created_at: string;
+};
+
 type Detail = {
   email: string;
   name: string;
@@ -36,7 +43,20 @@ type Detail = {
   first_order_at: string | null;
   last_order_at: string | null;
   order_history: Order[];
+
+  // NEW money metrics
+  wallet_balance: string;
+  referral_earned_total: string;
+  affiliate_pending_total: string;
+  affiliate_approved_total: string;
+  affiliate_paid_total: string;
+
+  // optional list
+  recent_affiliate_conversions?: Conversion[];
 };
+
+const INR = (v: string | number | null | undefined) =>
+  `₹${(v ?? 0).toString()}`;
 
 export default function CustomerDetailClient({ email }: { email: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,8 +67,8 @@ export default function CustomerDetailClient({ email }: { email: string }) {
   useEffect(() => {
     if (!canView) return;
     api
-      .get(`admin/customers/detail?email=${encodeURIComponent(email)}`, {})
-      .then((r) => r.data)
+      .get(`admin/customers/detail?email=${encodeURIComponent(email)}`)
+      .then((r) => r.data as Detail)
       .then(setData)
       .catch(() => setData(null));
   }, [canView, email]);
@@ -65,6 +85,7 @@ export default function CustomerDetailClient({ email }: { email: string }) {
         <h1 className="text-2xl font-semibold">Customer</h1>
       </div>
 
+      {/* Identity + KPIs */}
       <div className="grid md:grid-cols-3 gap-4">
         <div className="p-4 rounded-2xl border">
           <div className="text-sm text-gray-500">Name</div>
@@ -79,12 +100,14 @@ export default function CustomerDetailClient({ email }: { email: string }) {
           <div className="text-sm text-gray-500">Orders</div>
           <div className="text-xl font-semibold">{data.orders}</div>
           <div className="text-sm text-gray-500 mt-2">Total Spent</div>
-          <div className="text-xl font-semibold">₹{data.total_spent}</div>
+          <div className="text-xl font-semibold">{INR(data.total_spent)}</div>
         </div>
 
         <div className="p-4 rounded-2xl border">
           <div className="text-sm text-gray-500">Avg Order Value</div>
-          <div className="text-xl font-semibold">₹{data.avg_order_value}</div>
+          <div className="text-xl font-semibold">
+            {INR(data.avg_order_value)}
+          </div>
           <div className="text-sm text-gray-500 mt-2">Last Order</div>
           <div>
             {data.last_order_at
@@ -94,6 +117,51 @@ export default function CustomerDetailClient({ email }: { email: string }) {
         </div>
       </div>
 
+      {/* NEW money KPI cards */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="p-4 rounded-2xl border">
+          <div className="text-sm text-gray-500">Wallet Balance</div>
+          <div className="text-xl font-semibold">
+            {INR(data.wallet_balance)}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Referral credits post here automatically
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl border">
+          <div className="text-sm text-gray-500">
+            Referral Earnings (Lifetime)
+          </div>
+          <div className="text-xl font-semibold">
+            {INR(data.referral_earned_total)}
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl border">
+          <div className="text-sm text-gray-500">Affiliate</div>
+          <div>
+            Pending:{" "}
+            <span className="font-medium">
+              {INR(data.affiliate_pending_total)}
+            </span>
+          </div>
+          <div>
+            Approved:{" "}
+            <span className="font-medium">
+              {INR(data.affiliate_approved_total)}
+            </span>
+          </div>
+          <div>
+            Paid:{" "}
+            <span className="font-medium">
+              {INR(data.affiliate_paid_total)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Orders */}
       <div className="rounded-2xl border overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
@@ -116,15 +184,16 @@ export default function CustomerDetailClient({ email }: { email: string }) {
                 <td>{new Date(o.created_at).toLocaleString()}</td>
                 <td>{o.status}</td>
                 <td>{o.is_paid ? "Yes" : "No"}</td>
-                <td>₹{o.subtotal}</td>
-                <td>₹{o.discount}</td>
-                <td>₹{o.shipping}</td>
-                <td className="font-medium">₹{o.total_amount}</td>
+                <td>{INR(o.subtotal)}</td>
+                <td>{INR(o.discount)}</td>
+                <td>{INR(o.shipping)}</td>
+                <td className="font-medium">{INR(o.total_amount)}</td>
                 <td>
                   <ul className="list-disc pl-5">
                     {o.items.map((i) => (
                       <li key={i.id}>
-                        {i.product_name} ({i.sku}) × {i.quantity} @ ₹{i.price}
+                        {i.product_name} ({i.sku}) × {i.quantity} @{" "}
+                        {INR(i.price)}
                       </li>
                     ))}
                   </ul>
@@ -141,6 +210,33 @@ export default function CustomerDetailClient({ email }: { email: string }) {
           </tbody>
         </table>
       </div>
+
+      {/* Optional: Recent Affiliate Conversions */}
+      {!!data.recent_affiliate_conversions?.length && (
+        <div className="rounded-2xl border overflow-x-auto">
+          <div className="p-3 font-medium">Recent Affiliate Conversions</div>
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr className="[&>th]:px-3 [&>th]:py-2 text-left">
+                <th>Order</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>When</th>
+              </tr>
+            </thead>
+            <tbody className="[&>tr>td]:px-3 [&>tr>td]:py-2">
+              {data.recent_affiliate_conversions!.map((c, i) => (
+                <tr key={i} className="border-t">
+                  <td>#{c.order_id}</td>
+                  <td>{INR(c.amount)}</td>
+                  <td>{c.status}</td>
+                  <td>{new Date(c.created_at).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

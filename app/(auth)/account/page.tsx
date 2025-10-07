@@ -1,28 +1,15 @@
 "use client";
 
-import { api } from "@/lib/api";
-import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { api } from "@/lib/api";
 
-// ------------------------------------------------------------
-// Elvarra / Elvara — ACCOUNT SETTINGS (Retail)
-// Route: app/account/settings/page.tsx
-// Refactor notes:
-//  - Keep the same data flow & API helpers
-//  - Switch to the layout/styling used by AccountPage:
-//    • bg-zinc-950/text-zinc-100 page shell
-//    • cards: rounded-2xl border border-zinc-800 bg-zinc-900
-//    • inputs: border-zinc-800 bg-zinc-950
-//    • primary buttons: gradient using var(--color-primary)/(--color-accent)
-//    • secondary buttons: bordered zinc
-// ------------------------------------------------------------
-
-// ---------------------------------
+// -----------------------------
 // Types
-// ---------------------------------
-export type Address = {
-  id: string; // uuid-ish
-  name: string; // Full name
+// -----------------------------
+type Address = {
+  id: string;
+  name: string;
   phone?: string;
   line1: string;
   line2?: string;
@@ -32,182 +19,502 @@ export type Address = {
   country: string;
   isDefault?: boolean;
 };
-type WalletSummary = { balance: number };
-function asNumber(v: unknown, def = 0): number {
-  const n = Number(v);
-  return isNaN(n) ? def : n;
-}
+type Caps = { can_create_referral: boolean; can_create_affiliate: boolean };
 
-// ---------------------------------
-// Helpers
-// ---------------------------------
-function uid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
+type LinkKind = "REF" | "AFF";
+type ReferralLink = {
+  id: number;
+  code: string;
+  kind: LinkKind;
+  percent: string; // backend sends decimals as strings
+  flat_amount: string;
+  cookie_ttl_days: number;
+  active: boolean;
+  clicks: number;
+  conversions: number;
+  earnings: string; // stringified decimal
+  created_at: string;
+};
 
-async function fetchWithTimeout(
-  url: string,
-  init: RequestInit & { timeoutMs?: number } = {}
-) {
-  const { timeoutMs = 12000, ...rest } = init;
-  const ctrl = new AbortController();
-  const id = setTimeout(() => ctrl.abort(), timeoutMs);
+// -----------------------------
+// Small utils
+// -----------------------------
+const LS_ADDR = "elvara:addresses";
+const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const asNumber = (v: unknown, d = 0) =>
+  Number.isFinite(Number(v)) ? Number(v) : d;
+
+// -----------------------------
+// API helpers (use axios `api`)
+// -----------------------------
+async function apiGetWallet(): Promise<{ balance: number }> {
   try {
-    const res = await fetch(url, {
-      ...rest,
-      signal: ctrl.signal,
-      credentials: "include",
+    const r = await api.get("/api/wallet/", { withCredentials: true });
+    return { balance: asNumber(r.data?.balance, 0) };
+  } catch {
+    return { balance: 0 };
+  }
+}
+async function apiCapabilities(): Promise<Caps> {
+  try {
+    const r = await api.get("/referrals/capabilities/", {
+      withCredentials: true,
     });
-    return res;
-  } finally {
-    clearTimeout(id);
-  }
-}
-
-async function safeJson(res: Response) {
-  try {
-    return await res.json();
+    return r.data as Caps;
   } catch {
-    return null;
+    return { can_create_referral: true, can_create_affiliate: false };
   }
 }
-async function safeText(res: Response) {
+
+async function apiListReferralLinks(): Promise<ReferralLink[]> {
   try {
-    return await res.text();
-  } catch {
-    return "";
+    const r = await api.get("/referrals/mine/", {
+      withCredentials: true,
+      headers: { Accept: "application/json" },
+    });
+    const data = r.data;
+    if (Array.isArray(data)) return data as ReferralLink[];
+    if (data?.results && Array.isArray(data.results))
+      return data.results as ReferralLink[];
+  } catch {}
+  return [];
+}
+
+async function apiCreateReferralLink(body: {
+  kind: LinkKind;
+  percent?: number;
+  flat_amount?: number;
+}) {
+  try {
+    const r = await api.post("/referrals/create/", body, {
+      withCredentials: true,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    return r.data; // { id, code }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    const msg =
+      err?.response?.data?.detail || err?.message || "Unable to create link";
+    throw new Error(msg);
   }
 }
 
-// Try API first; fallback to localStorage mock for addresses
-const LS_KEY = "elvara:addresses";
-
+// Addresses (keep working even if API down)
 async function apiListAddresses(): Promise<Address[]> {
   try {
-    const r = await fetchWithTimeout("/api/account/addresses/", {
-      method: "GET",
+    const r = await api.get("/api/account/addresses/", {
+      withCredentials: true,
     });
-    if (r.ok) return (await r.json()) as Address[];
-  } catch {}
-  // fallback
-  const raw =
-    typeof window !== "undefined" ? localStorage.getItem(LS_KEY) : null;
-  return raw ? (JSON.parse(raw) as Address[]) : [];
+    return (r.data as Address[]) || [];
+  } catch {
+    const raw =
+      typeof window !== "undefined" ? localStorage.getItem(LS_ADDR) : null;
+    return raw ? (JSON.parse(raw) as Address[]) : [];
+  }
 }
-
 async function apiSaveAddress(a: Address) {
   try {
-    const r = await fetchWithTimeout("/api/account/addresses/", {
-      method: "POST",
+    await api.post("/api/account/addresses/", a, {
+      withCredentials: true,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(a),
     });
-    if (r.ok) return await safeJson(r);
-  } catch {}
-  // fallback
-  const arr = await apiListAddresses();
-  const next = [...arr, a];
-  if (typeof window !== "undefined") {
-    localStorage.setItem(LS_KEY, JSON.stringify(next));
+  } catch {
+    const arr = await apiListAddresses();
+    const next = [...arr, a];
+    if (typeof window !== "undefined")
+      localStorage.setItem(LS_ADDR, JSON.stringify(next));
   }
-  return { ok: true };
 }
-
 async function apiUpdateAddress(a: Address) {
   try {
-    const r = await fetchWithTimeout(
-      `/api/account/addresses/${encodeURIComponent(a.id)}/`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(a),
-      }
-    );
-    if (r.ok) return await safeJson(r);
-  } catch {}
-  // fallback
-  const arr = await apiListAddresses();
-  const idx = arr.findIndex((x) => x.id === a.id);
-  if (idx >= 0) arr[idx] = a;
-  if (typeof window !== "undefined") {
-    localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    await api.put(`/api/account/addresses/${encodeURIComponent(a.id)}/`, a, {
+      withCredentials: true,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch {
+    const arr = await apiListAddresses();
+    const idx = arr.findIndex((x) => x.id === a.id);
+    if (idx >= 0) arr[idx] = a;
+    if (typeof window !== "undefined")
+      localStorage.setItem(LS_ADDR, JSON.stringify(arr));
   }
-  return { ok: true };
 }
-
 async function apiDeleteAddress(id: string) {
   try {
-    const r = await fetchWithTimeout(
-      `/api/account/addresses/${encodeURIComponent(id)}/`,
-      {
-        method: "DELETE",
-      }
-    );
-    if (r.ok) return true;
-  } catch {}
-  // fallback
-  const arr = await apiListAddresses();
-  if (typeof window !== "undefined") {
-    localStorage.setItem(
-      LS_KEY,
-      JSON.stringify(arr.filter((x) => x.id !== id))
-    );
+    await api.delete(`/api/account/addresses/${encodeURIComponent(id)}/`, {
+      withCredentials: true,
+    });
+  } catch {
+    const arr = await apiListAddresses();
+    if (typeof window !== "undefined")
+      localStorage.setItem(
+        LS_ADDR,
+        JSON.stringify(arr.filter((x) => x.id !== id))
+      );
   }
-  return true;
 }
-
 async function apiSetDefault(id: string) {
   try {
-    const r = await fetchWithTimeout(
+    await api.post(
       `/api/account/addresses/${encodeURIComponent(id)}/default/`,
-      {
-        method: "POST",
-      }
+      null,
+      { withCredentials: true }
     );
-    if (r.ok) return true;
-  } catch {}
-  // fallback
-  const arr = await apiListAddresses();
-  const next = arr.map((x) => ({ ...x, isDefault: x.id === id }));
-  if (typeof window !== "undefined") {
-    localStorage.setItem(LS_KEY, JSON.stringify(next));
+  } catch {
+    const arr = await apiListAddresses();
+    const next = arr.map((x) => ({ ...x, isDefault: x.id === id }));
+    if (typeof window !== "undefined")
+      localStorage.setItem(LS_ADDR, JSON.stringify(next));
   }
-  return true;
 }
 
-async function apiChangePassword(current: string, nextPass: string) {
-  const payload = { current, password: nextPass };
-  const tryPost = async (url: string) =>
-    fetchWithTimeout(url, {
-      method: "POST",
+async function apiChangePassword(current: string, password: string) {
+  const payload = { current, password };
+  const tryPost = (u: string) =>
+    api.post(u, payload, {
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      withCredentials: true,
     });
-  let res = await tryPost("/api/account/password/");
-  if (!res.ok && res.status === 404)
-    res = await tryPost("/api/account/password");
-  if (!res.ok)
-    throw new Error(
-      (await safeText(res)) || `Password update failed (${res.status})`
-    );
-  return true;
-}
-async function apiGetWallet(): Promise<WalletSummary> {
-  // Try /api/wallet/ → /wallet/ → /account/wallet/
-  const tryUrls = ["/api/wallet/", "/wallet/", "/account/wallet/"];
-  for (const url of tryUrls) {
-    try {
-      const r = await api.get(url);
-      if (r.data) {
-        const data = await r.data;
-        return { balance: asNumber(data?.balance, 0) };
-      }
-    } catch {}
+  let r;
+  try {
+    r = await tryPost("/api/account/password/");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    if (e?.response?.status === 404) r = await tryPost("/api/account/password");
+    else throw e;
   }
-  return { balance: 0 };
+  return !!r;
 }
+
+// -----------------------------
+// UI atoms
+// -----------------------------
+const CopyButton: React.FC<{ text: string; className?: string }> = ({
+  text,
+  className = "",
+}) => {
+  const [ok, setOk] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          setOk(true);
+          setTimeout(() => setOk(false), 1200);
+        } catch {}
+      }}
+      className={`rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800 ${className}`}
+    >
+      {ok ? "Copied" : "Copy"}
+    </button>
+  );
+};
+const Pill: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <span className="inline-flex items-center rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[10px] uppercase tracking-wide">
+    {children}
+  </span>
+);
+const Money: React.FC<{ value: string | number }> = ({ value }) => {
+  const n = typeof value === "string" ? Number(value) : value;
+  return <span>₹{(n || 0).toFixed(2)}</span>;
+};
+
+// -----------------------------
+// Invite & Earn
+// -----------------------------
+const InviteAndEarnCard: React.FC = () => {
+  const [links, setLinks] = useState<ReferralLink[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [caps, setCaps] = useState<Caps>({
+    can_create_referral: true,
+    can_create_affiliate: false,
+  });
+
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       const data = await apiListReferralLinks();
+  //       setLinks(data);
+  //     } catch (e: any) {
+  //       setErr(e?.message || "Unable to load referral links");
+  //     }
+  //   })();
+  // }, []);
+
+  useEffect(() => {
+    (async () => {
+      setCaps(await apiCapabilities());
+      setLinks(await apiListReferralLinks());
+    })();
+  }, []);
+
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  async function create(kind: LinkKind) {
+    setErr(null);
+    setCreating(true);
+    try {
+      const body =
+        kind === "REF"
+          ? { kind: "REF" as const, flat_amount: 50 }
+          : { kind: "AFF" as const, percent: 10 };
+      const created = await apiCreateReferralLink(body);
+      let next = await apiListReferralLinks();
+      if (!next?.length && created?.code) {
+        // optimistic insert if API list is empty (cache/auth race)
+        const optimistic: ReferralLink = {
+          id: created.id ?? Date.now(),
+          code: created.code,
+          kind,
+          percent: kind === "AFF" ? String(body.percent ?? 0) : "0",
+          flat_amount: kind === "REF" ? String(body.flat_amount ?? 0) : "0",
+          cookie_ttl_days: 30,
+          active: true,
+          clicks: 0,
+          conversions: 0,
+          earnings: "0",
+          created_at: new Date().toISOString(),
+        };
+        next = [optimistic, ...links];
+      }
+      setLinks(next);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      setErr(e?.message || "Unable to create link");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">Invite & Earn</h2>
+        <div className="text-xs text-zinc-400">
+          Share your link, earn wallet cash or commission.
+        </div>
+      </div>
+
+      {err && (
+        <div className="mt-3 rounded-xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-200">
+          {err}
+        </div>
+      )}
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {/* Referral */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-wider text-zinc-400">
+                Referral link
+              </div>
+              <div className="mt-1 text-sm text-zinc-200">
+                Flat wallet reward on first paid order.
+              </div>
+            </div>
+            <button
+              disabled={creating}
+              onClick={() => create("REF")}
+              className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-3 py-1.5 text-xs font-semibold text-[var(--text-dark)] disabled:opacity-60"
+            >
+              {creating ? "Creating…" : "Create link"}
+            </button>
+          </div>
+
+          <div className="mt-3 space-y-2">
+            {links.filter((l) => l.kind === "REF").length === 0 && (
+              <div className="text-xs text-zinc-400">
+                No referral links yet.
+              </div>
+            )}
+            {links
+              .filter((l) => l.kind === "REF")
+              .map((l) => {
+                const shareUrl = siteUrl
+                  ? `${siteUrl}/?ref=${encodeURIComponent(l.code)}`
+                  : l.code;
+                return (
+                  <div
+                    key={`${l.kind}-${l.id}`}
+                    className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">
+                          {shareUrl}
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-zinc-400">
+                          <Pill>REFERRAL</Pill>
+                          <span className="ml-2">
+                            Flat: <Money value={l.flat_amount} />
+                          </span>
+                        </div>
+                      </div>
+                      <CopyButton text={shareUrl} />
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+                        <div className="text-[10px] uppercase text-zinc-400">
+                          Clicks
+                        </div>
+                        <div className="text-sm font-semibold">{l.clicks}</div>
+                      </div>
+                      <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+                        <div className="text-[10px] uppercase text-zinc-400">
+                          Orders
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {l.conversions}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+                        <div className="text-[10px] uppercase text-zinc-400">
+                          Earnings
+                        </div>
+                        <div className="text-sm font-semibold">
+                          <Money value={l.earnings} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Affiliate */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          {caps.can_create_affiliate ? (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-zinc-400">
+                    Affiliate link
+                  </div>
+                  <div className="mt-1 text-sm text-zinc-200">
+                    % commission after payment confirmation.
+                  </div>
+                </div>
+
+                <button
+                  disabled={creating}
+                  onClick={() => create("AFF")}
+                  className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-3 py-1.5 text-xs font-semibold text-[var(--text-dark)] disabled:opacity-60"
+                >
+                  {creating ? "Creating…" : "Create link"}
+                </button>
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {links.filter((l) => l.kind === "AFF").length === 0 && (
+                  <div className="text-xs text-zinc-400">
+                    No affiliate links yet.
+                  </div>
+                )}
+                {links
+                  .filter((l) => l.kind === "AFF")
+                  .map((l) => {
+                    const shareUrl = siteUrl
+                      ? `${siteUrl}/?ref=${encodeURIComponent(l.code)}`
+                      : l.code;
+                    return (
+                      <div
+                        key={`${l.kind}-${l.id}`}
+                        className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium">
+                              {shareUrl}
+                            </div>
+                            <div className="mt-0.5 text-[11px] text-zinc-400">
+                              <Pill>AFFILIATE</Pill>
+                              <span className="ml-2">
+                                Rate: {Number(l.percent || 0)}%
+                              </span>
+                            </div>
+                          </div>
+                          <CopyButton text={shareUrl} />
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+                          <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+                            <div className="text-[10px] uppercase text-zinc-400">
+                              Clicks
+                            </div>
+                            <div className="text-sm font-semibold">
+                              {l.clicks}
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+                            <div className="text-[10px] uppercase text-zinc-400">
+                              Orders
+                            </div>
+                            <div className="text-sm font-semibold">
+                              {l.conversions}
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+                            <div className="text-[10px] uppercase text-zinc-400">
+                              Earnings
+                            </div>
+                            <div className="text-sm font-semibold">
+                              <Money value={l.earnings} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+                <div className="text-sm text-zinc-300">
+                  Affiliate program is invite-only.{" "}
+                  <a href="/contact" className="underline">
+                    Contact us
+                  </a>{" "}
+                  to apply.
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-300">
+        <div className="font-medium">How it works</div>
+        <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>
+            Share your link. A cookie tracks attribution for ~30 days
+            (configurable).
+          </li>
+          <li>
+            Paid orders: referrals get wallet credit; affiliates get a
+            commission record.
+          </li>
+          <li>Self-referrals/cancelled orders may be excluded per policy.</li>
+        </ul>
+      </div>
+    </section>
+  );
+};
+
+// -----------------------------
+// Page
+// -----------------------------
 export default function AccountSettingsPage() {
-  // Password
+  // wallet
+  const [wallet, setWallet] = useState<{ balance: number } | null>(null);
+  const [walletErr, setWalletErr] = useState<string | null>(null);
+
+  // password
   const [cur, setCur] = useState("");
   const [pass, setPass] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -215,40 +522,30 @@ export default function AccountSettingsPage() {
   const [pwErr, setPwErr] = useState<string | null>(null);
   const [pwOk, setPwOk] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
-  const [wallet, setWallet] = useState<WalletSummary | null>(null);
-  const [walletErr, setWalletErr] = useState<string | null>(null);
 
-  // Addresses
+  // addresses
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [adErr, setAdErr] = useState<string | null>(null);
   const [editing, setEditing] = useState<Address | null>(null);
 
   useEffect(() => {
     (async () => {
-      const list = await apiListAddresses();
-      setAddresses(list);
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
+      setAddresses(await apiListAddresses());
       try {
-        const w = await apiGetWallet();
-        setWallet(w);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
-        setWalletErr("Unable to load wallet");
+        setWallet(await apiGetWallet());
+      } catch {
         setWallet({ balance: 0 });
+        setWalletErr("Unable to load wallet");
       }
     })();
   }, []);
 
-  function validatePass(): string | null {
+  const validatePass = (): string | null => {
     if (!cur) return "Please enter your current password.";
     if (pass.length < 6) return "New password must be at least 6 characters.";
     if (pass !== confirm) return "Passwords do not match.";
     return null;
-  }
+  };
 
   async function submitPass(e: React.FormEvent) {
     e.preventDefault();
@@ -271,30 +568,25 @@ export default function AccountSettingsPage() {
     }
   }
 
-  function upsertLocal(addr: Address) {
-    setAddresses((prev) => {
-      const i = prev.findIndex((x) => x.id === addr.id);
-      if (i >= 0) {
-        const next = [...prev];
-        next[i] = addr;
-        return next;
-      }
-      return [addr, ...prev];
-    });
-  }
-
   async function saveAddress(a: Address) {
     setAdErr(null);
     try {
       if (addresses.some((x) => x.id === a.id)) await apiUpdateAddress(a);
       else await apiSaveAddress(a);
-      upsertLocal(a);
+      setAddresses((prev) => {
+        const i = prev.findIndex((x) => x.id === a.id);
+        if (i >= 0) {
+          const next = [...prev];
+          next[i] = a;
+          return next;
+        }
+        return [a, ...prev];
+      });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setAdErr(e?.message || "Unable to save address.");
     }
   }
-
   async function removeAddress(id: string) {
     setAdErr(null);
     try {
@@ -305,7 +597,6 @@ export default function AccountSettingsPage() {
       setAdErr(e?.message || "Unable to delete address.");
     }
   }
-
   async function makeDefault(id: string) {
     setAdErr(null);
     try {
@@ -319,65 +610,60 @@ export default function AccountSettingsPage() {
     }
   }
 
-  function AddressCard({ a }: { a: Address }) {
-    return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="text-sm font-medium text-zinc-100">
-              {a.name}
-              {a.isDefault ? (
-                <span className="ml-2 rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[10px]">
-                  Default
-                </span>
-              ) : null}
-            </div>
-            <div className="mt-1 text-xs text-zinc-300">
-              <div className="truncate">
-                {a.line1}
-                {a.line2 ? ", " + a.line2 : ""}
-              </div>
-              <div className="truncate">
-                {a.city}, {a.province} {a.zip}
-              </div>
-              <div className="truncate">{a.country}</div>
-              {a.phone && <div className="truncate">Phone: {a.phone}</div>}
-            </div>
+  const AddressCard: React.FC<{ a: Address }> = ({ a }) => (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-medium text-zinc-100">
+            {a.name}
+            {a.isDefault ? (
+              <span className="ml-2 rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[10px]">
+                Default
+              </span>
+            ) : null}
           </div>
-          <div className="flex shrink-0 gap-2">
-            {!a.isDefault && (
-              <button
-                onClick={() => makeDefault(a.id)}
-                className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800"
-              >
-                Make Default
-              </button>
-            )}
-            <button
-              onClick={() => setEditing(a)}
-              className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => removeAddress(a.id)}
-              className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800"
-            >
-              Delete
-            </button>
+          <div className="mt-1 text-xs text-zinc-300">
+            <div className="truncate">
+              {a.line1}
+              {a.line2 ? ", " + a.line2 : ""}
+            </div>
+            <div className="truncate">
+              {a.city}, {a.province} {a.zip}
+            </div>
+            <div className="truncate">{a.country}</div>
+            {a.phone && <div className="truncate">Phone: {a.phone}</div>}
           </div>
         </div>
+        <div className="flex shrink-0 gap-2">
+          {!a.isDefault && (
+            <button
+              onClick={() => makeDefault(a.id)}
+              className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800"
+            >
+              Make Default
+            </button>
+          )}
+          <button
+            onClick={() => setEditing(a)}
+            className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => removeAddress(a.id)}
+            className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800"
+          >
+            Delete
+          </button>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  function AddressEditor({
-    value,
-    onClose,
-  }: {
+  const AddressEditor: React.FC<{
     value?: Address | null;
     onClose: () => void;
-  }) {
+  }> = ({ value, onClose }) => {
     const [form, setForm] = useState<Address>(
       value ??
         ({
@@ -390,11 +676,8 @@ export default function AccountSettingsPage() {
           country: "Saudi Arabia",
         } as Address)
     );
-
-    function set<K extends keyof Address>(k: K, v: Address[K]) {
+    const set = <K extends keyof Address>(k: K, v: Address[K]) =>
       setForm((s) => ({ ...s, [k]: v }));
-    }
-
     async function submit(e: React.FormEvent) {
       e.preventDefault();
       if (!form.name.trim()) return alert("Please enter name");
@@ -404,7 +687,6 @@ export default function AccountSettingsPage() {
       await saveAddress(form);
       onClose();
     }
-
     return (
       <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
         <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
@@ -472,7 +754,6 @@ export default function AccountSettingsPage() {
               placeholder="Country"
               className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
             />
-
             <div className="mt-2 flex items-center justify-end gap-2">
               <button
                 type="button"
@@ -492,12 +773,11 @@ export default function AccountSettingsPage() {
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <main className="min-h-dvh bg-zinc-950 text-zinc-100 antialiased">
       <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
-        {/* Page header card */}
         <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900">
           <div className="grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
             <div className="min-w-0">
@@ -505,7 +785,7 @@ export default function AccountSettingsPage() {
                 Account settings
               </h1>
               <p className="mt-1 truncate text-sm text-zinc-400">
-                Manage your password and shipping addresses.
+                Manage your password, wallet, addresses — and invite & earn.
               </p>
             </div>
             <div className="flex flex-col items-stretch gap-2 sm:items-end">
@@ -518,15 +798,15 @@ export default function AccountSettingsPage() {
             </div>
           </div>
         </div>
+
         {/* Wallet */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 mt-6  ">
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 mt-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">My wallet</h2>
             <div className="text-xs text-zinc-400">
               {walletErr ? walletErr : "Auto-applied at checkout"}
             </div>
           </div>
-
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
               <div className="text-xs uppercase tracking-wider text-zinc-400">
@@ -536,14 +816,12 @@ export default function AccountSettingsPage() {
                 ₹{(wallet?.balance ?? 0).toFixed(2)}
               </div>
             </div>
-
             <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
               <div className="text-xs uppercase tracking-wider text-zinc-400">
                 Status
               </div>
               <div className="mt-1 text-sm">Active</div>
             </div>
-
             <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
               <div className="text-xs uppercase tracking-wider text-zinc-400">
                 How it works
@@ -555,137 +833,128 @@ export default function AccountSettingsPage() {
               </p>
             </div>
           </div>
-
-          {/* (Optional) a link to a transactions page if you add one later */}
-          {/* <div className="mt-4">
-              <a
-                href="/account/wallet/transactions"
-                className="text-sm text-zinc-300 underline-offset-4 hover:underline"
-              >
-                View transactions
-              </a>
-            </div> */}
         </section>
 
-        {/* Main grid */}
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1fr]">
-          {/* Change Password */}
-          <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Change password</h2>
-            </div>
+        {/* Grid */}
+        <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <InviteAndEarnCard />
 
-            <form onSubmit={submitPass} className="mt-4 space-y-4">
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                  Current password
-                </label>
-                <input
-                  type="password"
-                  value={cur}
-                  onChange={(e) => setCur(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
-                  required
-                />
+          <div className="grid grid-cols-1 gap-6">
+            {/* Change Password */}
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Change password</h2>
               </div>
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                  New password
-                </label>
-                <div className="flex items-stretch overflow-hidden rounded-xl border border-zinc-800">
+              <form onSubmit={submitPass} className="mt-4 space-y-4">
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
+                    Current password
+                  </label>
                   <input
-                    type={show ? "text" : "password"}
-                    value={pass}
-                    onChange={(e) => setPass(e.target.value)}
-                    className="w-full bg-zinc-950 px-3 py-2 text-sm outline-none"
-                    placeholder="••••••••"
+                    type="password"
+                    value={cur}
+                    onChange={(e) => setCur(e.target.value)}
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShow((s) => !s)}
-                    className="px-3 text-sm text-zinc-300 hover:text-zinc-100"
-                  >
-                    {show ? "Hide" : "Show"}
-                  </button>
                 </div>
-                <p className="mt-1 text-xs text-zinc-400">
-                  Minimum 6 characters.
-                </p>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                  Confirm new password
-                </label>
-                <input
-                  type={show ? "text" : "password"}
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
-                  required
-                />
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
+                    New password
+                  </label>
+                  <div className="flex items-stretch overflow-hidden rounded-xl border border-zinc-800">
+                    <input
+                      type={show ? "text" : "password"}
+                      value={pass}
+                      onChange={(e) => setPass(e.target.value)}
+                      className="w-full bg-zinc-950 px-3 py-2 text-sm outline-none"
+                      placeholder="••••••••"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShow((s) => !s)}
+                      className="px-3 text-sm text-zinc-300 hover:text-zinc-100"
+                    >
+                      {show ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    Minimum 6 characters.
+                  </p>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
+                    Confirm new password
+                  </label>
+                  <input
+                    type={show ? "text" : "password"}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
+                    required
+                  />
+                </div>
+                {pwErr && (
+                  <div className="rounded-xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-200">
+                    {pwErr}
+                  </div>
+                )}
+                {pwOk && (
+                  <div className="rounded-xl border border-emerald-500/50 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                    Password updated.
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={pwLoading}
+                  className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--text-dark)] disabled:opacity-60"
+                >
+                  {pwLoading ? "Saving…" : "Update password"}
+                </button>
+              </form>
+            </section>
+
+            {/* Addresses */}
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Saved addresses</h2>
+                <button
+                  onClick={() =>
+                    setEditing({
+                      id: uid(),
+                      name: "",
+                      line1: "",
+                      city: "",
+                      province: "",
+                      zip: "",
+                      country: "Saudi Arabia",
+                    })
+                  }
+                  className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-3 py-1.5 text-sm font-semibold text-[var(--text-dark)]"
+                >
+                  Add new
+                </button>
               </div>
 
-              {pwErr && (
-                <div className="rounded-xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-200">
-                  {pwErr}
+              {adErr && (
+                <div className="mt-3 rounded-xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-200">
+                  {adErr}
                 </div>
               )}
-              {pwOk && (
-                <div className="rounded-xl border border-emerald-500/50 bg-emerald-500/10 p-3 text-sm text-emerald-200">
-                  Password updated.
-                </div>
-              )}
 
-              <button
-                type="submit"
-                disabled={pwLoading}
-                className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--text-dark)] disabled:opacity-60"
-              >
-                {pwLoading ? "Saving…" : "Update password"}
-              </button>
-            </form>
-          </section>
-
-          {/* Addresses */}
-          <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Saved addresses</h2>
-              <button
-                onClick={() =>
-                  setEditing({
-                    id: uid(),
-                    name: "",
-                    line1: "",
-                    city: "",
-                    province: "",
-                    zip: "",
-                    country: "Saudi Arabia",
-                  })
-                }
-                className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-3 py-1.5 text-sm font-semibold text-[var(--text-dark)]"
-              >
-                Add new
-              </button>
-            </div>
-
-            {adErr && (
-              <div className="mt-3 rounded-xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-200">
-                {adErr}
+              <div className="mt-4 grid grid-cols-1 gap-3">
+                {addresses.length === 0 && (
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-400">
+                    No saved addresses yet.
+                  </div>
+                )}
+                {addresses.map((a) => (
+                  <AddressCard key={a.id} a={a} />
+                ))}
               </div>
-            )}
-
-            <div className="mt-4 grid grid-cols-1 gap-3">
-              {addresses.length === 0 && (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-400">
-                  No saved addresses yet.
-                </div>
-              )}
-              {addresses.map((a) => (
-                <AddressCard key={a.id} a={a} />
-              ))}
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
       </section>
 
@@ -695,10 +964,3 @@ export default function AccountSettingsPage() {
     </main>
   );
 }
-
-/*
-------------------------------------------------------------
-API CONTRACT (example Next.js route handlers)
-
-(unchanged from your original)
-*/

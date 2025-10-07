@@ -1,6 +1,6 @@
 // app/admin/customers/page.tsx
 
-import CustomersPageClient from "@/components/CustomersPageClient";
+import CustomersPageClient from "@/components/admin/customer/CustomersPageClient";
 
 export const dynamic = "force-dynamic";
 

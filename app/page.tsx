@@ -51,6 +51,19 @@ export default function Page() {
     };
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("ref");
+    if (code) {
+      // store locally for later checkout use
+      const expires = Date.now() + 30 * 24 * 3600 * 1000; // 30 days
+      localStorage.setItem("elv_ref", code);
+      localStorage.setItem("elv_ref_exp", String(expires));
+      // also notify backend to set its cookie
+      api.post("/referrals/track/", { code }).catch(() => {});
+    }
+  }, []);
+
   const allCategories = useMemo(() => {
     return [
       "All",

@@ -116,6 +116,10 @@ export default function CheckoutPage() {
 
   // Payment (demo only)
   const [addr, setAddr] = useState<Address | null>(null);
+  let ref_code = "";
+  if (typeof window !== "undefined") {
+    ref_code = localStorage.getItem("elv_ref") || "";
+  }
 
   // Totals
   const subtotal = useMemo(
@@ -208,6 +212,7 @@ export default function CheckoutPage() {
         shipping: shipping,
         coupon_code: coupon?.code || "",
         subtotal: subtotal,
+        ref_code,
       };
       if (addr?.full_name == null || addr.email == null || addr.phone == null)
         return;
