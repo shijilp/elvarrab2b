@@ -41,7 +41,7 @@ export function OrdersTable({
     const idx = rows.findIndex((r) => r.id === orderId);
     if (idx >= 0) {
       // mutate friendly: if rows is immutable in parent, consider lifting this up
-      rows[idx].note = note as any;
+      rows[idx].note = note as string;
     }
   }
   async function handleSaveNote(orderId: number, note: string) {
