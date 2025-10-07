@@ -4,6 +4,9 @@ import Link from "next/link";
 import { LoadingOverlay } from "../ui/LoadingOverlay";
 import { useState } from "react";
 import { StatusPill } from "../ui/StatusPill";
+import { NoteBadge } from "./NoteBadge";
+import { NoteModal } from "./NoteModal";
+import { api } from "@/lib/api";
 
 // ---------- Tables ----------
 export function OrdersTable({
@@ -30,7 +33,32 @@ export function OrdersTable({
   const allChecked = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const someChecked = selected.size > 0 && !allChecked;
   const [assignUserId, setAssignUserId] = useState<number | "">("");
+  const [saving, setSaving] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState<number | null>(null);
 
+  // optimistic update helper
+  function updateRowNote(orderId: number, note: string) {
+    const idx = rows.findIndex((r) => r.id === orderId);
+    if (idx >= 0) {
+      // mutate friendly: if rows is immutable in parent, consider lifting this up
+      rows[idx].note = note as any;
+    }
+  }
+  async function handleSaveNote(orderId: number, note: string) {
+    try {
+      setSaving(true);
+      // PATCH to your Django endpoint (example)
+      await api.patch(`admin/orders/${orderId}/`, { note });
+
+      updateRowNote(orderId, note);
+      setEditingOrderId(null);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to save note.");
+    } finally {
+      setSaving(false);
+    }
+  }
   return (
     <div className="relative rounded-2xl border border-neutral-200 bg-white/90 p-3 dark:border-neutral-800 dark:bg-neutral-900/70">
       <div className="mb-2 flex items-center gap-2">
@@ -124,6 +152,8 @@ export function OrdersTable({
               <th className="px-2 py-2">Total</th>
               <th className="px-2 py-2">Date</th>
               <th className="px-2 py-2">Assigned</th>
+              <th className="px-2 py-2">Notes</th>
+
               <th className="px-2 py-2"></th>
             </tr>
           </thead>
@@ -157,7 +187,27 @@ export function OrdersTable({
                   <td className="px-2 py-2 opacity-80">
                     {o.assigned_to?.first_name || ""}
                   </td>
+                  <td className="px-2 py-2">
+                    <NoteBadge
+                      note={o.note}
+                      onEdit={() => setEditingOrderId(o.id)}
+                    />
+                  </td>
                   <td className="px-2 py-2 text-right">
+                    <NoteModal
+                      open={editingOrderId !== null}
+                      initialNote={
+                        editingOrderId
+                          ? rows.find((r) => r.id === editingOrderId)?.note ??
+                            ""
+                          : ""
+                      }
+                      onClose={() => setEditingOrderId(null)}
+                      onSave={(val) => {
+                        if (editingOrderId) handleSaveNote(editingOrderId, val);
+                      }}
+                      saving={saving}
+                    />
                     <Link
                       href={`/orders/${o.id}`}
                       className="rounded-lg px-2 py-1 text-xs ring-1 ring-neutral-200 dark:ring-neutral-800"

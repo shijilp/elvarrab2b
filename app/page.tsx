@@ -309,9 +309,15 @@ export default function Page() {
             <div>
               <SectionTitle>Our Story</SectionTitle>
               <p className="mt-3  text-neutral-300">
+                Behind Elvarra is the woman who envisioned a brand where jewelry
+                feels both personal and powerful. She built the venture on the
+                belief that luxury should be effortless, ethical, and designed
+                to celebrate everyday moments.
+              </p>
+              <p className="mt-3  text-neutral-300">
                 We craft pieces that celebrate light, form, and everyday luxury.
                 Designed in-house and produced in small batches with ethical
-                partners. Every collection is a love letter to modern
+                partners, every collection is a love letter to modern
                 femininity—understated, confident, timeless.
               </p>
               <div className="mt-6 flex gap-3 text-xs opacity-80">

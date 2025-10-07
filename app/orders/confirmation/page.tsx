@@ -1,6 +1,10 @@
 "use client";
 import Link from "next/link";
 import React, { useMemo, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { api } from "@/lib/api";
+import { Order } from "@/types";
+
 // NOTE: We purposely avoid importing `useSearchParams` from `next/navigation`
 // because some sandboxes/mock environments return a null-ish object that causes
 // runtime crashes. We read from `window.location.search` inside an effect.
@@ -76,8 +80,7 @@ export type CheckoutPayload = {
   province: string;
   zip: string;
   country: string;
-  method: "standard" | "express" | string;
-  payment: "card" | "apple" | "cash" | string;
+
   promo?: string;
   subtotal: number;
   discount: number;
@@ -107,34 +110,6 @@ function generateOrderId(seed?: string) {
   return `R-${num}`;
 }
 
-// Robust parser that accepts plain JSON, single-encoded, or double-encoded strings
-function parseOrderParam(
-  raw: string | null | undefined
-): CheckoutPayload | null {
-  if (!raw) return null;
-  const tries: string[] = [raw];
-  try {
-    tries.push(decodeURIComponent(raw));
-  } catch {}
-  try {
-    tries.push(decodeURIComponent(decodeURIComponent(raw)));
-  } catch {}
-  for (const candidate of tries) {
-    try {
-      const obj = JSON.parse(candidate);
-      if (
-        obj &&
-        typeof obj === "object" &&
-        "subtotal" in obj &&
-        "total" in obj
-      ) {
-        return obj as CheckoutPayload;
-      }
-    } catch {}
-  }
-  return null;
-}
-
 export default function ThankYouPage() {
   // Theme can later come from context/store; keep a safe default
   const theme: ThemeMode | null = "dark";
@@ -146,33 +121,27 @@ export default function ThankYouPage() {
     }
   }, [theme]);
 
-  const [payload, setPayload] = useState<CheckoutPayload | null>(null);
-  const [orderId, setOrderId] = useState<string>("");
+  const [payload, setPayload] = useState<Order | null>(null);
+  // const [orderId, setOrderId] = useState<string>("");
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("order"); // "61
 
   useEffect(() => {
-    // Read from window to avoid null-ish searchParams in mocked envs
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const raw = params.get("order"); // may be null; safe handled by parser
-    const parsed = parseOrderParam(raw);
-    if (parsed) {
-      setPayload(parsed);
-      const id = generateOrderId(
-        JSON.stringify({
-          email: parsed.email,
-          total: parsed.total,
-          when: parsed.subtotal,
-        })
-      );
-      setOrderId(id);
-    } else {
-      setPayload(null);
-      setOrderId("");
-    }
-  }, []);
+    const fetchOrder = async () => {
+      try {
+        const res = await api.get(`/my-orders/${orderId}/`, {});
+        setPayload(res.data);
+      } catch (error) {
+        console.error("Failed to fetch order:", error);
+      } finally {
+      }
+    };
+
+    fetchOrder();
+  }, [orderId]);
 
   const hasData = !!payload;
-  console.log(setOrderId);
+
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
       <div className="container py-10">
@@ -182,7 +151,7 @@ export default function ThankYouPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold">
-                Thank you{payload ? `, ${payload.first}` : "!"}
+                Thank you{payload ? `, ${payload.full_name}` : "!"}
               </h1>
               <p className={`mt-1 text-sm ${palette.subfg}`}>
                 {hasData ? (
@@ -197,9 +166,9 @@ export default function ThankYouPage() {
             </div>
             {hasData && (
               <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${palette.chip}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold btn-gradient-accent`}
               >
-                Order received
+                {payload!.is_paid ? "Confirmed" : "Order Received"}
               </span>
             )}
           </div>
@@ -217,7 +186,9 @@ export default function ThankYouPage() {
               </div>
               <div className={`rounded-xl ${palette.ring} ${palette.card} p-3`}>
                 <div className="opacity-80">Payment</div>
-                <div className="font-medium capitalize">{payload!.payment}</div>
+                <div className="font-medium capitalize">
+                  {payload!.is_paid ? "Paid" : "Pending"}
+                </div>
               </div>
             </div>
           )}
@@ -231,22 +202,20 @@ export default function ThankYouPage() {
                 >
                   <div className="text-lg font-semibold">Shipping address</div>
                   <div className={`mt-2 text-sm ${palette.subfg}`}>
+                    <div>{payload!.full_name}</div>
                     <div>
-                      {payload!.first} {payload!.last}
+                      {payload!.line1}
+                      {payload!.line2 ? ", " + payload!.line2 : ""}
                     </div>
                     <div>
-                      {payload!.address1}
-                      {payload!.address2 ? ", " + payload!.address2 : ""}
-                    </div>
-                    <div>
-                      {payload!.city}, {payload!.province} {payload!.zip}
+                      {payload!.city}, {payload!.state} {payload!.pincode}
                     </div>
                     <div>{payload!.country}</div>
                     <div className="mt-2">
-                      Delivery method:{" "}
+                      {/* Delivery method:{" "}
                       {payload!.method === "express"
                         ? "Express (1–2 days)"
-                        : "Standard (3–5 days)"}
+                        : "Standard (3–5 days)"} */}
                     </div>
                   </div>
                 </div>
@@ -285,16 +254,16 @@ export default function ThankYouPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="opacity-80">Shipping</span>
-                    <span>{money(payload!.ship)}</span>
+                    <span>{money(payload!.shipping)}</span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <span className="opacity-80">VAT</span>
                     <span>{money(payload!.vat)}</span>
-                  </div>
+                  </div> */}
                   <div className="flex items-center justify-between border-t pt-2">
                     <span className="font-medium">Total</span>
                     <span className="font-semibold">
-                      {money(payload!.total)}
+                      {money(payload!.total_amount)}
                     </span>
                   </div>
                 </div>
@@ -302,13 +271,13 @@ export default function ThankYouPage() {
                 <div className="mt-4 grid grid-cols-1 gap-2">
                   <button
                     onClick={() => window.print()}
-                    className={`rounded-xl border ${palette.border} px-4 py-2 text-sm`}
+                    className={`rounded-xl border ${palette.border} px-4 py-2 text-sm print:hidden`}
                   >
                     Print receipt
                   </button>
                   <a
-                    href={`/orders/${encodeURIComponent(orderId)}`}
-                    className={`rounded-xl px-4 py-2 text-center text-sm font-medium ${palette.button}`}
+                    href={`/orders/${encodeURIComponent(orderId ?? "")}`}
+                    className={`rounded-xl px-4 py-2 text-center text-sm font-medium print:hidden btn-gradient-accent `}
                   >
                     View order
                   </a>
@@ -328,7 +297,7 @@ export default function ThankYouPage() {
               </Link>
               <Link
                 href="/products"
-                className={`rounded-xl px-4 py-3 text-center text-sm ${palette.button}`}
+                className={`rounded-xl px-4 py-3 text-center text-sm btn-gradient-accent`}
               >
                 Continue shopping
               </Link>
@@ -337,11 +306,11 @@ export default function ThankYouPage() {
         </div>
 
         {/* Back links */}
-        <div className="mx-auto mt-6 flex max-w-3xl items-center justify-between text-sm">
+        <div className="mx-auto mt-6 flex max-w-3xl items-center justify-between text-sm print:hidden">
           <Link href="/" className="underline">
             Home
           </Link>
-          <Link href="/orders" className="underline">
+          <Link href="/orders" className="underline  ">
             My orders
           </Link>
         </div>
@@ -349,30 +318,3 @@ export default function ThankYouPage() {
     </main>
   );
 }
-
-/*
-------------------------------------------------------------
-TESTS (snippets; place in tests/ or __tests__/)
-
-// tests/thank-you-utils.test.ts
-// import { generateOrderId, money, parseOrderParam } from "app/thank-you/page";
-// it("generates deterministic id for same seed", () => {
-//   const a = generateOrderId(JSON.stringify({ email: "a@b.com", total: 10 }));
-//   const b = generateOrderId(JSON.stringify({ email: "a@b.com", total: 10 }));
-//   expect(a).toBe(b);
-// });
-// it("formats money", () => { expect(money(100, "USD")).toMatch(/\$/); });
-// it("parses plain JSON", () => {
-//   const raw = JSON.stringify({ email: "x@y.com", subtotal: 10, discount: 0, ship: 0, vat: 1.5, total: 11.5, phone: "", first: "A", last: "B", address1: "", city: "", province: "", zip: "", country: "SA", method: "standard", payment: "card", items: [] });
-//   expect(parseOrderParam(raw)).not.toBeNull();
-// });
-// it("parses encoded JSON", () => {
-//   const raw = encodeURIComponent(JSON.stringify({ email: "x@y.com", subtotal: 10, discount: 0, ship: 0, vat: 1.5, total: 11.5, phone: "", first: "A", last: "B", address1: "", city: "", province: "", zip: "", country: "SA", method: "standard", payment: "card", items: [] }));
-//   expect(parseOrderParam(raw)).not.toBeNull();
-// });
-// it("returns null on invalid input", () => {
-//   expect(parseOrderParam("not json")).toBeNull();
-//   expect(parseOrderParam(null)).toBeNull();
-// });
-//------------------------------------------------------------
-*/

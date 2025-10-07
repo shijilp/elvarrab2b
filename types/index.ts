@@ -132,7 +132,7 @@ export interface Order {
   is_paid : string
   razorpay_payment_id : string
   items:OrderItems[]
-  notes:any
+  note:string
   assigned_to:AssignedUser
 }
 
