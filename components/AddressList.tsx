@@ -153,7 +153,7 @@ export default function AddressList({
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{a.full_name}</span>
                     {a.is_default && (
-                      <span className="text-[11px] px-2 py-[2px] rounded btn-gradient text-blue-900 font-bold uppercase tracking-wide">
+                      <span className="text-[11px] px-2 py-[2px] rounded btn-gradient-accent text-blue-900 font-bold uppercase tracking-wide">
                         Default
                       </span>
                     )}

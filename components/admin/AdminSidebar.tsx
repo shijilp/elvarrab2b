@@ -28,6 +28,11 @@ export function Sidebar({
     { href: "/admin/inventory/adjustments", label: "Adjustments" },
     { href: "/admin/inventory/transfers", label: "Transfers" },
   ];
+  const customerlinks = [
+    { href: "/admin/customers/dashboard", label: "Dashboard" },
+    { href: "/admin/customers", label: "Report" },
+    { href: "/admin/customers/wallet", label: "Wallet" },
+  ];
   const isActive = (href: string) =>
     pathname === href || pathname?.startsWith(href + "/");
   return (
@@ -65,6 +70,35 @@ export function Sidebar({
         <nav className="mt-2 flex-1 overflow-y-auto px-2 pb-4">
           <ul className="space-y-1">
             {links.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={clsx(
+                      "group flex items-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 ring-transparent",
+                      active
+                        ? " text-white ring-neutral-900 btn-gradient-accent dark:text-neutral-900 "
+                        : "text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-900"
+                    )}
+                    aria-current={active ? "page" : undefined}
+                    title={collapsed ? link.label : undefined} // tooltip when collapsed
+                  >
+                    <span
+                      className={clsx(
+                        "inline-block h-1.5 w-1.5 rounded-full",
+                        active ? "bg-current" : "bg-neutral-400"
+                      )}
+                    />
+                    {!collapsed && <span>{link.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          <ul className="space-y-1">
+            <p>Customer</p>
+            {customerlinks.map((link) => {
               const active = isActive(link.href);
               return (
                 <li key={link.href}>

@@ -40,9 +40,7 @@ export default function ProductsCatalogClient() {
     .filter(Boolean);
 
   // ---------- derive UI state from URL (so links are shareable) ----------
-  const urlCategory = (
-    searchParams.get("category") || DEFAULTS.category
-  ).toLowerCase();
+  const urlCategory = searchParams.get("category") || DEFAULTS.category;
   const urlQuery = searchParams.get("q") || DEFAULTS.q;
   const urlMin = Number(searchParams.get("min") || DEFAULTS.min);
   const urlMax = Number(searchParams.get("max") || DEFAULTS.max);

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { WhatsAppShareButton } from "@/components/ui/WhatsAppShareButton";
 
 // -----------------------------
 // Types
@@ -36,6 +37,12 @@ type ReferralLink = {
   created_at: string;
 };
 
+type wallet = {
+  cleared: number;
+  uncleared: number;
+  total: number;
+  balance: number;
+};
 // -----------------------------
 // Small utils
 // -----------------------------
@@ -47,12 +54,12 @@ const asNumber = (v: unknown, d = 0) =>
 // -----------------------------
 // API helpers (use axios `api`)
 // -----------------------------
-async function apiGetWallet(): Promise<{ balance: number }> {
+async function apiGetWallet(): Promise<wallet> {
   try {
-    const r = await api.get("/api/wallet/", { withCredentials: true });
-    return { balance: asNumber(r.data?.balance, 0) };
+    const r = await api.get("wallet/", { withCredentials: true });
+    return r.data as unknown as wallet;
   } catch {
-    return { balance: 0 };
+    return { cleared: 0, uncleared: 0, total: 0, balance: 0 };
   }
 }
 async function apiCapabilities(): Promise<Caps> {
@@ -206,14 +213,14 @@ const CopyButton: React.FC<{ text: string; className?: string }> = ({
           setTimeout(() => setOk(false), 1200);
         } catch {}
       }}
-      className={`rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800 ${className}`}
+      className={`rounded-xl border btn-gradient-accent border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs hover:bg-zinc-800 ${className}`}
     >
       {ok ? "Copied" : "Copy"}
     </button>
   );
 };
 const Pill: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <span className="inline-flex items-center rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[10px] uppercase tracking-wide">
+  <span className="inline-flex items-center  rounded-full border border-zinc-700 btn-gradient-accent  px-2 py-0.5 text-[10px] uppercase tracking-wide">
     {children}
   </span>
 );
@@ -304,8 +311,7 @@ const InviteAndEarnCard: React.FC = () => {
           {err}
         </div>
       )}
-
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-3 ">
         {/* Referral */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <div className="flex items-center justify-between">
@@ -320,7 +326,7 @@ const InviteAndEarnCard: React.FC = () => {
             <button
               disabled={creating}
               onClick={() => create("REF")}
-              className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-3 py-1.5 text-xs font-semibold text-[var(--text-dark)] disabled:opacity-60"
+              className="rounded-xl btn-gradient-accent px-3 py-1.5 text-xs font-semibold text-[var(--text-dark)] disabled:opacity-60"
             >
               {creating ? "Creating…" : "Create link"}
             </button>
@@ -355,7 +361,15 @@ const InviteAndEarnCard: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      <CopyButton text={shareUrl} />
+
+                      {/* Buttons: Copy + WhatsApp */}
+                      <div className="shrink-0 flex gap-2">
+                        <CopyButton text={shareUrl} />
+                        <WhatsAppShareButton
+                          url={shareUrl}
+                          message="Hey! Get something gorgeous from Elvarra—use my link:"
+                        />
+                      </div>
                     </div>
                     <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
                       <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
@@ -404,7 +418,7 @@ const InviteAndEarnCard: React.FC = () => {
                 <button
                   disabled={creating}
                   onClick={() => create("AFF")}
-                  className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-3 py-1.5 text-xs font-semibold text-[var(--text-dark)] disabled:opacity-60"
+                  className="rounded-xl btn-gradient-accent px-3 py-1.5 text-xs font-semibold text-[var(--text-dark)] disabled:opacity-60"
                 >
                   {creating ? "Creating…" : "Create link"}
                 </button>
@@ -439,7 +453,15 @@ const InviteAndEarnCard: React.FC = () => {
                               </span>
                             </div>
                           </div>
-                          <CopyButton text={shareUrl} />
+
+                          {/* Buttons: Copy + WhatsApp */}
+                          <div className="shrink-0 flex gap-2">
+                            <CopyButton text={shareUrl} />
+                            <WhatsAppShareButton
+                              url={shareUrl}
+                              message="Hey! Get something gorgeous from Elvarra—use my link:"
+                            />
+                          </div>
                         </div>
                         <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
                           <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
@@ -511,8 +533,9 @@ const InviteAndEarnCard: React.FC = () => {
 // -----------------------------
 export default function AccountSettingsPage() {
   // wallet
-  const [wallet, setWallet] = useState<{ balance: number } | null>(null);
+  const [wallet, setWallet] = useState<wallet | null>(null);
   const [walletErr, setWalletErr] = useState<string | null>(null);
+  //  const { cleared, uncleared, total } = wallet;
 
   // password
   const [cur, setCur] = useState("");
@@ -534,7 +557,7 @@ export default function AccountSettingsPage() {
       try {
         setWallet(await apiGetWallet());
       } catch {
-        setWallet({ balance: 0 });
+        setWallet({ balance: 0, total: 0, cleared: 0, uncleared: 0 });
         setWalletErr("Unable to load wallet");
       }
     })();
@@ -813,15 +836,36 @@ export default function AccountSettingsPage() {
                 Current balance
               </div>
               <div className="mt-1 text-2xl font-semibold">
-                ₹{(wallet?.balance ?? 0).toFixed(2)}
+                ₹{wallet?.total ?? 0}
               </div>
             </div>
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-              <div className="text-xs uppercase tracking-wider text-zinc-400">
-                Status
+            <div className="grid grid-cols-4 gap-4 text-center">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+                <div className="text-xs text-zinc-400">Cleared</div>
+                <div className="text-lg font-semibold text-emerald-400">
+                  ₹{wallet?.cleared}
+                </div>
               </div>
-              <div className="mt-1 text-sm">Active</div>
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+                <div className="text-xs text-zinc-400">Uncleared</div>
+                <div className="text-lg font-semibold text-yellow-400">
+                  ₹{wallet?.uncleared}
+                </div>
+              </div>
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+                <div className="text-xs text-zinc-400">Total</div>
+                <div className="text-lg font-semibold text-zinc-100">
+                  ₹{wallet?.total}
+                </div>
+              </div>
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+                <div className="text-xs text-zinc-400">Status</div>
+                <div className="text-lg font-semibold text-zinc-100">
+                  Active
+                </div>
+              </div>
             </div>
+
             <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
               <div className="text-xs uppercase tracking-wider text-zinc-400">
                 How it works

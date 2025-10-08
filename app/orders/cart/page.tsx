@@ -28,10 +28,7 @@ export default function CartPage() {
     /*   { id: "express", label: "Express (1–2 days)", price: 19.0 },
     { id: "pickup", label: "Store Pickup", price: 0.0 }, */
   ];
-  const shipping = useMemo(
-    () => shippingOptions.find((s) => s.id === ship)!.price,
-    [ship]
-  );
+  const shipping = useMemo(() => (subtotal > 700 ? 0 : 30), [subtotal]);
   const discount = useMemo(
     () => (promoApplied ? Math.min(0.15 * subtotal, 50) : 0),
     [promoApplied, subtotal]
@@ -42,15 +39,14 @@ export default function CartPage() {
     [subtotal, discount]
   );
   const total = useMemo(
-    () => Math.max(0, subtotal - discount) + tax + shipping,
-    [subtotal, discount, tax, shipping]
+    () => Math.max(0, subtotal - discount) + shipping,
+    [subtotal, discount, shipping]
   );
 
   const applyPromo = (e: React.FormEvent) => {
     e.preventDefault();
     if (promo.trim()) setPromoApplied(true);
   };
-
   return (
     <main className="min-h-dvh bg-zinc-950 text-zinc-100">
       <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
@@ -166,7 +162,7 @@ export default function CartPage() {
 
               {/* Shipping */}
               <div className="mt-3">
-                <div className="mb-1 text-sm text-zinc-400">Shipping</div>
+                {/* <div className="mb-1 text-sm text-zinc-400">Shipping</div>
                 <div className="space-y-2">
                   {shippingOptions.map((s) => (
                     <label
@@ -185,7 +181,7 @@ export default function CartPage() {
                       <span>{formatMoney(s.price)}</span>
                     </label>
                   ))}
-                </div>
+                </div> */}
               </div>
 
               {/* Totals */}
@@ -198,10 +194,10 @@ export default function CartPage() {
                   <span className="text-zinc-400">Discount</span>
                   <span>- {formatMoney(discount)}</span>
                 </div>
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span className="text-zinc-400">Tax (8%)</span>
                   <span>{formatMoney(tax)}</span>
-                </div>
+                </div> */}
                 <div className="flex justify-between">
                   <span className="text-zinc-400">Shipping</span>
                   <span>{formatMoney(shipping)}</span>
