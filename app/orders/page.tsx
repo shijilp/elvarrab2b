@@ -8,6 +8,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { money } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/StatusPill";
+import OrderRepay from "@/components/ui/OrderRepay";
 
 /**
  * Customer Orders — layout adapted to match the "first page" style
@@ -285,7 +286,7 @@ export default function CustomerOrdersPage() {
                       Cancel
                     </button>
                   )}
-
+                  {!o.is_paid && <OrderRepay order_id={o.id} />}
                   <Link
                     href={`/orders/${encodeURIComponent(String(o.id))}`}
                     className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--text-dark)]"

@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceDownloadButton } from "./InvoicePDF";
 import { StatusPill } from "./ui/StatusPill";
 import { OrderStatus } from "@/types";
+import OrderRepay from "./ui/OrderRepay";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — RETAIL ORDER DETAILS PAGE (Robust params)
@@ -304,7 +305,9 @@ export default function OrderDetailsPage({ id }: { id: string }) {
             className={`inline-block rounded-full px-3 py-1 text-xs font-semibold 
             `}
           >
-            <StatusPill status={order.status} />
+            <div className=" flex gap-1">
+              <StatusPill status={order.status} />
+            </div>
           </span>
         </div>
 
@@ -427,63 +430,30 @@ export default function OrderDetailsPage({ id }: { id: string }) {
                 <span>-{money(order.wallet_used, "INR")}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="font-medium">Net Paid</span>
+                <span className="font-medium">
+                  {order.is_paid ? "Net Paid" : "Net Payable"}
+                </span>
                 <span className="font-medium">
                   {money(order.net_amount, "INR")}
                 </span>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-2">
-              <a
+            <div className="mt-4 grid grid-cols-1 gap-3">
+              {/* <Link
                 href={`/invoices/${encodeURIComponent(order.id)}`}
                 className={`rounded-xl border ${palette.border} px-4 py-2 text-center text-sm`}
               >
                 Download Invoice (PDF)
-              </a>
-
-              <a
+              </Link> */}
+              {!order.is_paid && <OrderRepay order_id={order.id} />}
+              <Link
                 href="/support"
-                className={`rounded-xl px-4 py-2 text-center text-sm ${palette.button}`}
+                className={`rounded-xl px-4 py-2 text-center text-sm btn-gradient-accent`}
               >
                 Need Help?
-              </a>
+              </Link>
             </div>
-
-            <InvoiceDownloadButton
-              order={{
-                id: order.id,
-                created_at: order.created_at,
-                full_name: order.full_name,
-                line1: order.line1,
-                line2: order.line2,
-                city: order.city,
-                state: order.state,
-                pincode: order.pincode,
-                country: order.country,
-                subtotal: order.subtotal,
-                shipping: order.shipping,
-                discount: order.discount,
-                total_amount: order.total_amount,
-                currency: "INR",
-                // (optional) tax if you track it:
-                // tax_amount: order.tax_amount,
-                // tax_label: "GST (18%)",
-                items: order.items.map((it) => ({
-                  product: { sku: it.product.sku, name: it.product.name },
-                  quantity: it.quantity,
-                  price: it.price,
-                })),
-                brand: {
-                  name: "ELVARRA",
-                  tagline: "Luxury Fashion Jewelry",
-                  // logoUrl: "https://your-cdn/logo.png", // optional
-                },
-                invoice_no: `INV-${order.id}`,
-                paid: order.is_paid,
-                status: order.status,
-              }}
-            />
           </aside>
         </div>
         <InvoiceDownloadButton order={order} />
@@ -491,19 +461,3 @@ export default function OrderDetailsPage({ id }: { id: string }) {
     </main>
   );
 }
-
-/*
-------------------------------------------------------------
-TESTS (snippets; place in tests/ or __tests__/)
-
-// tests/retail-order-details.test.ts
-// If helpers are exported, you can test them like:
-// import { money, extractIdFromPath } from "app/account/orders/[id]/page";
-// it("formats money", () => { expect(money(100, "USD")).toMatch(/\$/); });
-// it("extracts id from path", () => {
-//   expect(extractIdFromPath("/account/orders/R-10511")).toBe("R-10511");
-//   expect(extractIdFromPath("/account/orders/R-10488?x=1")).toBe("R-10488");
-//   expect(extractIdFromPath("/account/orders/")).toBeUndefined();
-// });
-//------------------------------------------------------------
-*/
