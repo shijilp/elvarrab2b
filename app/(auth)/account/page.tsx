@@ -860,7 +860,7 @@ export default function AccountSettingsPage() {
               </div>
               <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
                 <div className="text-xs text-zinc-400">Status</div>
-                <div className="text-lg font-semibold text-zinc-100">
+                <div className="text-sm md:text-lg  font-semibold text-zinc-100">
                   Active
                 </div>
               </div>

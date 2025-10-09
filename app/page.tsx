@@ -110,6 +110,11 @@ export default function Page() {
   // await api.post("/orders/send-delivered/", { order_id: 17 });
   //};
 
+  let ref_code = "";
+  if (typeof window !== "undefined") {
+    ref_code = localStorage.getItem("elv_ref") || "";
+  }
+
   return (
     <main className="">
       {/* Hero */}
@@ -121,6 +126,8 @@ export default function Page() {
         <div className="container grid grid-cols-1 gap-8 py-14 lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20 mx-auto">
           <div>
             <p className="text-xs tracking-[0.25em] opacity-80">ELVARRA</p>
+            <p className="text-xs tracking-[0.25em] opacity-80">{ref_code}</p>
+
             <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
               Where Elegance Meets Light
             </h1>
