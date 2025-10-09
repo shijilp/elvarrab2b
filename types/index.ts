@@ -136,6 +136,19 @@ export interface Order {
   assigned_to:AssignedUser
 }
 
+export type OrderLite = {
+  id: number;
+  code?: string;
+  total_amount?: number | string;
+  status: string;
+  full_name: string;
+  city: string;
+  shipped_at?: string | null;
+  updated_at?:string | null;
+  payment_status: string;
+  items?:OrderItems[]
+};
+
 export type RazorpayHandlerResponse = {
   razorpay_order_id: string;
   razorpay_payment_id: string;

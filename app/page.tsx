@@ -19,6 +19,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [sort, setSort] = useState<string>("featured");
+  const [ref_code, setRef_code] = useState("");
 
   // useEffect(() => {
   //   api
@@ -110,10 +111,10 @@ export default function Page() {
   // await api.post("/orders/send-delivered/", { order_id: 17 });
   //};
 
-  let ref_code = "";
-  if (typeof window !== "undefined") {
-    ref_code = localStorage.getItem("elv_ref") || "";
-  }
+  useEffect(() => {
+    const stored = localStorage.getItem("elv_ref");
+    if (stored) setRef_code(JSON.parse(stored));
+  }, []);
 
   return (
     <main className="">

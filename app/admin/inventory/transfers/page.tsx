@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { ProductMini, resolveProduct } from "../_shared/productResolver";
+import Link from "next/link";
 
 type Warehouse = { id: number; code: string; name: string };
 
@@ -131,6 +132,23 @@ export default function NewTransferPage() {
 
   return (
     <div className="mx-auto max-w-6xl p-6 space-y-6 text-neutral-200">
+      <nav className=" max-w-7xl px-4 sm:px-6 lg:px-1 py-2  text-xs opacity-80">
+        <ol className="flex items-center gap-2">
+          <li>
+            <Link href="/admin" className="hover:opacity-80">
+              Dashboard
+            </Link>
+          </li>
+          <li>›</li>
+          <li>
+            <Link href="/admin/inventory" className="hover:opacity-80">
+              Inventory
+            </Link>
+          </li>
+          <li>›</li>
+          <li className="opacity-90">{"Transfer"} </li>
+        </ol>
+      </nav>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">
           <span className="text-[#d4af37]">Elvarra</span> · New Transfer
@@ -253,7 +271,7 @@ export default function NewTransferPage() {
 
               <button
                 onClick={() => removeLine(i)}
-                className={cx(btn, "col-span-2")}
+                className={cx(btn, " col-span-2")}
               >
                 ✕ Remove
               </button>

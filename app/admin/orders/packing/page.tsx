@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { OrderLite } from "@/types";
 
 // --- types ---
 type ScanResult = {
@@ -10,20 +11,9 @@ type ScanResult = {
   code?: string; // if your PATCH returns code, we show it
   total_amount?: number | string;
   status: string;
-  shipped_at?: string | null;
+  updated_at?: string | null;
   full_name: string;
   city: string;
-  payment_status: string;
-};
-
-type OrderLite = {
-  id: number;
-  code?: string;
-  total_amount?: number | string;
-  status: string;
-  full_name: string;
-  city: string;
-  shipped_at: string | null;
   payment_status: string;
 };
 
@@ -153,9 +143,9 @@ export default function ScanOrders() {
 
       if (!background) setListLoading(true);
       try {
-        const params: Record<string, string> = { status: "shipped" };
-        if (gteISO) params["shipped_after"] = gteISO;
-        if (lteISO) params["shipped_before"] = lteISO;
+        const params: Record<string, string> = { status: "packed" };
+        if (gteISO) params["updated_after"] = gteISO;
+        if (lteISO) params["updated_before"] = lteISO;
 
         // TIP: standardize your env var, e.g. NEXT_PUBLIC_API_BASE_URL
         const base =
@@ -174,8 +164,8 @@ export default function ScanOrders() {
           : res.data?.results ?? [];
 
         data.sort((a, b) => {
-          const ad = a.shipped_at ? new Date(a.shipped_at).getTime() : 0;
-          const bd = b.shipped_at ? new Date(b.shipped_at).getTime() : 0;
+          const ad = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+          const bd = b.updated_at ? new Date(b.updated_at).getTime() : 0;
           if (bd !== ad) return bd - ad;
           return (b.id ?? 0) - (a.id ?? 0);
         });
@@ -190,8 +180,8 @@ export default function ScanOrders() {
           const next = [...extras, ...merged];
 
           next.sort((a, b) => {
-            const ad = a.shipped_at ? new Date(a.shipped_at).getTime() : 0;
-            const bd = b.shipped_at ? new Date(b.shipped_at).getTime() : 0;
+            const ad = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+            const bd = b.updated_at ? new Date(b.updated_at).getTime() : 0;
             if (bd !== ad) return bd - ad;
             return (b.id ?? 0) - (a.id ?? 0);
           });
@@ -254,7 +244,7 @@ export default function ScanOrders() {
     try {
       const res = await api.post(
         `${process.env.NEXT_PUBLIC_API_BASE}admin/orders/${code}/set_status/`,
-        { id: code, status: "processing" },
+        { id: code, status: "packed" },
         { withCredentials: true }
       );
       setLast(res.data);
@@ -272,11 +262,11 @@ export default function ScanOrders() {
         full_name: res.data.full_name,
         payment_status: res.data.payment_status,
         city: res.data.city,
-        status: "processing",
-        shipped_at: new Date().toISOString(),
+        status: "packed",
+        updated_at: new Date().toISOString(),
       };
 
-      const nowISO = optimistic.shipped_at!;
+      const nowISO = optimistic.updated_at!;
       const inWindow =
         (!gteISO || nowISO >= gteISO) && (!lteISO || nowISO <= lteISO);
 
@@ -286,8 +276,8 @@ export default function ScanOrders() {
           : prev;
         // maintain sort
         next.sort((a, b) => {
-          const ad = a.shipped_at ? new Date(a.shipped_at).getTime() : 0;
-          const bd = b.shipped_at ? new Date(b.shipped_at).getTime() : 0;
+          const ad = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+          const bd = b.updated_at ? new Date(b.updated_at).getTime() : 0;
           if (bd !== ad) return bd - ad;
           return (b.id ?? 0) - (a.id ?? 0);
         });
@@ -365,12 +355,16 @@ export default function ScanOrders() {
         </ol>
       </nav>
       <h1 className="text-2xl font-bold mb-2">Packing Control </h1>
-      <p className="text-sm opacity-80 mb-6">
+      <p className="text-sm opacity-80 mb-1">
         Scan the <b>order barcode</b>. Status advances automatically (→{" "}
         <span className="rounded px-2 py-0.5 bg-neutral-900 text-white">
-          shipped
+          Packed
         </span>
         ).
+      </p>
+      <p className="text-xs opacity-80 mb-6">
+        The packed count may vary because the packing date is not tracked
+        separately.
       </p>
 
       {/* Hidden input for scanners */}
@@ -449,7 +443,7 @@ export default function ScanOrders() {
         </div>
 
         <div className="rounded-xl px-3 py-2 text-sm ring-1 ring-neutral-200 bg-white/90 dark:bg-neutral-900 dark:ring-neutral-800">
-          <span className="opacity-70 mr-2">Shipped</span>
+          <span className="opacity-70 mr-2">Packed</span>
           <span className="font-semibold">{count}</span>
           {range !== "all" && (
             <span className="opacity-60 ml-2">
@@ -463,13 +457,13 @@ export default function ScanOrders() {
       {/* TABLE */}
       <div className="rounded-2xl ring-1 ring-neutral-200 dark:ring-neutral-800 bg-white/90 dark:bg-neutral-900/70 overflow-x-auto">
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
-          <div className="text-sm opacity-70">Shipped orders</div>
+          <div className="text-sm opacity-70">Packed orders</div>
           {listLoading && <div className="text-xs opacity-60">Loading…</div>}
         </div>
 
         {orders.length === 0 ? (
           <div className="px-4 py-8 text-sm opacity-60">
-            No shipped orders in this range.
+            No packed orders in this range.
           </div>
         ) : (
           <table className="min-w-full text-sm">
@@ -481,34 +475,37 @@ export default function ScanOrders() {
                 <th className="px-4 py-2 font-medium">Total</th>
                 <th className="px-4 py-2 font-medium">Payment</th>
                 <th className="px-4 py-2 font-medium">Status</th>
-                <th className="px-4 py-2 font-medium">Shipped at</th>
+                <th className="px-4 py-2 font-medium">Packed at</th>
               </tr>
             </thead>
             <tbody>
-              {orders.map((o) => (
-                <tr
-                  key={o.id}
-                  className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
-                >
-                  <td className="px-4 py-2">
-                    <span className="font-medium">{o.code ?? `#${o.id}`}</span>
-                  </td>
-                  <td className="px-4 py-2">{o.full_name}</td>
-                  <td className="px-4 py-2">{o.city}</td>
-                  <td className="px-4 py-2">{fmtMoney(o.total_amount)}</td>
-                  <td className="px-4 py-2">
-                    <span className="rounded px-2 py-0.5 bg-neutral-900 text-white text-xs dark:bg-green-600 dark:text-neutral-900">
-                      {o.payment_status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className="rounded px-2 py-0.5 bg-neutral-900 text-white text-xs dark:bg-white dark:text-neutral-900">
-                      {o.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">{fmtDate(o.shipped_at)}</td>
-                </tr>
-              ))}
+              {orders &&
+                orders.map((o, row) => (
+                  <tr
+                    key={row}
+                    className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
+                  >
+                    <td className="px-4 py-2">
+                      <span className="font-medium">
+                        {o.code ?? `#${o.id}`}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">{o.full_name}</td>
+                    <td className="px-4 py-2">{o.city}</td>
+                    <td className="px-4 py-2">{fmtMoney(o.total_amount)}</td>
+                    <td className="px-4 py-2">
+                      <span className="rounded px-2 py-0.5 bg-neutral-900 text-white text-xs dark:bg-green-600 dark:text-neutral-900">
+                        {o.payment_status?.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className="rounded px-2 py-0.5 bg-neutral-900 text-white text-xs dark:bg-white dark:text-neutral-900">
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">{fmtDate(o.updated_at)}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         )}

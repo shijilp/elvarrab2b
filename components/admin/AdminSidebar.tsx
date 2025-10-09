@@ -20,7 +20,6 @@ export function Sidebar({
     { href: "/admin/products", label: "Products" },
     { href: "/admin/orders/packing", label: "Packing" },
     { href: "/admin/orders/shipping", label: "Shipping" },
-    { href: "/admin/customers", label: "Customers" },
   ];
   const inventorylinks = [
     { href: "/admin/inventory", label: "Dashboard" },
@@ -96,8 +95,8 @@ export function Sidebar({
               );
             })}
           </ul>
-          <ul className="space-y-1">
-            <p>Customer</p>
+          <ul className="space-y-1 mt-5">
+            <p className=" text-base opacity-75">Customer</p>
             {customerlinks.map((link) => {
               const active = isActive(link.href);
               return (
@@ -125,8 +124,8 @@ export function Sidebar({
               );
             })}
           </ul>
-          <ul className="space-y-1">
-            <p>Inventory</p>
+          <ul className="space-y-1 mt-5">
+            <p className="text-base opacity-75">Inventory</p>
             {inventorylinks.map((link) => {
               const active = isActive(link.href);
               return (

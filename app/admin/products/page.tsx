@@ -17,9 +17,9 @@ export type Product = {
   tag?: string; // optional custom field
   price: number;
   image_url?: string;
-  inventory?: number;
   stock: number;
-
+  home_page?: boolean;
+  compare_at_price: number;
   low_stock_threshold?: number;
   // in_stock?: boolean; // optional helper from backend
   is_active?: boolean;
@@ -160,9 +160,10 @@ function useProducts(params: {
                 sku: "ELV-LUNA",
                 price: 69,
                 image_url: "/placeholder/earrings.jpg",
-                inventory: 24,
                 low_stock_threshold: 6,
                 is_active: true,
+                compare_at_price: 0,
+
                 stock: 24,
               },
               {
@@ -171,8 +172,9 @@ function useProducts(params: {
                 sku: "ELV-AURORA",
                 price: 129,
                 image_url: "/placeholder/bracelet.jpg",
-                inventory: 3,
                 low_stock_threshold: 6,
+                compare_at_price: 0,
+
                 is_active: true,
                 stock: 3,
               },
@@ -182,8 +184,9 @@ function useProducts(params: {
                 sku: "ELV-NOOR",
                 price: 99,
                 image_url: "/placeholder/pendant.jpg",
-                inventory: 0,
                 low_stock_threshold: 4,
+                compare_at_price: 0,
+
                 is_active: false,
                 stock: 0,
               },
@@ -409,7 +412,7 @@ function Modal({
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-4 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-1 flex items-center justify-between">
           <h3 className="text-lg font-semibold">{title}</h3>
           <button
             onClick={onClose}
@@ -462,9 +465,12 @@ export default function AdminProductsPage() {
   const [form, setForm] = useState<{
     price: number;
     tag?: string;
+    compare_at_price: number;
+
     inventory?: number;
     is_active?: boolean;
-  }>({ price: 0 });
+    home_page?: boolean;
+  }>({ price: 0, compare_at_price: 0 });
 
   function onSelect(id: number, checked: boolean) {
     setSelected((prev) => {
@@ -479,8 +485,9 @@ export default function AdminProductsPage() {
     setEditing(p);
     setForm({
       price: p.price ?? 0,
-      tag: p.sku,
-      inventory: p.inventory ?? 0,
+      tag: p.tag,
+      compare_at_price: p.compare_at_price ?? 0,
+      home_page: p.home_page,
       is_active: p.is_active,
     });
     setEditOpen(true);
@@ -539,7 +546,7 @@ export default function AdminProductsPage() {
         if (row.id === editing.id) {
           row.price = form.price;
           row.tag = form.tag;
-          row.inventory = form.inventory;
+          row.home_page = form.home_page;
           row.is_active = form.is_active;
         }
       });
@@ -868,6 +875,7 @@ export default function AdminProductsPage() {
         onClose={() => setEditOpen(false)}
         title={editing ? `Edit: ${editing.name}` : "Edit Product"}
       >
+        <p className=" mb-5 opacity-70  text-sm">SKU: {editing?.sku}</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="text-sm">
             <div className="mb-1 opacity-70">Price</div>
@@ -881,27 +889,31 @@ export default function AdminProductsPage() {
             />
           </label>
           <label className="text-sm">
-            <div className="mb-1 opacity-70">TAG</div>
-            <input
-              value={form.tag || ""}
-              onChange={(e) => setForm((f) => ({ ...f, tag: e.target.value }))}
-              className="w-full rounded-xl border border-neutral-200 bg-transparent px-3 py-2 outline-none dark:border-neutral-800"
-            />
-          </label>
-          <label className="text-sm">
-            <div className="mb-1 opacity-70">Inventory</div>
+            <div className="mb-1 opacity-70">Compare Price</div>
             <input
               type="number"
-              value={form.inventory ?? 0}
+              value={form.compare_at_price}
               onChange={(e) =>
                 setForm((f) => ({
                   ...f,
-                  inventory: Number(e.target.value || 0),
+                  compare_at_price: Number(e.target.value || 0),
                 }))
               }
               className="w-full rounded-xl border border-neutral-200 bg-transparent px-3 py-2 outline-none dark:border-neutral-800"
             />
           </label>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={!!form.home_page}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, is_active: e.target.checked }))
+              }
+            />
+            <span>On Home Page</span>
+          </label>
+
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -911,6 +923,14 @@ export default function AdminProductsPage() {
               }
             />
             <span>Active</span>
+          </label>
+          <label className="text-sm">
+            <div className="mb-1 opacity-70">TAG [ premium | deal | new ]</div>
+            <input
+              value={form.tag || ""}
+              onChange={(e) => setForm((f) => ({ ...f, tag: e.target.value }))}
+              className="w-full rounded-xl border border-neutral-200 bg-transparent px-3 py-2 outline-none dark:border-neutral-800"
+            />
           </label>
         </div>
         <div className="mt-4 flex justify-end gap-2">

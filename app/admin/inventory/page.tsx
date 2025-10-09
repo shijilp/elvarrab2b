@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import Link from "next/link";
 
 type Warehouse = { id: number; name: string; code: string };
 
@@ -140,6 +141,18 @@ export default function InventoryDashboard() {
 
   return (
     <div className="mx-auto max-w-7xl p-6 space-y-6 text-neutral-200">
+      <nav className=" max-w-7xl px-4 sm:px-6 lg:px-1 py-2  text-xs opacity-80">
+        <ol className="flex items-center gap-2">
+          <li>
+            <Link href="/admin" className="hover:opacity-80">
+              Dashboard
+            </Link>
+          </li>
+          <li>›</li>
+
+          <li className="opacity-90">{"Inventory"} </li>
+        </ol>
+      </nav>
       {/* Title */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">

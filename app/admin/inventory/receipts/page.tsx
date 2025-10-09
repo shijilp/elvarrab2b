@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Link from "next/link";
 
 // -------------------- Types --------------------
 type Warehouse = { id: number; name: string; code: string };
@@ -361,6 +362,23 @@ export default function NewReceiptPage() {
 
   return (
     <div className="mx-auto max-w-6xl p-6 space-y-6 text-neutral-200">
+      <nav className=" max-w-7xl px-4 sm:px-6 lg:px-1 py-2  text-xs opacity-80">
+        <ol className="flex items-center gap-2">
+          <li>
+            <Link href="/admin" className="hover:opacity-80">
+              Dashboard
+            </Link>
+          </li>
+          <li>›</li>
+          <li>
+            <Link href="/admin/inventory" className="hover:opacity-80">
+              Inventory
+            </Link>
+          </li>
+          <li>›</li>
+          <li className="opacity-90">{"Receipts"} </li>
+        </ol>
+      </nav>
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { OrderLite } from "@/types";
 
 // --- types ---
 type ScanResult = {
@@ -13,17 +14,6 @@ type ScanResult = {
   shipped_at?: string | null;
   full_name: string;
   city: string;
-  payment_status: string;
-};
-
-type OrderLite = {
-  id: number;
-  code?: string;
-  total_amount?: number | string;
-  status: string;
-  full_name: string;
-  city: string;
-  shipped_at: string | null;
   payment_status: string;
 };
 
@@ -361,10 +351,10 @@ export default function ScanOrders() {
           </li>
           <li>›</li>
 
-          <li className="opacity-90">{"Packing"} </li>
+          <li className="opacity-90">{"Shipping"} </li>
         </ol>
       </nav>
-      <h1 className="text-2xl font-bold mb-2">Packing Control </h1>
+      <h1 className="text-2xl font-bold mb-2">Shipping Control </h1>
       <p className="text-sm opacity-80 mb-6">
         Scan the <b>order barcode</b>. Status advances automatically (→{" "}
         <span className="rounded px-2 py-0.5 bg-neutral-900 text-white">
@@ -485,9 +475,9 @@ export default function ScanOrders() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((o) => (
+              {orders.map((o, row) => (
                 <tr
-                  key={o.id}
+                  key={row}
                   className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
                 >
                   <td className="px-4 py-2">
@@ -502,8 +492,8 @@ export default function ScanOrders() {
                     </span>
                   </td>
                   <td className="px-4 py-2">
-                    <span className="rounded px-2 py-0.5 bg-neutral-900 text-white text-xs dark:bg-white dark:text-neutral-900">
-                      {o.status}
+                    <span className="rounded px-2 py-0.5 text-white text-xs  btn-gradient-accent dark:text-neutral-900">
+                      {o.status.toUpperCase()}
                     </span>
                   </td>
                   <td className="px-4 py-2">{fmtDate(o.shipped_at)}</td>

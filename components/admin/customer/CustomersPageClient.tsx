@@ -138,6 +138,18 @@ export default function CustomersPageClient() {
 
   return (
     <div className="p-6 space-y-4">
+      <nav className=" max-w-7xl px-4 sm:px-6 lg:px-1 py-4  text-xs opacity-80">
+        <ol className="flex items-center gap-2">
+          <li>
+            <Link href="/admin" className="hover:opacity-80">
+              Dashboard
+            </Link>
+          </li>
+          <li>›</li>
+
+          <li className="opacity-90">{"Customers"} </li>
+        </ol>
+      </nav>
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-2xl font-semibold">Customers</h1>
         <div className="ml-auto flex gap-2">

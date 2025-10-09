@@ -75,6 +75,18 @@ export default function CustomersDashboardClient() {
 
   return (
     <div className="p-6 space-y-6">
+      <nav className=" max-w-7xl px-4 sm:px-6 lg:px-1 py-4  text-xs opacity-80">
+        <ol className="flex items-center gap-2">
+          <li>
+            <Link href="/admin" className="hover:opacity-80">
+              Admin
+            </Link>
+          </li>
+          <li>›</li>
+
+          <li className="opacity-90">{"Customer Dashboard"} </li>
+        </ol>
+      </nav>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">Customer Insights</h1>
         <div className="text-sm text-gray-500">

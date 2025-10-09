@@ -7,8 +7,8 @@ export default function Footer() {
       <div className="container text-sm text-neutral-600 dark:text-neutral-300 flex flex-col sm:flex-row justify-between gap-4">
         <p>© {new Date().getFullYear()} Elvarra. All rights reserved.</p>
         <nav className="flex gap-4">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
+          <a href="/privacy">Privacy</a>
+          <a href="terms">Terms</a>
           <a href="/contact">Support</a>
         </nav>
       </div>

@@ -299,7 +299,7 @@ const InviteAndEarnCard: React.FC = () => {
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="md:flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">Invite & Earn</h2>
         <div className="text-xs text-zinc-400">
           Share your link, earn wallet cash or commission.
