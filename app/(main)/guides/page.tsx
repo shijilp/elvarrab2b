@@ -1,6 +1,7 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
-import React, { useMemo, useState, useMemo as useMemo2 } from "react";
+import React, { useMemo, useState } from "react";
 
 // ==============================================================
 // Elvarra / Elvara — Guides Index
@@ -111,7 +112,9 @@ function GuideCard({ g, palette }: { g: Guide; palette: Palette }) {
       className={`group overflow-hidden rounded-2xl ${palette.ring} ${palette.card}`}
     >
       <div className="relative">
-        <img
+        <Image
+          width={640}
+          height={640}
           src={g.image}
           alt={g.title}
           className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"

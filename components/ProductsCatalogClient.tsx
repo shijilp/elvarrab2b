@@ -250,8 +250,7 @@ export default function ProductsCatalogClient() {
           <div>
             <h1 className="text-2xl font-semibold el-textn">Shop All</h1>
             <p className="mt-1 text-sm el-text-subn">
-              Free shipping over {money(1000)} • 30-day returns • 2-year
-              warranty
+              Free shipping over {money(700)} across India.
             </p>
           </div>
           {/* <a
@@ -387,11 +386,18 @@ export default function ProductsCatalogClient() {
                 </select>
               </div>
 
-              <div className="mt-2">
+              <div className="mt-2 flex justify-around ">
+                <button
+                  disabled={!isDirty}
+                  className="w-1/3 btn-gradient-accent sm:hidden rounded-xl border el-border px-2 py-2 text-sm disabled:opacity-40 hover:bg-white/5"
+                  aria-disabled={!isDirty}
+                >
+                  Go
+                </button>
                 <button
                   onClick={resetFilters}
                   disabled={!isDirty}
-                  className="w-full rounded-xl border el-border px-3 py-2 text-sm disabled:opacity-40 hover:bg-white/5"
+                  className=" w-1/3 sm:w-full btn-gradient-accent rounded-xl border el-border px-3 py-2 text-sm disabled:opacity-40 hover:bg-white/5"
                   aria-disabled={!isDirty}
                 >
                   Reset filters
@@ -413,7 +419,9 @@ export default function ProductsCatalogClient() {
                   />
                 </div>
               )}
-              <div className=" el-text-subn">{data.count} products</div>
+              <div className=" el-text-subn hidden md:block">
+                {data.count} products
+              </div>
               <div className="hidden gap-2 sm:flex">
                 <button
                   onClick={() => goto(page - 1)}
@@ -509,7 +517,7 @@ export default function ProductsCatalogClient() {
 
                       <div className="mt-2 flex items-center justify-between">
                         <div className="text-sm font-semibold">
-                          {(p as Product).compare_at_price ? (
+                          {(p as Product).compare_at_price > 0 ? (
                             <>
                               <span className="mr-1 line-through opacity-70">
                                 {money((p as Product).compare_at_price)}
@@ -541,17 +549,17 @@ export default function ProductsCatalogClient() {
               <button
                 onClick={() => goto(page - 1)}
                 disabled={page <= 1}
-                className="rounded-xl border el-border px-3 py-1.5 disabled:opacity-40"
+                className="rounded-xl border el-border el-text-subn px-3 py-1.5 disabled:opacity-40"
               >
                 Prev
               </button>
-              <div className="px-1 py-1.5 text-sm">
+              <div className="px-1 py-1.5 text-sm el-text-subn">
                 Page {page} / {totalPages}
               </div>
               <button
                 onClick={() => goto(page + 1)}
                 disabled={page >= totalPages}
-                className="rounded-xl border el-border px-3 py-1.5 disabled:opacity-40"
+                className="rounded-xl border el-border el-text-subn px-3 py-1.5 disabled:opacity-40"
               >
                 Next
               </button>

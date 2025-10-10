@@ -233,15 +233,11 @@ export default function OrderDetailsPage({ id }: { id: string }) {
   //   [id]
   // );
   useEffect(() => {
-    if (!user?.access || !id) return;
+    if (!user || !id) return;
 
     const fetchOrder = async () => {
       try {
-        const res = await api.get(`/my-orders/${id}/`, {
-          headers: {
-            Authorization: `Bearer ${user.access}`,
-          },
-        });
+        const res = await api.get(`/my-orders/${id}/`, {});
         setOrder(res.data);
       } catch (error) {
         console.error("Failed to fetch order:", error);

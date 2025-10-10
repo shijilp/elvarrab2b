@@ -66,9 +66,12 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+      /// setTimeout(() => router.push("/"), 100);
+      //console.log("Login successful — redirecting..." + res);
       router.push("/");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
+      // console.log("Login failed", err);
       setError(
         err?.response?.data?.detail ||
           err?.response?.data?.error ||

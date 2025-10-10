@@ -57,21 +57,6 @@ function isEmail(x: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x);
 }
 
-async function fetchWithTimeout(
-  url: string,
-  init: RequestInit & { timeoutMs?: number } = {}
-) {
-  const { timeoutMs = 12000, ...rest } = init;
-  const ctrl = new AbortController();
-  const id = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { ...rest, signal: ctrl.signal });
-    return res;
-  } finally {
-    clearTimeout(id);
-  }
-}
-
 export default function SupportPage() {
   const theme: ThemeMode = "dark";
   const palette = useMemo(() => paletteForTheme(theme), [theme]);
@@ -120,13 +105,6 @@ export default function SupportPage() {
     }
 
     setLoading(true);
-    const payload = {
-      name,
-      email,
-      subject,
-      message,
-      orderId: orderId || undefined,
-    };
 
     try {
       const res = await api.post(

@@ -24,8 +24,8 @@ interface User {
   username: string;
   isAdmin: boolean;
   email?: string; // 👈 added
-  access: string; // renamed from 'token' for clarity
-  refresh?: string; // optional if you want auto-refresh
+  //access: string; // renamed from 'token' for clarity
+  //refresh?: string; // optional if you want auto-refresh
   role: string; // optional roles/permissions
   first_name?: string;
 }
@@ -65,8 +65,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(u);
     if (u) {
       localStorage.setItem("user", JSON.stringify(u));
-      setAuthToken(u.access);
-      scheduleRefresh(u.access);
+      // setAuthToken(u.access);
+      // scheduleRefresh(u.access);
     } else {
       localStorage.removeItem("user");
       setAuthToken(null);
@@ -90,8 +90,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const parsed: User = JSON.parse(saved);
         setUser(parsed);
-        setAuthToken(parsed.access); // ✅ (you already fixed this)
-        scheduleRefresh(parsed.access);
+        //setAuthToken(parsed.access); // ✅ (you already fixed this)
+        //scheduleRefresh(parsed.access);
       } catch {}
     }
     setInitialized(true); // ✅ hydration done
@@ -100,23 +100,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (username: string, password: string) => {
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/token/`,
-        { username, password }
-      );
-      const access = res.data.access as string;
-      const refresh = res.data.refresh as string | undefined;
-      const payload: JWTPayload = jwtDecode(access);
+      // const res = await axios.post(
+      //   `${process.env.NEXT_PUBLIC_API_URL}/api/token/`,
+      //   { username, password }
+      // );
+      const res = await axios.post("/api/login", { username, password });
+      const loggedInUser = res.data.user; // tokens are in httpOnly cookies
+      // const access = res.data.access as string;
+      // const refresh = res.data.refresh as string | undefined;
+      // const payload: JWTPayload = jwtDecode(access);
 
-      const loggedInUser: User = {
-        username: payload.username,
-        isAdmin: !!payload.is_staff,
-        email: payload.email ?? res.data.email,
-        role: res.data.role ?? "user", // 👈 example
-        first_name: res.data.first_name,
-        access,
-        refresh,
-      };
+      // const loggedInUser: User = {
+      //   username: payload.username,
+      //   isAdmin: !!payload.is_staff,
+      //   email: payload.email ?? res.data.email,
+      //   role: res.data.role ?? "user", // 👈 example
+      //   first_name: res.data.first_name,
+      //   access,
+      //   refresh,
+      // };
 
       saveUser(loggedInUser); // ✅ use central saver
     } catch {
@@ -126,25 +128,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // const googleLogin = async (idToken: string) => {
+  //   setLoading(true);
+  //   try {
+  //     const res = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_API_URL}/auth/google/`,
+  //       { id_token: idToken }
+  //     );
+  //     const { access, refresh, user: profile } = res.data;
+
+  //     const payload: JWTPayload = jwtDecode(access);
+  //     const loggedInUser: User = {
+  //       username: profile?.username ?? payload.username,
+  //       isAdmin: !!payload.is_staff,
+  //       email: profile?.email ?? payload.email,
+  //       role: profile?.role ?? "user", // 👈 example
+  //       first_name: profile?.first_name ?? "",
+  //       access,
+  //       refresh,
+  //     };
+  //     saveUser(loggedInUser);
+  //     router.replace("/");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const googleLogin = async (idToken: string) => {
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/google/`,
-        { id_token: idToken }
-      );
-      const { access, refresh, user: profile } = res.data;
-
-      const payload: JWTPayload = jwtDecode(access);
-      const loggedInUser: User = {
-        username: profile?.username ?? payload.username,
-        isAdmin: !!payload.is_staff,
-        email: profile?.email ?? payload.email,
-        role: profile?.role ?? "user", // 👈 example
-        first_name: profile?.first_name ?? "",
-        access,
-        refresh,
+      const res = await axios.post("/api/auth/google", { id_token: idToken });
+      const profile = res.data.user as {
+        username: string | null;
+        isAdmin: boolean;
+        email?: string | null;
+        role?: string | null;
+        first_name?: string | null;
       };
+
+      // keep your existing User shape but WITHOUT tokens
+      const loggedInUser: User = {
+        username: profile.username ?? "",
+        isAdmin: !!profile.isAdmin,
+        email: profile.email ?? undefined,
+        role: profile.role ?? "user",
+        first_name: profile.first_name ?? "",
+        // access/refresh are NOT stored in client anymore
+      } as unknown as User;
+
       saveUser(loggedInUser);
       router.replace("/");
     } finally {
@@ -153,21 +184,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Optional: silent refresh
-  const refreshAccess = async (): Promise<string | null> => {
-    if (!user?.refresh) return null;
+  // const refreshAccess = async (): Promise<string | null> => {
+  //   if (!user?.refresh) return null;
+  //   try {
+  //     const res = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_API_URL}/api/token/refresh/`,
+  //       { refresh: user.refresh }
+  //     );
+  //     const access = res.data.access as string;
+  //     const updated: User = { ...user, access };
+  //     saveUser(updated);
+  //     return access;
+  //   } catch {
+  //     // refresh failed → logout
+  //     saveUser(null);
+  //     return null;
+  //   }
+  // };
+  const refreshAccess = async (): Promise<boolean> => {
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/token/refresh/`,
-        { refresh: user.refresh }
-      );
-      const access = res.data.access as string;
-      const updated: User = { ...user, access };
-      saveUser(updated);
-      return access;
+      const res = await axios.post("/api/refresh");
+      return res.status === 200;
     } catch {
-      // refresh failed → logout
-      saveUser(null);
-      return null;
+      saveUser(null); // logout on failure
+      return false;
     }
   };
 
@@ -186,7 +226,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loading,
         initialized,
         googleLogin,
-        refreshAccess,
+        //refreshAccess,
       }}
     >
       {children}

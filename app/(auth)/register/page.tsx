@@ -61,25 +61,22 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/register/`,
-        {
-          first_name: name,
-          username: email,
-          password: password,
-          email: email || undefined,
-        }
-      );
+      const res = await axios.post("/api/register", {
+        first_name: name,
+        username: email,
+        password: password,
+        email: email || undefined,
+      });
 
       const user = {
         username: res.data.username,
         isAdmin: res.data.isAdmin,
-        token: res.data.access,
+        email: res.data.email,
+        role: res.data.role,
+        first_name: res.data.first_name,
       };
       localStorage.setItem("user", JSON.stringify(user));
-      axios.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${res.data.access}`;
+
       setLoading(false);
 
       router.push("/");

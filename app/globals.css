@@ -124,6 +124,15 @@ html, body {
     @apply bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110;
    
 }
+.gradient-yellow{
+    @apply bg-gradient-to-r from-amber-400 to-yellow-200   ;
+}
+.gradient-elegant{
+    @apply bg-gradient-to-r  from-violet-500 to-purple-300   ;
+}
+.gradient-icy{
+    @apply bg-gradient-to-r from-sky-400 to-blue-300   ;
+}
 }
 
 .gradient-accent {

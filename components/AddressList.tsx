@@ -14,10 +14,10 @@ export default function AddressList({
 }) {
   const { user } = useAuth();
   const isLoggedIn = !!user;
-  const headers = useMemo(
-    () => (user ? { Authorization: `Bearer ${user.access}` } : undefined),
-    [user]
-  );
+  // const headers = useMemo(
+  //   () => (user ? { Authorization: `Bearer ${user.access}` } : undefined),
+  //   [user]
+  // );
 
   const [list, setList] = useState<Address[]>([]);
   const [selectedId, setSelectedId] = useState<string | number | null>(null);
@@ -47,7 +47,7 @@ export default function AddressList({
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn, type, headers?.Authorization]);
+  }, [isLoggedIn, type]);
 
   async function add(addr: Address) {
     if (isLoggedIn) {

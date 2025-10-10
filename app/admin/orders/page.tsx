@@ -141,9 +141,7 @@ export default function CustomerOrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await api.get("/admin/orders/", {
-          headers: { Authorization: `Bearer ${user?.access}` },
-        });
+        const res = await api.get("/admin/orders/", {});
 
         setOrders(res.data.results);
         const admn = await api.get("admins/");
@@ -155,7 +153,7 @@ export default function CustomerOrdersPage() {
         setLoading(false);
       }
     };
-    if (user?.access) fetchOrders();
+    if (user) fetchOrders();
     else setLoading(false); // avoid spinner forever when logged out
   }, [user]);
 
@@ -195,9 +193,7 @@ export default function CustomerOrdersPage() {
       );
 
       // Refresh orders so table shows waybills/status changes
-      const fresh = await api.get("/admin/orders/", {
-        headers: { Authorization: `Bearer ${user?.access}` },
-      });
+      const fresh = await api.get("/admin/orders/", {});
       setOrders(fresh.data.results);
       setSelected(new Set());
     } catch (e) {
@@ -216,9 +212,7 @@ export default function CustomerOrdersPage() {
       const res = await api.post("/shipments/bulk-mark-shipped/", { ids });
       alert(`Marked shipped: ${res.data?.updated ?? 0}`);
 
-      const fresh = await api.get("/admin/orders/", {
-        headers: { Authorization: `Bearer ${user?.access}` },
-      });
+      const fresh = await api.get("/admin/orders/", {});
       setOrders(fresh.data.results);
       setSelected(new Set());
     } catch (e) {
@@ -580,9 +574,7 @@ export default function CustomerOrdersPage() {
       });
 
       // Option A: re-fetch (simple & consistent)
-      const res = await api.get("/admin/orders/", {
-        headers: { Authorization: `Bearer ${user?.access}` },
-      });
+      const res = await api.get("/admin/orders/", {});
       setOrders(res.data.results);
 
       // Option B (optional): optimistic UI update

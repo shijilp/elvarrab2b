@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import ProductCard from "@/components/ProductCard";
-import { api } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import { Product } from "@/types";
 import OccassionTab from "@/components/OccassionTab";
+import { api } from "@/lib/api";
 
 export default function Page() {
   // const [mounted, setMounted] = useState(false);
@@ -20,22 +20,6 @@ export default function Page() {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [sort, setSort] = useState<string>("featured");
   const [ref_code, setRef_code] = useState("");
-
-  // useEffect(() => {
-  //   api
-  //     .get("/products/")
-  //     .then((res) => {
-  //       setProducts(res.data.results);
-  //     })
-  //     .catch((err) => console.error("Failed to fetch products:", err));
-
-  //   api
-  //     .get("/categories/")
-  //     .then((res) => {
-  //       setCategories(res.data.results);
-  //     })
-  //     .catch((err) => console.error("Failed to fetch categories:", err));
-  // }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -152,10 +136,10 @@ export default function Page() {
                 Explore Collections
               </Link>
             </div>
-            <div className="mt-6 flex items-center gap-4 text-xs opacity-80">
+            <div className="mt-6  flex  items-center gap-4 text-xs opacity-80">
               <span>• Elegance in Every Detail</span>
               <span>• Luxury, Redefined</span>
-              <span>• Crafted to Captivate</span>
+              <span className=" hidden sm:block">• Crafted to Captivate</span>
             </div>
           </div>
           <div className="relative">
@@ -331,7 +315,7 @@ export default function Page() {
               <div className="mt-6 flex gap-3 text-xs opacity-80">
                 <span>• Nickel-free</span>
                 <span>• 18k gold plating</span>
-                <span>• Lab-grown stones</span>
+                {/* <span>• Lab-grown stones</span> */}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -355,22 +339,76 @@ export default function Page() {
       <OccassionTab />
 
       {/* Testimonials */}
-      <section className="container py-12 lg:py-16 mx-auto">
-        <SectionTitle>What Our Customers Say</SectionTitle>
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="container mx-auto py-16 px-4">
+        {/* Header */}
+        {/* <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight gradient-yellow text-transparent bg-clip-text">
+            What Our Customers Say
+          </h2>
+          <p className="mt-3 text-neutral-400 max-w-lg mx-auto">
+            Real stories from people who wear Elvarra — elegance that speaks for
+            itself.
+          </p>
+        </div> */}
+
+        {/* Testimonials */}
+        {/* <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            "Stunning quality and shine.",
-            "Perfect everyday pieces.",
-            "Feels premium, looks gorgeous!",
-          ].map((quote, i) => (
+            {
+              quote:
+                "Stunning quality and shine. I get compliments every time I wear it!",
+              name: "— Aisha, Verified Buyer",
+            },
+            {
+              quote: "Perfect everyday pieces. Minimal, elegant, and timeless.",
+              name: "— Noura, Verified Buyer",
+            },
+            {
+              quote:
+                "Feels premium, looks gorgeous! The packaging was beautiful too.",
+              name: "— Meera, Verified Buyer",
+            },
+          ].map((item, i) => (
             <figure
               key={i}
-              className="rounded-2xl p-5 ring-1 ring-neutral-800 bg-neutral-900/70"
+              className="rounded-2xl p-6 bg-gradient-to-b from-neutral-900 to-black ring-1 ring-neutral-800 shadow-lg hover:shadow-amber-500/20 transition-all duration-300"
             >
-              <blockquote className="text-neutral-300">“{quote}”</blockquote>
-              <figcaption className="mt-3 text-sm">— Verified Buyer</figcaption>
+              <blockquote className="text-neutral-200 text-lg leading-relaxed italic">
+                “{item.quote}”
+              </blockquote>
+              <figcaption className="mt-4 text-sm text-amber-400 font-medium">
+                {item.name}
+              </figcaption>
             </figure>
           ))}
+        </div> */}
+
+        {/* CTA Bar */}
+        <div className="mt-1 text-center">
+          <h3 className="text-2xl md:text-3xl font-semibold tracking-tight gradient-yellow text-transparent bg-clip-text">
+            Discover Why Everyone Loves Elvarra
+          </h3>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/products/premium"
+              className="px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-semibold hover:scale-105 transition-transform duration-300"
+            >
+              ✨ Premium Collection
+            </Link>
+            <Link
+              href="/products/deals"
+              className="px-5 py-2 rounded-full bg-neutral-800 text-neutral-200 ring-1 ring-neutral-700 hover:bg-neutral-700 transition-colors duration-300"
+            >
+              💎 Explore Deals
+            </Link>
+
+            <Link
+              href="products?tags=new"
+              className="px-5 py-2 rounded-full gradient-elegant text-white font-semibold hover:scale-105 transition-transform duration-300"
+            >
+              💜 New Arrivals
+            </Link>
+          </div>
         </div>
       </section>
 

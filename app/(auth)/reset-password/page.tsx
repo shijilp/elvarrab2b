@@ -2,7 +2,6 @@
 import React, { useMemo, useState } from "react";
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { api } from "@/lib/api";
 import axios from "axios";
 
 export default function ResetPasswordPage() {
@@ -81,14 +80,11 @@ function ResetPasswordForm() {
     }
 
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password/confirm/`,
-        {
-          uid,
-          token,
-          new_password: pass,
-        }
-      );
+      await axios.post("/api/reset-password/confirm", {
+        uid,
+        token,
+        new_password: pass,
+      });
       setDone(true);
       setTimeout(() => router.push("/login"), 2000);
     } catch (err: unknown) {

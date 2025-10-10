@@ -48,8 +48,6 @@ type wallet = {
 // -----------------------------
 const LS_ADDR = "elvara:addresses";
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-const asNumber = (v: unknown, d = 0) =>
-  Number.isFinite(Number(v)) ? Number(v) : d;
 
 // -----------------------------
 // API helpers (use axios `api`)

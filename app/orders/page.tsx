@@ -48,7 +48,7 @@ export default function CustomerOrdersPage() {
         setLoading(false);
       }
     };
-    if (user?.access) fetchOrders();
+    if (user) fetchOrders();
     else setLoading(false);
   }, [user]);
 

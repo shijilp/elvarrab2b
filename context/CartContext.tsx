@@ -58,9 +58,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Authenticated → load from backend
       if (user) {
         try {
-          const res = await api.get("cart/", {
-            headers: { Authorization: `Bearer ${user.access}` },
-          });
+          const res = await api.get("cart/", {});
 
           // product may be an ID (number) OR a nested object (if you later change serializer)
           const items = (res.data || []).map((item: any) => {
@@ -128,17 +126,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       try {
         if (exists) {
-          await api.patch(
-            `cart/${product.id}/`,
-            { quantity: exists.quantity + 1 },
-            { headers: { Authorization: `Bearer ${user.access}` } }
-          );
+          await api.patch(`cart/${product.id}/`, {
+            quantity: exists.quantity + 1,
+          });
         } else {
-          await api.post(
-            "/cart/",
-            { product_id: product.id, quantity: 1 },
-            { headers: { Authorization: `Bearer ${user.access}` } }
-          );
+          await api.post("/cart/", { product_id: product.id, quantity: 1 });
         }
       } catch (err) {
         console.error("Backend cart sync failed:", err);
@@ -154,15 +146,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     if (user) {
       try {
-        await api.patch(
-          `/cart/${productId}/update/`,
-          { quantity },
-          {
-            headers: {
-              Authorization: `Bearer ${user.access}`,
-            },
-          }
-        );
+        await api.patch(`/cart/${productId}/update/`, { quantity });
       } catch (err) {
         console.error("Failed to update quantity", err);
       }
@@ -189,15 +173,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       try {
         if (item.quantity > 1) {
-          await api.patch(
-            `/cart/${productId}/update/`,
-            { quantity: item.quantity - 1 },
-            { headers: { Authorization: `Bearer ${user.access}` } }
-          );
-        } else {
-          await api.delete(`/cart/${productId}/remove/`, {
-            headers: { Authorization: `Bearer ${user.access}` },
+          await api.patch(`/cart/${productId}/update/`, {
+            quantity: item.quantity - 1,
           });
+        } else {
+          await api.delete(`/cart/${productId}/remove/`, {});
         }
       } catch (err) {
         console.error("Backend remove failed:", err);
@@ -210,14 +190,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCartItems([]);
     if (user) {
       try {
-        const res = await api.get("cart/", {
-          headers: { Authorization: `Bearer ${user.access}` },
-        });
+        const res = await api.get("cart/", {});
         await Promise.all(
           res.data.map((item: any) =>
-            api.delete(`cart/${item.product.id}/remove/`, {
-              headers: { Authorization: `Bearer ${user.access}` },
-            })
+            api.delete(`cart/${item.product.id}/remove/`, {})
           )
         );
       } catch (err) {

@@ -1,6 +1,5 @@
 "use client";
 import React, { useMemo, useState } from "react";
-import { api } from "@/lib/api";
 import axios from "axios";
 
 // ------------------------------------------------------------
@@ -65,10 +64,7 @@ export default function ForgotPasswordPage() {
       return;
     }
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/request-reset-password/`,
-        { email }
-      );
+      await axios.post("/api/reset-password", { email });
       setSent(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
