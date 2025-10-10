@@ -141,7 +141,7 @@ export default function Header() {
       </header>
 
       {/* Bottom Mobile Nav */}
-      <nav className="md:hidden print:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-neutral-900/90 border-t border-neutral-200 dark:border-neutral-800 backdrop-blur pb-[max(env(safe-area-inset-bottom),0px)]">
+      <nav className="md:hidden print:hidden fixed bottom-0 inset-x-0 z-40 bg-neutral-900/50 border-t border-neutral-200 dark:border-neutral-800 backdrop-blur pb-[max(env(safe-area-inset-bottom),0px)]">
         <div className="flex justify-around items-center h-14 text-xs">
           <Tab href="/" label="Home" active={isActive("/")}>
             <Home className="h-5 w-5" />

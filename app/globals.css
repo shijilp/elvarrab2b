@@ -133,6 +133,9 @@ html, body {
 .gradient-icy{
     @apply bg-gradient-to-r from-sky-400 to-blue-300   ;
 }
+.gradient-premium{
+    @apply bg-gradient-to-r from-amber-500 to-orange-300 ;
+}
 }
 
 .gradient-accent {

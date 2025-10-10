@@ -1,7 +1,9 @@
 "use client";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { api } from "@/lib/api";
 import { money } from "@/lib/money";
 import { Product } from "@/types";
+import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
@@ -16,7 +18,7 @@ function PremiumCollectionPage() {
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([api.get("/portfolio/?tags=deal")])
+    Promise.all([api.get("/portfolio/?tags_all=premium")])
       .then(([pRes]) => {
         if (!mounted) return;
         setProducts(pRes.data.results ?? pRes.data ?? []);
@@ -30,11 +32,11 @@ function PremiumCollectionPage() {
 
   return (
     <main
-      className={`bg-neutral-950 text-neutral-50  min-h-screen antialiased`}
+      className={`bg-neutral-950 text-neutral-50  min-h-screen antialiased `}
     >
       {/* Optional: include <HeaderNav /> globally in layout instead */}
 
-      <section className="container py-10">
+      <section className="container py-10 mx-auto">
         <nav className={`text-xs text-neutral-50`}>
           <Link href="/" className="underline">
             Home
@@ -81,8 +83,10 @@ function PremiumCollectionPage() {
               </a>
             </div>
             <div className="relative h-48 md:h-auto">
-              <img
-                src="https://images.unsplash.com/photo-1603561596112-0e8e1f43d0a6?q=80&w=1200&auto=format&fit=crop"
+              <Image
+                width={240}
+                height={240}
+                src="/images/about-1.jpg"
                 alt="Premium hero"
                 className="h-full w-full object-cover"
               />
@@ -114,7 +118,9 @@ function PremiumCollectionPage() {
                 </span>
               </div>
               <div className="p-3">
-                <div className="text-sm font-medium">{p.name}</div>
+                <div className="text-sm font-medium overflow-ellipsis">
+                  {p.name}
+                </div>
                 <div className="mt-1 text-sm font-semibold">
                   {money(p.price)}
                 </div>
@@ -126,6 +132,7 @@ function PremiumCollectionPage() {
           ))}
         </div>
       </section>
+      <LoadingOverlay show={loading} />
     </main>
   );
 }

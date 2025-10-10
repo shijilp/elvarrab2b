@@ -124,16 +124,16 @@ export default function Page() {
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
-                href="#bestsellers"
-                className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 btn-gradient-accent"
-              >
-                Shop Bestsellers
-              </Link>
-              <Link
                 href="/products"
                 className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
               >
                 Explore Collections
+              </Link>
+              <Link
+                href="/products/premium"
+                className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 btn-gradient-accent"
+              >
+                ✨ Premium Collections
               </Link>
             </div>
             <div className="mt-6  flex  items-center gap-4 text-xs opacity-80">
@@ -396,7 +396,7 @@ export default function Page() {
               ✨ Premium Collection
             </Link>
             <Link
-              href="/products/deals"
+              href="/products/deal"
               className="px-5 py-2 rounded-full bg-neutral-800 text-neutral-200 ring-1 ring-neutral-700 hover:bg-neutral-700 transition-colors duration-300"
             >
               💎 Explore Deals
