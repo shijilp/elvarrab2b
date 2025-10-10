@@ -4,7 +4,6 @@
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useState } from "react";
-import { Order } from "@/types";
 
 export default function PrintAllPackingSlipsButton() {
   const router = useRouter();

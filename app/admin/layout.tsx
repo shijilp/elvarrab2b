@@ -10,7 +10,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, initialized } = useAuth(); // your AuthContext should return user info + role
+  const { user, initialized } = useAuth(); // your AuthContext should return user info + role
   const router = useRouter();
 
   useEffect(() => {

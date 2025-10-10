@@ -55,25 +55,6 @@ function clsx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(" ");
 }
 
-// ---------- Reusable UI ----------
-function LoadingOverlay({
-  show,
-  label = "Loading...",
-}: {
-  show: boolean;
-  label?: string;
-}) {
-  if (!show) return null;
-  return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/40 backdrop-blur">
-      <div className="flex items-center gap-3 rounded-2xl bg-neutral-900 px-4 py-3 text-neutral-100 ring-1 ring-neutral-800">
-        <Spinner />
-        <span className="text-sm opacity-90">{label}</span>
-      </div>
-    </div>
-  );
-}
-
 function StatCard({
   title,
   value,

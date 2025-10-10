@@ -4,6 +4,7 @@ import { PromoBanner } from "@/components/PromoBanner";
 import { api } from "@/lib/api";
 import { money } from "@/lib/utils";
 import { Product } from "@/types";
+import Image from "next/image";
 import Link from "next/link";
 import React, { JSX, useEffect, useMemo, useState } from "react";
 
@@ -23,13 +24,6 @@ export default function DealsPage() {
   >("all");
   const [festivalOnly, setFestivalOnly] = useState<boolean>(true); // toggle for tag=deal by default
 
-  // Countdown target
-  const [endsAt] = useState<Date>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + SALE_DAYS);
-    d.setHours(23, 59, 59, 999);
-    return d;
-  });
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000); // tick every minute
     return () => clearInterval(id);
@@ -212,7 +206,9 @@ export default function DealsPage() {
                   )}
 
                   {/* Image */}
-                  <img
+                  <Image
+                    width={640}
+                    height={640}
                     src={d.image}
                     alt={d.name}
                     className="aspect-[4/5] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"

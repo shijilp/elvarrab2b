@@ -1,4 +1,3 @@
-import { Spinner } from "../admin/Spinner";
 import ElvarraSpinner from "../ElvarraSpinner";
 
 export function LoadingOverlay({ show }: { show: boolean }) {

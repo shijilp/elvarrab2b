@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import AddressForm, { Address, AddressType } from "./AddressForm";
 import { api } from "@/lib/api";

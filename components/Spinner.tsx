@@ -228,10 +228,8 @@ if (process.env.NODE_ENV !== "production") {
     window.__ELVARRA_SPINNER_TESTS_RAN__ = true;
     try {
       const res = __runSpinnerSelfTests();
-      // eslint-disable-next-line no-console
       if (!res.ok) console.warn("[Elvarra Spinner]", res.message);
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn("[Elvarra Spinner] tests failed to run", e);
     }
   }

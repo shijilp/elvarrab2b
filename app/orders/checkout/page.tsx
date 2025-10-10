@@ -160,6 +160,7 @@ export default function CheckoutPage() {
     setWalletWillUse(canUse);
     setPayableNow(Math.max(0, gross - canUse));
   }, [subtotal, discount, shipping, wallet]);
+
   const validate = (): string | null => {
     const res = AddressSchema.safeParse(addr);
     if (!res.success) {
@@ -461,9 +462,9 @@ export default function CheckoutPage() {
               <ApplyCoupon email={addr?.email} />
             </div>
             <BtnElvarra
-              disabled={placing || cartItems.length === 0}
+              disabled={placing || cartItems.length === 0 || !addr}
               onClick={placeOrder}
-              className={` w-full px-5 py-3 text-sm font-medium btn-gradient-accent `}
+              className={` w-full px-5 py-3 text-sm disabled:opacity-15 font-medium btn-gradient-accent `}
             >
               {" "}
               {placing ? "Processing…" : "Pay securely"}

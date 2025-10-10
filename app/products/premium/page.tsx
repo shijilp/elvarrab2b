@@ -106,7 +106,9 @@ function PremiumCollectionPage() {
               className={`group overflow-hidden rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70`}
             >
               <div className="relative">
-                <img
+                <Image
+                  width={640}
+                  height={640}
                   src={p.image}
                   alt={p.name}
                   className="aspect-[4/5] w-full object-cover"

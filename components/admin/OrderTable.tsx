@@ -234,7 +234,3 @@ export function OrdersTable({
     </div>
   );
 }
-
-function clsx(...parts: (string | false | null | undefined)[]) {
-  return parts.filter(Boolean).join(" ");
-}

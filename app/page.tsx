@@ -49,16 +49,16 @@ export default function Page() {
     }
   }, []);
 
-  const allCategories = useMemo(() => {
-    return [
-      "All",
-      ...Array.from(
-        new Set(
-          products.map((p) => p.category?.name).filter(Boolean) as string[]
-        )
-      ),
-    ];
-  }, [products]);
+  // const allCategories = useMemo(() => {
+  //   return [
+  //     "All",
+  //     ...Array.from(
+  //       new Set(
+  //         products.map((p) => p.category?.name).filter(Boolean) as string[]
+  //       )
+  //     ),
+  //   ];
+  // }, [products]);
 
   const allCategoryNames = useMemo(() => {
     return [

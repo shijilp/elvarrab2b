@@ -15,38 +15,28 @@ function formatMoney(n: number) {
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
-  const [ship, setShip] = useState("standard");
-  const [promo, setPromo] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
 
   const subtotal = useMemo(
     () => cartItems.reduce((s, it) => s + it.price * it.quantity, 0),
     [cartItems]
   );
-  const shippingOptions = [
-    { id: "standard", label: "Standard (3–6 days)", price: 9.0 },
-    /*   { id: "express", label: "Express (1–2 days)", price: 19.0 },
-    { id: "pickup", label: "Store Pickup", price: 0.0 }, */
-  ];
+
   const shipping = useMemo(() => (subtotal > 700 ? 0 : 30), [subtotal]);
   const discount = useMemo(
     () => (promoApplied ? Math.min(0.15 * subtotal, 50) : 0),
     [promoApplied, subtotal]
   );
-  const taxRate = 0.08;
-  const tax = useMemo(
-    () => (subtotal - discount) * taxRate,
-    [subtotal, discount]
-  );
+
   const total = useMemo(
     () => Math.max(0, subtotal - discount) + shipping,
     [subtotal, discount, shipping]
   );
 
-  const applyPromo = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (promo.trim()) setPromoApplied(true);
-  };
+  // const applyPromo = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (promo.trim()) setPromoApplied(true);
+  // };
   return (
     <main className="min-h-dvh bg-zinc-950 text-zinc-100">
       <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10">

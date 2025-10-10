@@ -7,9 +7,6 @@ import { api } from "@/lib/api"; // Axios instance
 import { useAuth } from "@/context/AuthContext";
 
 // ---------- Helpers ----------
-function clsx(...parts: (string | false | null | undefined)[]) {
-  return parts.filter(Boolean).join(" ");
-}
 
 function slugify(input: string) {
   return input

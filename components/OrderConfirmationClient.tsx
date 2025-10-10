@@ -89,15 +89,6 @@ function money(n: number, currency = "USD") {
   }
 }
 
-function generateOrderId(seed?: string) {
-  // Deterministic-ish fallback using time + a bit of hash of payload
-  const base = seed
-    ? Array.from(seed).reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
-    : Date.now();
-  const num = (base % 900000) + 100000; // 6 digits
-  return `R-${num}`;
-}
-
 export default function OrderConfirmationClient() {
   // Theme can later come from context/store; keep a safe default
   const theme: ThemeMode | null = "dark";
