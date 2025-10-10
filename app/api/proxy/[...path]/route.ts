@@ -14,7 +14,7 @@ async function handle(req: NextRequest, ctx: Ctx) {
   const cookieStore = await cookies();
   const access = cookieStore.get("access_token")?.value;
 
-  const targetUrl = `${BACKEND}/${path.join("/")}${req.nextUrl.search}${req.method==="PATCH" ? "/":""} `;
+  const targetUrl = `${BACKEND}/${path.join("/")}${req.nextUrl.search}${req.method==="PATCH" || "POST" ? "/":""} `;
 
   const headers = new Headers(req.headers);
   headers.set("host", new URL(BACKEND).host);

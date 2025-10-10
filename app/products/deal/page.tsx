@@ -11,11 +11,12 @@ import React, { JSX, useEffect, useMemo, useState } from "react";
 const COUPON_CODE = "EXTRA10";
 const FESTIVAL_NAME = "Diwali Mega Sale";
 const SALE_DAYS = 7; // countdown length (days) — change if needed
-
+const FESTIVAL_START = new Date("2025-10-20T00:00:00+03:00");
+const FESTIVAL_END = new Date("2025-11-05T23:59:59+03:00");
 export default function DealsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [now, setNow] = useState<Date>(new Date());
   // Filters
   const [activeBand, setActiveBand] = useState<
     "all" | "u999" | "1kto2k" | "2kplus"
@@ -29,10 +30,19 @@ export default function DealsPage() {
     d.setHours(23, 59, 59, 999);
     return d;
   });
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000); // tick every minute
+    return () => clearInterval(id);
+  }, []);
+  const festivalMode = now >= FESTIVAL_START && now <= FESTIVAL_END;
+  // Default filters behave smarter in festival window
+  useEffect(() => {
+    if (festivalMode) setFestivalOnly(true);
+  }, [festivalMode]);
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([api.get("/portfolio/?tags=deal")])
+    Promise.all([api.get("/portfolio/?tags_all=deal")])
       .then(([pRes]) => {
         if (!mounted) return;
         setProducts(pRes.data.results ?? pRes.data ?? []);
@@ -70,29 +80,62 @@ export default function DealsPage() {
   return (
     <main className="relative min-h-screen bg-neutral-950 text-neutral-50 antialiased overflow-hidden">
       {/* Page-scoped festive aura */}
-      <FestiveBackdrop />
-
+      {festivalMode && <FestiveBackdrop />}
       {/* Top promo (kept) */}
       <PromoBanner
-        id="flash-deal"
-        message={`Limited time: extra 10% off on top of deals at checkout`}
-        ctaText={`Use code ${COUPON_CODE}`}
+        id={festivalMode ? "flash-deal-festival" : "flash-deal"}
+        message={
+          festivalMode
+            ? `Festival is live: extra 10% off with ${COUPON_CODE}`
+            : "Today’s best deals — limited stock"
+        }
+        ctaText={festivalMode ? `Use ${COUPON_CODE}` : "Shop deals"}
         href="/deals"
-        accent="emerald"
+        accent={festivalMode ? "emerald" : "yellow"}
       />
 
-      {/* Hero + Countdown */}
-      <FestiveHero endsAt={endsAt} />
-
-      {/* Marquee */}
-      <OfferMarquee
-        items={[
-          "🪔 Free Gift on ₹1,999+",
-          "✨ Extra 10% with code " + COUPON_CODE,
-          "🚚 Fast Shipping",
-          "🎁 Festive Gift Wrap Available",
-        ]}
-      />
+      {festivalMode ? (
+        <>
+          {/* FESTIVAL-ONLY */}
+          <FestiveHero
+            endsAt={
+              new Date(Math.min(+FESTIVAL_END, +now + 7 * 24 * 60 * 60 * 1000))
+            }
+          />
+          <OfferMarquee
+            items={[
+              "🪔 Free Gift on ₹1,999+",
+              `✨ Extra 10% with code ${COUPON_CODE}`,
+              "🚚 Fast Shipping",
+              "🎁 Gift Wrap Available",
+            ]}
+          />
+        </>
+      ) : (
+        // NON-FESTIVAL hero (simple, neutral)
+        <section className="container py-10 mx-auto">
+          <div className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-6 text-center">
+            <h1 className="text-3xl font-semibold">Today’s Deals</h1>
+            <p className="mt-2 text-neutral-300">
+              Fresh markdowns across bestsellers. Limited stock.
+            </p>
+            <div className="mt-4 flex justify-center gap-2">
+              <a
+                href="/collections/premium"
+                className="rounded-full border border-neutral-700 px-4 py-2"
+              >
+                Premium Collection
+              </a>
+              <a
+                href="/new-arrivals"
+                className="rounded-full bg-neutral-200 text-neutral-900 px-4 py-2"
+              >
+                New Arrivals
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="container py-8 mx-auto">
         {/* Header Row */}
@@ -210,7 +253,7 @@ export default function DealsPage() {
       </div>
 
       {/* Floating Festival Bar */}
-      <FloatingFestivalBar coupon={COUPON_CODE} />
+      {festivalMode && <FloatingFestivalBar coupon={COUPON_CODE} />}
     </main>
   );
 }
