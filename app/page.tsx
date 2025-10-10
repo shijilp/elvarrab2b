@@ -113,7 +113,7 @@ export default function Page() {
 
   useEffect(() => {
     const stored = localStorage.getItem("elv_ref");
-    if (stored) setRef_code(JSON.parse(stored));
+    if (stored) setRef_code(stored);
   }, []);
 
   return (
