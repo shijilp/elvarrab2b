@@ -53,7 +53,7 @@ function abs(url?: string | null) {
 }
 
 // ✅ Note params is a Promise in Next 15
-/* export async function generateMetadata(props: {
+export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await props.params;
@@ -100,7 +100,7 @@ function abs(url?: string | null) {
     robots: { index: true, follow: true },
   };
 }
- */
+
 export default function ProductsPage() {
   return (
     <Suspense fallback={<PageFallback />}>
