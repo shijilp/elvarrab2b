@@ -10,7 +10,7 @@ const metadata: Metadata = {
 };
 
 export default function MaterialsGuidePage() {
-  const theme = "dark" as const; // switch to "light" for Chic Light
+  const theme = "dark" as const;
   const palette = paletteForTheme(theme);
 
   const Section = ({
@@ -22,14 +22,18 @@ export default function MaterialsGuidePage() {
     eyebrow?: string;
     children: React.ReactNode;
   }) => (
-    <section className={`${palette.card} ${palette.ring} rounded-2xl p-6`}>
+    <section
+      className={`${palette.card} ${palette.ring} rounded-2xl p-5 sm:p-6`}
+    >
       {eyebrow && (
         <div className="text-[10px] uppercase tracking-wider opacity-70">
           {eyebrow}
         </div>
       )}
       <h2 className="mt-1 text-lg font-semibold">{title}</h2>
-      <div className={`mt-3 text-sm leading-6 ${palette.subfg}`}>
+      <div
+        className={`mt-3 text-sm leading-6 ${palette.subfg} break-words hyphens-auto`}
+      >
         {children}
       </div>
     </section>
@@ -85,7 +89,7 @@ export default function MaterialsGuidePage() {
     },
     {
       material: "Gold Vermeil (over 925)",
-      durability: "Medium‑High",
+      durability: "Medium-High",
       color: "Gold over sterling silver",
       hypo: "Good",
       care: "Medium",
@@ -94,7 +98,7 @@ export default function MaterialsGuidePage() {
     {
       material: "Rhodium Plated",
       durability: "High",
-      color: "Cool, bright, anti‑tarnish",
+      color: "Cool, bright, anti-tarnish",
       hypo: "Good",
       care: "Low",
       notes: "Applied over silver/white gold for protection",
@@ -118,17 +122,19 @@ export default function MaterialsGuidePage() {
     >
       {/* Intro band */}
       <div
-        className={`${palette.card} ${palette.ring} relative overflow-hidden rounded-2xl p-6 sm:p-7`}
+        className={`${palette.card} ${palette.ring} relative overflow-hidden rounded-2xl p-5 sm:p-7`}
       >
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/0" />
         <div className="relative">
-          <p className={`text-sm ${palette.subfg} max-w-3xl`}>
+          <p
+            className={`text-sm ${palette.subfg} max-w-3xl break-words hyphens-auto`}
+          >
             Material choice affects color, weight, skin comfort, and longevity.
-            This guide breaks down the most common fashion‑jewelry cores and
+            This guide breaks down the most common fashion-jewelry cores and
             finishes—plus how to keep each looking its best.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Chip>Daily‑wear tips</Chip>
+            <Chip>Daily-wear tips</Chip>
             <Chip>Allergy notes</Chip>
             <Chip>Plating thickness</Chip>
           </div>
@@ -137,11 +143,11 @@ export default function MaterialsGuidePage() {
 
       {/* Base metals */}
       <Section title="Base Metals" eyebrow="The foundation">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-neutral-800 p-4">
             <div className="text-sm font-semibold">Stainless Steel (316L)</div>
             <p className="mt-1">
-              Corrosion‑resistant and sturdy. Often PVD‑colored (gold/black).
+              Corrosion-resistant and sturdy. Often PVD-colored (gold/black).
               Great for sensitive skin.
             </p>
             <p className="mt-2 text-xs opacity-80">
@@ -155,7 +161,7 @@ export default function MaterialsGuidePage() {
               restores shine.
             </p>
             <p className="mt-2 text-xs opacity-80">
-              Rhodium‑plated silver = easier upkeep.
+              Rhodium-plated silver = easier upkeep.
             </p>
           </div>
           <div className="rounded-xl border border-neutral-800 p-4">
@@ -171,7 +177,7 @@ export default function MaterialsGuidePage() {
           <div className="rounded-xl border border-neutral-800 p-4">
             <div className="text-sm font-semibold">Titanium (posts)</div>
             <p className="mt-1">
-              Light, strong, and nickel‑free—popular for sensitive ear posts.
+              Light, strong, and nickel-free—popular for sensitive ear posts.
             </p>
             <p className="mt-2 text-xs opacity-80">
               Pairs well with stainless or silver stacks.
@@ -182,10 +188,10 @@ export default function MaterialsGuidePage() {
 
       {/* Plating & coatings */}
       <Section title="Plating & Color Finishes" eyebrow="How color is applied">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-neutral-800 p-4">
             <div className="text-sm font-semibold">
-              Electroplating (Gold‑plated)
+              Electroplating (Gold-plated)
             </div>
             <ul className="mt-2 list-disc pl-5">
               <li>Thin gold layer over base metal (brass/steel/silver).</li>
@@ -198,8 +204,8 @@ export default function MaterialsGuidePage() {
               PVD (Physical Vapor Deposition)
             </div>
             <ul className="mt-2 list-disc pl-5">
-              <li>Vapor‑bonded color film (common on 316L steel).</li>
-              <li>Highly wear‑resistant; better sweat/water tolerance.</li>
+              <li>Vapor-bonded color film (common on 316L steel).</li>
+              <li>Highly wear-resistant; better sweat/water tolerance.</li>
               <li>Great for black/gold colorways that last.</li>
             </ul>
           </div>
@@ -219,62 +225,64 @@ export default function MaterialsGuidePage() {
               Bright, cool finish that resists tarnish and scratching.
             </p>
             <p className="mt-2 text-xs opacity-80">
-              Excellent for low‑maintenance silver looks.
+              Excellent for low-maintenance silver looks.
             </p>
           </div>
         </div>
       </Section>
 
-      {/* Thickness table */}
+      {/* Thickness table (scroll-safe on mobile) */}
       <Section
         title="Plating Thickness at a Glance"
         eyebrow="What lasts longer"
       >
-        <table className="w-full text-left text-xs">
-          <thead className="text-white/80">
-            <tr>
-              <th className="py-1 pr-3">Term</th>
-              <th className="py-1 pr-3">Approx. Thickness</th>
-              <th className="py-1 pr-3">Typical Base</th>
-              <th className="py-1 pr-3">Notes</th>
-            </tr>
-          </thead>
-          <tbody className="opacity-90">
-            {[
-              [
-                "Flash/Light plate",
-                "< 0.5µm",
-                "Brass/Steel",
-                "Color only—treat as occasional wear",
-              ],
-              [
-                "Standard plate",
-                "≈ 0.5–1.0µm",
-                "Brass/Steel/Silver",
-                "Everyday with careful use",
-              ],
-              [
-                "Heavy plate",
-                "≈ 1.0–2.5µm",
-                "Brass/Silver",
-                "Better friction resistance",
-              ],
-              [
-                "Vermeil",
-                ">= 2.5µm",
-                "Sterling Silver",
-                "Premium; gentler care extends life",
-              ],
-            ].map(([t, th, b, n]) => (
-              <tr key={t as string} className="border-t border-neutral-800">
-                <td className="py-1 pr-3">{t as string}</td>
-                <td className="py-1 pr-3">{th as string}</td>
-                <td className="py-1 pr-3">{b as string}</td>
-                <td className="py-1 pr-3">{n as string}</td>
+        <div className="-mx-4 overflow-x-auto sm:mx-0">
+          <table className="w-[640px] sm:w-full text-left text-xs">
+            <thead className="text-white/80">
+              <tr>
+                <th className="py-1 pr-3">Term</th>
+                <th className="py-1 pr-3">Approx. Thickness</th>
+                <th className="py-1 pr-3">Typical Base</th>
+                <th className="py-1 pr-3">Notes</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="opacity-90">
+              {[
+                [
+                  "Flash/Light plate",
+                  "< 0.5µm",
+                  "Brass/Steel",
+                  "Color only—treat as occasional wear",
+                ],
+                [
+                  "Standard plate",
+                  "≈ 0.5–1.0µm",
+                  "Brass/Steel/Silver",
+                  "Everyday with careful use",
+                ],
+                [
+                  "Heavy plate",
+                  "≈ 1.0–2.5µm",
+                  "Brass/Silver",
+                  "Better friction resistance",
+                ],
+                [
+                  "Vermeil",
+                  ">= 2.5µm",
+                  "Sterling Silver",
+                  "Premium; gentler care extends life",
+                ],
+              ].map(([t, th, b, n]) => (
+                <tr key={t as string} className="border-t border-neutral-800">
+                  <td className="py-1 pr-3">{t as string}</td>
+                  <td className="py-1 pr-3">{th as string}</td>
+                  <td className="py-1 pr-3">{b as string}</td>
+                  <td className="py-1 pr-3">{n as string}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Section>
 
       {/* Sensitivity & care */}
@@ -282,12 +290,12 @@ export default function MaterialsGuidePage() {
         title="Sensitivity & Skin Comfort"
         eyebrow="Hypoallergenic picks"
       >
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-neutral-800 p-4">
             <div className="text-sm font-semibold">Best bets</div>
             <ul className="mt-2 list-disc pl-5">
               <li>316L stainless or titanium posts</li>
-              <li>Sterling silver, rhodium‑plated silver</li>
+              <li>Sterling silver, rhodium-plated silver</li>
               <li>Rinse sweat; keep skin and jewelry dry</li>
             </ul>
           </div>
@@ -295,7 +303,7 @@ export default function MaterialsGuidePage() {
             <div className="text-sm font-semibold">If irritation occurs</div>
             <ul className="mt-2 list-disc pl-5">
               <li>Pause wear; clean piece and skin</li>
-              <li>Switch to verified nickel‑free posts</li>
+              <li>Switch to verified nickel-free posts</li>
               <li>Try clear barrier on contact points (short term)</li>
             </ul>
           </div>
@@ -304,9 +312,9 @@ export default function MaterialsGuidePage() {
 
       {/* Water, sweat, tarnish */}
       <Section title="Water, Sweat & Tarnish" eyebrow="What to expect">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-neutral-800 p-4">
-            <div className="text-sm font-semibold">Real‑world tolerance</div>
+            <div className="text-sm font-semibold">Real-world tolerance</div>
             <p className="mt-1">
               Stainless/PVD handles moisture best. Electroplated gold over
               brass/silver lasts longer if kept dry.
@@ -327,7 +335,7 @@ export default function MaterialsGuidePage() {
 
       {/* Care checklist */}
       <Section title="Care Checklist" eyebrow="Minimal routine, big results">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <ul className="list-disc pl-5">
             <li>Last on, first off (after skincare; before sleep).</li>
             <li>Keep dry; wipe with microfiber after wear.</li>
@@ -337,15 +345,15 @@ export default function MaterialsGuidePage() {
           <ul className="list-disc pl-5">
             <li>Monthly: mild soap + lukewarm rinse (stainless/silver).</li>
             <li>Seasonal: check clasps, replace worn backs.</li>
-            <li>Consider re‑plating high‑wear favorites every 6–12 months.</li>
+            <li>Consider re-plating high-wear favorites every 6–12 months.</li>
           </ul>
         </div>
       </Section>
 
-      {/* Comparison table */}
-      <Section title="Comparison Table" eyebrow="Side‑by‑side">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+      {/* Comparison table (scroll-safe on mobile) */}
+      <Section title="Comparison Table" eyebrow="Side-by-side">
+        <div className="-mx-4 overflow-x-auto sm:mx-0">
+          <table className="w-[720px] sm:w-full text-left text-sm">
             <thead className="bg-black/20">
               <tr>
                 <th className="p-3">Material</th>
@@ -373,7 +381,7 @@ export default function MaterialsGuidePage() {
       </Section>
 
       {/* FAQ + Next steps */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         <Section title="FAQs" eyebrow="Quick answers">
           <details className="group rounded-xl border border-neutral-800 p-4 open:bg-transparent">
             <summary className="cursor-pointer list-none font-medium">
@@ -398,7 +406,7 @@ export default function MaterialsGuidePage() {
               What if I have sensitive skin?
             </summary>
             <p className="mt-2">
-              Start with 316L stainless, titanium posts, or rhodium‑plated
+              Start with 316L stainless, titanium posts, or rhodium-plated
               silver. Test new styles briefly first.
             </p>
           </details>
@@ -440,14 +448,14 @@ export default function MaterialsGuidePage() {
 
       {/* Closing CTA */}
       <div
-        className={`${palette.card} ${palette.ring} rounded-2xl p-6 text-sm flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between`}
+        className={`${palette.card} ${palette.ring} rounded-2xl p-5 sm:p-6 text-sm flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between`}
       >
         <div>
           <div className="text-base font-semibold">
-            Want low‑maintenance shine?
+            Want low-maintenance shine?
           </div>
           <p className={`${palette.subfg}`}>
-            Discover stainless/PVD sets and rhodium‑finished silver designed for
+            Discover stainless/PVD sets and rhodium-finished silver designed for
             everyday wear.
           </p>
         </div>

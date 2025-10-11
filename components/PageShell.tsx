@@ -42,42 +42,67 @@ export default function PageShell({
   children,
   theme = "dark",
   trail,
-  ctaSlot, // 👈 NEW PROP
+  ctaSlot,
 }: {
   title: string;
   subtitle: string;
   children: React.ReactNode;
   theme?: ThemeMode;
   trail: string;
-  ctaSlot?: React.ReactNode; // 👈 Optional CTA element
+  ctaSlot?: React.ReactNode;
 }) {
   const palette = paletteForTheme(theme);
 
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
-      <div className="container py-10">
-        {/* Breadcrumbs */}
-        <nav className={`text-xs ${palette.subfg}`}>
-          <Link href="/" className="underline">
+      {/* Safe padding + max width for all screens */}
+      <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        {/* Breadcrumbs: wrap gracefully on narrow screens */}
+        <nav
+          aria-label="Breadcrumb"
+          className={`text-xs ${palette.subfg} flex flex-wrap gap-x-1 gap-y-1`}
+        >
+          <Link
+            href="/"
+            className="underline underline-offset-2 hover:opacity-80"
+          >
             Home
-          </Link>{" "}
-          /{" "}
-          <Link href="/blog" className="underline">
+          </Link>
+          <span aria-hidden="true">/</span>
+          <Link
+            href="/blog"
+            className="underline underline-offset-2 hover:opacity-80"
+          >
             Blogs
-          </Link>{" "}
-          / <span>{trail}</span>
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span className="truncate max-w-full">{trail}</span>
         </nav>
 
         {/* Header with optional CTA */}
-        <header className="mt-2 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold">{title}</h1>
+        <header className="mt-3 mb-6 flex flex-col gap-3 sm:mt-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            {/* Responsive title sizes so it doesn’t overflow */}
+            <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
+              {title}
+            </h1>
             <p className={`mt-1 text-sm ${palette.subfg}`}>{subtitle}</p>
           </div>
-          {ctaSlot && <div className="shrink-0">{ctaSlot}</div>}
+
+          {/* CTA: full-width button on mobile, shrink on desktop */}
+          {ctaSlot && (
+            <div className="flex w-full items-center sm:w-auto">
+              <div className="w-full sm:w-auto">{ctaSlot}</div>
+            </div>
+          )}
         </header>
 
-        <div className="grid gap-6 md:grid-cols-2">{children}</div>
+        {/* Content grid:
+            - single column on phones
+            - 2 columns from large screens to avoid cramped md/tablets */}
+        <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-2">
+          {children}
+        </div>
       </div>
     </main>
   );

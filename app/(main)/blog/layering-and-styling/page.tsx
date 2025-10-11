@@ -2,15 +2,16 @@
 import Link from "next/link";
 import PageShell, { paletteForTheme } from "@/components/PageShell";
 import type { Metadata } from "next";
+import { useTheme } from "@/context/ThemeContext";
 
 const metadata: Metadata = {
-  title: "Guide: Layering & Styling | Elvarra",
+  title: "Blog: Layering & Styling | Elvarra",
   description:
     "Build balanced necklace, ring, bracelet, and ear stacks with luxe-dark styling: lengths matrix, neckline pairings, visual weight, color/metal mix, and occasion formulas.",
 };
 
 export default function LayeringAndStylingGuidePage() {
-  const theme = "dark" as const; // switch to "light" for Chic Light palette
+  const { theme } = useTheme();
   const palette = paletteForTheme(theme);
 
   const Section = ({
@@ -24,11 +25,11 @@ export default function LayeringAndStylingGuidePage() {
   }) => (
     <section className={`${palette.card} ${palette.ring} rounded-2xl p-6`}>
       {eyebrow && (
-        <div className="text-[10px] uppercase tracking-wider opacity-70">
+        <div className="text-[10px] uppercase tracking-wider dark:opacity-70 dark:text-neutral-500 ">
           {eyebrow}
         </div>
       )}
-      <h2 className="mt-1 text-lg font-semibold">{title}</h2>
+      <h2 className="mt-1 text-lg font-semibold ">{title}</h2>
       <div className={`mt-3 text-sm leading-6 ${palette.subfg}`}>
         {children}
       </div>
@@ -36,7 +37,7 @@ export default function LayeringAndStylingGuidePage() {
   );
 
   const Chip = ({ children }: { children: React.ReactNode }) => (
-    <span className="rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-medium text-yellow-300">
+    <span className="rounded-full border border-rose-200 bg-rose-50   dark:border-yellow-500/30 dark:bg-yellow-500/10 px-2 py-0.5 text-[10px] font-medium text-rose-700 dark:text-yellow-300">
       {children}
     </span>
   );
@@ -50,7 +51,7 @@ export default function LayeringAndStylingGuidePage() {
       ctaSlot={
         <Link
           href="/collections/stacking"
-          className="rounded-2xl bg-gradient-to-r from-yellow-500 to-amber-500 px-4 py-2 text-sm font-semibold text-neutral-900 hover:brightness-110"
+          className={`rounded-2xl px-4 py-2 text-sm font-semibold text-neutral-900 hover:brightness-110 ${palette.button}`}
         >
           Shop Stacking Essentials
         </Link>
