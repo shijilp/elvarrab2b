@@ -87,167 +87,172 @@ export default function DealsPage() {
         href="/deals"
         accent={festivalMode ? "emerald" : "yellow"}
       />
-
-      {festivalMode ? (
-        <>
-          {/* FESTIVAL-ONLY */}
-          <FestiveHero
-            endsAt={
-              new Date(Math.min(+FESTIVAL_END, +now + 7 * 24 * 60 * 60 * 1000))
-            }
-          />
-          <OfferMarquee
-            items={[
-              "🪔 Free Gift on ₹1,999+",
-              `✨ Extra 10% with code ${COUPON_CODE}`,
-              "🚚 Fast Shipping",
-              "🎁 Gift Wrap Available",
-            ]}
-          />
-        </>
-      ) : (
-        // NON-FESTIVAL hero (simple, neutral)
-        <section className="container py-10 mx-auto">
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-6 text-center">
-            <h1 className="text-3xl font-semibold">Today’s Deals</h1>
-            <p className="mt-2 text-neutral-300">
-              Fresh markdowns across bestsellers. Limited stock.
-            </p>
-            <div className="mt-4 flex justify-center gap-2">
-              <a
-                href="/collections/premium"
-                className="rounded-full border border-neutral-700 px-4 py-2"
-              >
-                Premium Collection
-              </a>
-              <a
-                href="/new-arrivals"
-                className="rounded-full bg-neutral-200 text-neutral-900 px-4 py-2"
-              >
-                New Arrivals
-              </a>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <div className="container py-8 mx-auto">
-        {/* Header Row */}
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Today’s Festival Deals</h1>
-            <p className="mt-1 text-sm text-neutral-300">
-              Hand-picked discounts across bestsellers — festival edition.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <FilterPill
-              active={activeBand === "all"}
-              onClick={() => setActiveBand("all")}
-              label="All"
+      <div className="relative isolate">
+        <div className="absolute inset-15 -z-10 opacity-50 blur-3xl mx-auto   max-w-[90vw] overflow-hidden">
+          <div className="pointer-events-none absolute -inset-0 rounded-[100px] gradient-icy" />
+        </div>
+        {festivalMode ? (
+          <>
+            {/* FESTIVAL-ONLY */}
+            <FestiveHero
+              endsAt={
+                new Date(
+                  Math.min(+FESTIVAL_END, +now + 7 * 24 * 60 * 60 * 1000)
+                )
+              }
             />
-            <FilterPill
-              active={activeBand === "u999"}
-              onClick={() => setActiveBand("u999")}
-              label="Under ₹999"
+            <OfferMarquee
+              items={[
+                "🪔 Free Gift on ₹1,999+",
+                `✨ Extra 10% with code ${COUPON_CODE}`,
+                "🚚 Fast Shipping",
+                "🎁 Gift Wrap Available",
+              ]}
             />
-            <FilterPill
-              active={activeBand === "1kto2k"}
-              onClick={() => setActiveBand("1kto2k")}
-              label="₹999–₹1,999"
-            />
-            <FilterPill
-              active={activeBand === "2kplus"}
-              onClick={() => setActiveBand("2kplus")}
-              label="₹2,000+"
-            />
-
-            <ToggleChip
-              checked={festivalOnly}
-              onChange={setFestivalOnly}
-              label="Festival Only"
-            />
-            <Link
-              href="/"
-              className="ml-auto rounded-xl px-4 py-2 text-sm font-medium bg-gradient-to-r from-amber-500 to-fuchsia-500 text-neutral-900 hover:brightness-110"
-            >
-              Back to shop
-            </Link>
-          </div>
-        </header>
-
-        {/* Products */}
-        {loading ? (
-          <GridSkeleton />
+          </>
         ) : (
-          <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {filtered.map((d) => {
-              const pct =
-                d.compare_at_price && d.compare_at_price > d.price
-                  ? Math.round(
-                      ((d.compare_at_price - d.price) / d.compare_at_price) *
-                        100
-                    )
-                  : null;
-
-              return (
+          // NON-FESTIVAL hero (simple, neutral)
+          <section className="container py-10 mx-auto">
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-6 text-center">
+              <h1 className="text-3xl font-semibold">Today’s Deals</h1>
+              <p className="mt-2 text-neutral-300">
+                Fresh markdowns across bestsellers. Limited stock.
+              </p>
+              <div className="mt-4 flex justify-center gap-2">
                 <a
-                  key={d.slug}
-                  href={`/products/${d.slug}`}
-                  className="group relative overflow-hidden rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70 shadow-[0_0_0_0_rgba(0,0,0,0)]
-                             hover:shadow-[0_0_40px_-10px_rgba(245,158,11,0.45)] transition-all duration-300"
+                  href="/collections/premium"
+                  className="rounded-full border border-neutral-700 px-4 py-2"
                 >
-                  {/* Festive corner ribbon */}
-                  {pct ? (
-                    <PromoRibbon text={`${pct}% OFF`} color="festival" />
-                  ) : (
-                    <PromoRibbon text="Deal" color="emerald" />
-                  )}
-
-                  {/* Image */}
-                  <Image
-                    width={640}
-                    height={640}
-                    src={d.image}
-                    alt={d.name}
-                    className="aspect-[4/5] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                  />
-
-                  {/* Body */}
-                  <div className="p-3">
-                    <div className="text-sm font-medium line-clamp-2">
-                      {d.name}
-                    </div>
-                    <div className="mt-1 text-sm">
-                      <span className="mr-2 font-semibold">
-                        {money(d.price, "INR")}
-                      </span>
-                      {d.compare_at_price ? (
-                        <span className="text-xs line-through text-neutral-400">
-                          {money(d.compare_at_price)}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    {/* Festival badge */}
-                    <span
-                      className="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider
-                                      bg-gradient-to-r from-amber-500 to-fuchsia-500 text-neutral-900"
-                    >
-                      🪔 Festival Price
-                    </span>
-                  </div>
-
-                  {/* Glow border on hover */}
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-transparent group-hover:ring-amber-400/30" />
+                  Premium Collection
                 </a>
-              );
-            })}
+                <a
+                  href="/new-arrivals"
+                  className="rounded-full bg-neutral-200 text-neutral-900 px-4 py-2"
+                >
+                  New Arrivals
+                </a>
+              </div>
+            </div>
           </section>
         )}
-      </div>
 
+        <div className="container py-8 mx-auto">
+          {/* Header Row */}
+          <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold">Today’s Festival Deals</h1>
+              <p className="mt-1 text-sm text-neutral-300">
+                Hand-picked discounts across bestsellers — festival edition.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <FilterPill
+                active={activeBand === "all"}
+                onClick={() => setActiveBand("all")}
+                label="All"
+              />
+              <FilterPill
+                active={activeBand === "u999"}
+                onClick={() => setActiveBand("u999")}
+                label="Under ₹999"
+              />
+              <FilterPill
+                active={activeBand === "1kto2k"}
+                onClick={() => setActiveBand("1kto2k")}
+                label="₹999–₹1,999"
+              />
+              <FilterPill
+                active={activeBand === "2kplus"}
+                onClick={() => setActiveBand("2kplus")}
+                label="₹2,000+"
+              />
+
+              <ToggleChip
+                checked={festivalOnly}
+                onChange={setFestivalOnly}
+                label="Festival Only"
+              />
+              <Link
+                href="/"
+                className="ml-auto rounded-xl px-4 py-2 text-sm font-medium bg-gradient-to-r from-amber-500 to-fuchsia-500 text-neutral-900 hover:brightness-110"
+              >
+                Back to shop
+              </Link>
+            </div>
+          </header>
+
+          {/* Products */}
+          {loading ? (
+            <GridSkeleton />
+          ) : (
+            <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {filtered.map((d) => {
+                const pct =
+                  d.compare_at_price && d.compare_at_price > d.price
+                    ? Math.round(
+                        ((d.compare_at_price - d.price) / d.compare_at_price) *
+                          100
+                      )
+                    : null;
+
+                return (
+                  <a
+                    key={d.slug}
+                    href={`/products/${d.slug}`}
+                    className="group relative overflow-hidden rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70 shadow-[0_0_0_0_rgba(0,0,0,0)]
+                             hover:shadow-[0_0_40px_-10px_rgba(245,158,11,0.45)] transition-all duration-300"
+                  >
+                    {/* Festive corner ribbon */}
+                    {pct ? (
+                      <PromoRibbon text={`${pct}% OFF`} color="festival" />
+                    ) : (
+                      <PromoRibbon text="Deal" color="emerald" />
+                    )}
+
+                    {/* Image */}
+                    <Image
+                      width={640}
+                      height={640}
+                      src={d.image}
+                      alt={d.name}
+                      className="aspect-[4/5] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                    />
+
+                    {/* Body */}
+                    <div className="p-3">
+                      <div className="text-sm font-medium line-clamp-2">
+                        {d.name}
+                      </div>
+                      <div className="mt-1 text-sm">
+                        <span className="mr-2 font-semibold">
+                          {money(d.price, "INR")}
+                        </span>
+                        {d.compare_at_price ? (
+                          <span className="text-xs line-through text-neutral-400">
+                            {money(d.compare_at_price)}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {/* Festival badge */}
+                      <span
+                        className="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider
+                                      bg-gradient-to-r from-amber-500 to-fuchsia-500 text-neutral-900"
+                      >
+                        🪔 Festival Price
+                      </span>
+                    </div>
+
+                    {/* Glow border on hover */}
+                    <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-transparent group-hover:ring-amber-400/30" />
+                  </a>
+                );
+              })}
+            </section>
+          )}
+        </div>
+      </div>
       {/* Floating Festival Bar */}
       {festivalMode && <FloatingFestivalBar coupon={COUPON_CODE} />}
     </main>

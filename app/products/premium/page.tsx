@@ -36,17 +36,18 @@ function PremiumCollectionPage() {
     >
       {/* Optional: include <HeaderNav /> globally in layout instead */}
 
-      <section className="container py-10 mx-auto ">
-        <nav className={`text-xs text-neutral-50`}>
-          <Link href="/" className="underline">
-            Home
-          </Link>{" "}
-          / <span>Premium</span>
-        </nav>
-        <section className="relative isolate">
-          <div className="absolute inset-0 -z-10 opacity-40 blur-3xl  max-w-[100vw] overflow-hidden">
-            <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
-          </div>
+      <div className="relative isolate">
+        <div className="absolute inset-0 -z-10 opacity-20 blur-3xl  max-w-[100vw] overflow-hidden">
+          <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-Sapphire" />
+        </div>
+
+        <section className="container py-10 mx-auto ">
+          <nav className={`text-xs text-neutral-50`}>
+            <Link href="/" className="underline">
+              Home
+            </Link>{" "}
+            / <span>Premium</span>
+          </nav>
 
           <header className="mt-2 flex items-end justify-between ">
             <div>
@@ -98,47 +99,48 @@ function PremiumCollectionPage() {
               </div>
             </div>
           </div>
+
+          {/* Grid */}
+          <div
+            id="grid"
+            className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+          >
+            {products.map((p) => (
+              <a
+                key={p.slug}
+                href={`/product/${p.slug}`}
+                className={`group overflow-hidden rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70`}
+              >
+                <div className="relative">
+                  <Image
+                    width={640}
+                    height={640}
+                    src={p.image}
+                    alt={p.name}
+                    className="aspect-[4/5] w-full object-cover"
+                  />
+                  <span
+                    className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider bg-yellow-500 text-neutral-900`}
+                  >
+                    Premium
+                  </span>
+                </div>
+                <div className="p-3">
+                  <div className="text-sm font-medium overflow-ellipsis">
+                    {p.name}
+                  </div>
+                  <div className="mt-1 text-sm font-semibold">
+                    {money(p.price)}
+                  </div>
+                  <div className={`mt-1 text-xs text-neutral-50`}>
+                    Ships in 24–48h • Free returns
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
         </section>
-        {/* Grid */}
-        <div
-          id="grid"
-          className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
-        >
-          {products.map((p) => (
-            <a
-              key={p.slug}
-              href={`/product/${p.slug}`}
-              className={`group overflow-hidden rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70`}
-            >
-              <div className="relative">
-                <Image
-                  width={640}
-                  height={640}
-                  src={p.image}
-                  alt={p.name}
-                  className="aspect-[4/5] w-full object-cover"
-                />
-                <span
-                  className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider bg-yellow-500 text-neutral-900`}
-                >
-                  Premium
-                </span>
-              </div>
-              <div className="p-3">
-                <div className="text-sm font-medium overflow-ellipsis">
-                  {p.name}
-                </div>
-                <div className="mt-1 text-sm font-semibold">
-                  {money(p.price)}
-                </div>
-                <div className={`mt-1 text-xs text-neutral-50`}>
-                  Ships in 24–48h • Free returns
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
+      </div>
       <LoadingOverlay show={loading} />
     </main>
   );
