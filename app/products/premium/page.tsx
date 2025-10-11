@@ -32,68 +32,73 @@ function PremiumCollectionPage() {
 
   return (
     <main
-      className={`bg-neutral-950 text-neutral-50  min-h-screen antialiased `}
+      className={`bg-neutral-950 text-neutral-50  min-h-screen antialiased  `}
     >
       {/* Optional: include <HeaderNav /> globally in layout instead */}
 
-      <section className="container py-10 mx-auto">
+      <section className="container py-10 mx-auto ">
         <nav className={`text-xs text-neutral-50`}>
           <Link href="/" className="underline">
             Home
           </Link>{" "}
           / <span>Premium</span>
         </nav>
-        <header className="mt-2 flex items-end justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">
-              Elvarra Premium Collection
-            </h1>
-            <p className={`mt-1 text-sm text-neutral-50`}>
-              Our finest pieces — elevated materials, precision finishes,
-              limited runs.
-            </p>
+        <section className="relative isolate">
+          <div className="absolute inset-0 -z-10 opacity-40 blur-3xl  max-w-[100vw] overflow-hidden">
+            <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
           </div>
-          <Link
-            href="/products"
-            className={`rounded-xl px-4 py-2 text-sm font-medium bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110`}
+
+          <header className="mt-2 flex items-end justify-between ">
+            <div>
+              <h1 className="text-2xl font-semibold">
+                Elvarra Premium Collection
+              </h1>
+              <p className={`mt-1 text-sm text-neutral-50`}>
+                Our finest pieces — elevated materials, precision finishes,
+                limited runs.
+              </p>
+            </div>
+            <Link
+              href="/products"
+              className={`rounded-xl px-4 py-2 text-sm font-medium bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110`}
+            >
+              Shop all
+            </Link>
+          </header>
+
+          {/* Feature banner */}
+          <div
+            className={`mt-6 overflow-hidden rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70`}
           >
-            Shop all
-          </Link>
-        </header>
-
-        {/* Feature banner */}
-        <div
-          className={`mt-6 overflow-hidden rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70`}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3">
-            <div className="p-6 md:col-span-2">
-              <h2 className="text-lg font-semibold">
-                Hand‑polished, hypoallergenic, lifetime shine
-              </h2>
-              <ul className={`mt-2 list-disc pl-5 text-sm text-neutral-50`}>
-                <li>18–24K gold plating over premium base</li>
-                <li>AAA zircon / lab diamond options</li>
-                <li>2‑year warranty • gift packaging</li>
-              </ul>
-              <a
-                href="#grid"
-                className={`mt-4 inline-block rounded-xl px-4 py-2 text-sm font-medium bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110`}
-              >
-                Explore pieces
-              </a>
-            </div>
-            <div className="relative h-48 md:h-auto">
-              <Image
-                width={240}
-                height={240}
-                src="/images/about-1.jpg"
-                alt="Premium hero"
-                className="h-full w-full object-cover"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3">
+              <div className="p-6 md:col-span-2">
+                <h2 className="text-lg font-semibold">
+                  Hand‑polished, hypoallergenic, lifetime shine
+                </h2>
+                <ul className={`mt-2 list-disc pl-5 text-sm text-neutral-50`}>
+                  <li>18–24K gold plating over premium base</li>
+                  <li>AAA zircon / lab diamond options</li>
+                  <li>2‑year warranty • gift packaging</li>
+                </ul>
+                <a
+                  href="#grid"
+                  className={`mt-4 inline-block rounded-xl px-4 py-2 text-sm font-medium bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110`}
+                >
+                  Explore pieces
+                </a>
+              </div>
+              <div className="relative h-48 md:h-auto">
+                <Image
+                  width={240}
+                  height={240}
+                  src="/images/about-1.jpg"
+                  alt="Premium hero"
+                  className="h-full w-full object-cover"
+                />
+              </div>
             </div>
           </div>
-        </div>
-
+        </section>
         {/* Grid */}
         <div
           id="grid"

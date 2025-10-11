@@ -289,35 +289,41 @@ export default function GuidesIndexPage() {
           <span>Blogs</span>
         </nav>
 
-        {/* Header */}
-        <header className="mt-3 mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Jewelry Guides
-            </h1>
-            <p className={`mt-1 text-sm ${palette.subfg}`}>
-              Care, styling, materials, and buying tips curated by Elvarra.
-            </p>
+        <section className="relative isolate">
+          <div className="absolute inset-0 -z-10 opacity-40 blur-3xl  max-w-[100vw] overflow-hidden">
+            <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
           </div>
-          <Link
-            href="/products"
-            className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium bg-gradient-to-r ${palette.accentFrom} ${palette.accentTo} ${palette.btnFg} shadow hover:brightness-110 transition`}
-          >
-            Shop jewelry
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-4 w-4"
+
+          {/* Header */}
+          <header className="mt-3 mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Jewelry Guides
+              </h1>
+              <p className={`mt-1 text-sm ${palette.subfg}`}>
+                Care, styling, materials, and buying tips curated by Elvarra.
+              </p>
+            </div>
+            <Link
+              href="/products"
+              className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium bg-gradient-to-r ${palette.accentFrom} ${palette.accentTo} ${palette.btnFg} shadow hover:brightness-110 transition`}
             >
-              <path
-                fillRule="evenodd"
-                d="M3 10a.75.75 0 0 1 .75-.75h9.638L10.23 6.293a.75.75 0 1 1 1.06-1.06l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 1 1-1.06-1.06l3.158-2.957H3.75A.75.75 0 0 1 3 10Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </Link>
-        </header>
+              Shop jewelry
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M3 10a.75.75 0 0 1 .75-.75h9.638L10.23 6.293a.75.75 0 1 1 1.06-1.06l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 1 1-1.06-1.06l3.158-2.957H3.75A.75.75 0 0 1 3 10Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
+          </header>
+        </section>
 
         {/* Controls */}
         <section

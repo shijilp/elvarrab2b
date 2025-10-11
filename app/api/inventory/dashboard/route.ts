@@ -4,11 +4,14 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const BACKEND = process.env.BACKEND_API_URL!; // e.g. http://localhost:8000
+const BACKEND = process.env.BACKEND_API_URL! ?? ""; // e.g. http://localhost:8000
 const base = BACKEND.endsWith("/") ? BACKEND.slice(0, -1) : BACKEND;
 
 function u(path: string) {
   // always ensure trailing slash for DRF list/detail endpoints
+    if (!path || typeof path !== "string") {
+    throw new Error("Invalid path passed to u()");
+  }
   const hasSlash = path.endsWith("/");
   return new URL(`${base}${path}${hasSlash ? "" : "/"}`);
 }

@@ -56,46 +56,53 @@ export default function PageShell({
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
       {/* Safe padding + max width for all screens */}
+
       <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         {/* Breadcrumbs: wrap gracefully on narrow screens */}
-        <nav
-          aria-label="Breadcrumb"
-          className={`text-xs ${palette.subfg} flex flex-wrap gap-x-1 gap-y-1`}
-        >
-          <Link
-            href="/"
-            className="underline underline-offset-2 hover:opacity-80"
-          >
-            Home
-          </Link>
-          <span aria-hidden="true">/</span>
-          <Link
-            href="/blog"
-            className="underline underline-offset-2 hover:opacity-80"
-          >
-            Blogs
-          </Link>
-          <span aria-hidden="true">/</span>
-          <span className="truncate max-w-full">{trail}</span>
-        </nav>
 
-        {/* Header with optional CTA */}
-        <header className="mt-3 mb-6 flex flex-col gap-3 sm:mt-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            {/* Responsive title sizes so it doesn’t overflow */}
-            <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
-              {title}
-            </h1>
-            <p className={`mt-1 text-sm ${palette.subfg}`}>{subtitle}</p>
+        <section className="relative isolate">
+          <div className="absolute inset-0 -z-10 opacity-40 blur-3xl  max-w-[100vw] overflow-hidden">
+            <div className="pointer-events-none absolute -inset-20 rounded-[100px] gradient-accent" />
           </div>
+          <nav
+            aria-label="Breadcrumb"
+            className={`text-xs ${palette.subfg} flex flex-wrap gap-x-1 gap-y-1`}
+          >
+            <Link
+              href="/"
+              className="underline underline-offset-2 hover:opacity-80"
+            >
+              Home
+            </Link>
+            <span aria-hidden="true">/</span>
+            <Link
+              href="/blog"
+              className="underline underline-offset-2 hover:opacity-80"
+            >
+              Blogs
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span className="truncate max-w-full">{trail}</span>
+          </nav>
 
-          {/* CTA: full-width button on mobile, shrink on desktop */}
-          {ctaSlot && (
-            <div className="flex w-full items-center sm:w-auto">
-              <div className="w-full sm:w-auto">{ctaSlot}</div>
+          {/* Header with optional CTA */}
+          <header className="mt-3 mb-6 flex flex-col gap-3 sm:mt-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              {/* Responsive title sizes so it doesn’t overflow */}
+              <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
+                {title}
+              </h1>
+              <p className={`mt-1 text-sm ${palette.subfg}`}>{subtitle}</p>
             </div>
-          )}
-        </header>
+
+            {/* CTA: full-width button on mobile, shrink on desktop */}
+            {ctaSlot && (
+              <div className="flex w-full items-center sm:w-auto">
+                <div className="w-full sm:w-auto">{ctaSlot}</div>
+              </div>
+            )}
+          </header>
+        </section>
 
         {/* Content grid:
             - single column on phones
