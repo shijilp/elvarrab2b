@@ -123,6 +123,13 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              <Link
+                href={"/blog"}
+                className="opacity-90 hover:opacity-100"
+                onClick={() => setOpen(false)}
+              >
+                Blog
+              </Link>
               {user ? (
                 <LogoutButton setOpen={setOpen} />
               ) : (

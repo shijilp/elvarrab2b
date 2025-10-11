@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { ProductMini, resolveProduct } from "../_shared/productResolver";
 import Link from "next/link";
+import { api2 } from "@/lib/api2";
 
 type Warehouse = { id: number; code: string; name: string };
 
@@ -45,7 +46,7 @@ export default function NewAdjustmentPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.get("warehouses?mine=1");
+        const res = await api2.get("warehouses?mine=1");
         setWarehouses(res.data);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
@@ -105,7 +106,7 @@ export default function NewAdjustmentPage() {
 
     setLoading(true);
     try {
-      await api.post("inventory/adjustments/", payload);
+      await api2.post("inventory/adjustments/", payload);
       setOk("Adjustment posted.");
       setTimeout(() => router.push("/admin/inventory/dashboard"), 800);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

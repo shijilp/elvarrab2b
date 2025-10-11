@@ -153,7 +153,7 @@ export default function ScanOrders() {
           process.env.NEXT_PUBLIC_API_BASE ||
           "";
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const res = await api.get<any>(`${base}admin/orders/`, {
+        const res = await api.get<any>(`admin/orders/`, {
           params,
           withCredentials: true,
           signal: controller.signal,
@@ -242,11 +242,10 @@ export default function ScanOrders() {
     setError(null);
     setLoading(true);
     try {
-      const res = await api.post(
-        `${process.env.NEXT_PUBLIC_API_BASE}admin/orders/${code}/set_status/`,
-        { id: code, status: "packed" },
-        { withCredentials: true }
-      );
+      const res = await api.post(`admin/orders/${code}/set_status/`, {
+        id: code,
+        status: "packed",
+      });
       setLast(res.data);
       if (res.data.alert) {
         setError(res.data.detail);

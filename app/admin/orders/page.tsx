@@ -7,6 +7,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { AdminStats } from "../page";
 import BulkDelhiveryButton from "@/components/ui/ShippingDelhBtn";
+import { api2 } from "@/lib/api2";
 
 // ------------------------------------------------------------
 // Elvarra / Elvara — CUSTOMER ORDERS PAGE (Retail Only)
@@ -524,7 +525,7 @@ export default function CustomerOrdersPage() {
     if (selected.size === 0) return;
     setLoading(true);
     try {
-      await api.post("/admin/orders/bulk-status", {
+      await api2.post("/admin/orders/bulk-status", {
         ids: Array.from(selected),
         status: action,
       });
@@ -568,7 +569,7 @@ export default function CustomerOrdersPage() {
     setLoading(true);
     try {
       setBusy(true);
-      await api.post("/admin/orders/bulk-assign", {
+      await api2.post("/admin/orders/bulk-assign/", {
         ids: Array.from(selected),
         user_id: userId,
       });

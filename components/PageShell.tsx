@@ -42,43 +42,42 @@ export default function PageShell({
   children,
   theme = "dark",
   trail,
+  ctaSlot, // 👈 NEW PROP
 }: {
   title: string;
   subtitle: string;
   children: React.ReactNode;
   theme?: ThemeMode;
   trail: string;
+  ctaSlot?: React.ReactNode; // 👈 Optional CTA element
 }) {
   const palette = paletteForTheme(theme);
+
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
       <div className="container py-10">
+        {/* Breadcrumbs */}
         <nav className={`text-xs ${palette.subfg}`}>
           <Link href="/" className="underline">
             Home
           </Link>{" "}
           /{" "}
-          <Link href="/guides" className="underline">
-            Guides
+          <Link href="/blog" className="underline">
+            Blogs
           </Link>{" "}
           / <span>{trail}</span>
         </nav>
 
-        <header className="mt-2 mb-8">
-          <h1 className="text-3xl font-semibold">{title}</h1>
-          <p className={`mt-1 text-sm ${palette.subfg}`}>{subtitle}</p>
+        {/* Header with optional CTA */}
+        <header className="mt-2 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold">{title}</h1>
+            <p className={`mt-1 text-sm ${palette.subfg}`}>{subtitle}</p>
+          </div>
+          {ctaSlot && <div className="shrink-0">{ctaSlot}</div>}
         </header>
 
         <div className="grid gap-6 md:grid-cols-2">{children}</div>
-
-        <div className="mt-10 flex justify-center">
-          <Link
-            href="/products"
-            className={`rounded-xl px-6 py-2 font-medium ${palette.button}`}
-          >
-            Shop Jewelry
-          </Link>
-        </div>
       </div>
     </main>
   );

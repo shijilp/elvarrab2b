@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Link from "next/link";
+import { api2 } from "@/lib/api2";
 
 // -------------------- Types --------------------
 type Warehouse = { id: number; name: string; code: string };
@@ -195,7 +196,7 @@ export default function NewReceiptPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.get("warehouses?mine=1");
+        const res = await api2.get("warehouses?mine=1");
         setWarehouses(res.data as Warehouse[]);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {

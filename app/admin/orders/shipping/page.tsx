@@ -147,13 +147,8 @@ export default function ScanOrders() {
         if (gteISO) params["shipped_after"] = gteISO;
         if (lteISO) params["shipped_before"] = lteISO;
 
-        // TIP: standardize your env var, e.g. NEXT_PUBLIC_API_BASE_URL
-        const base =
-          process.env.NEXT_PUBLIC_API_BASE_URL ||
-          process.env.NEXT_PUBLIC_API_BASE ||
-          "";
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const res = await api.get<any>(`${base}admin/orders/`, {
+        const res = await api.get<any>(`admin/orders/`, {
           params,
           withCredentials: true,
           signal: controller.signal,
@@ -243,7 +238,7 @@ export default function ScanOrders() {
     setLoading(true);
     try {
       const res = await api.post(
-        `${process.env.NEXT_PUBLIC_API_BASE}admin/orders/${code}/set_status/`,
+        `admin/orders/${code}/set_status/`,
         { id: code, status: "shipped" },
         { withCredentials: true }
       );

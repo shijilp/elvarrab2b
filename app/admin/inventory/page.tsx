@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Link from "next/link";
+import { api2 } from "@/lib/api2";
 
 type Warehouse = { id: number; name: string; code: string };
 
@@ -74,22 +75,32 @@ export default function InventoryDashboard() {
 
   // Load warehouses
   useEffect(() => {
+    let ignore = false;
     (async () => {
       try {
-        const res = await api.get("warehouses?mine=1");
-        setWarehouses(res.data as Warehouse[]);
+        const res = await fetch(`/api/inventory/warehouses?mine=1`, {
+          cache: "no-store",
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        if (!ignore) setWarehouses((data.results ?? data) as Warehouse[]);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         setErr(e?.response?.data?.detail || "Failed to load warehouses.");
+      } finally {
+        if (!ignore) setLoading(false);
       }
     })();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const computeStock = async () => {
     setLoading(true);
     setErr(null);
     try {
-      const whParam = await api.post(`recompute-balances/`);
+      const whParam = await api.post(`/recompute-balances/`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setErr(e?.response?.data?.detail || "Failed to compute stock.");
@@ -102,23 +113,25 @@ export default function InventoryDashboard() {
     setLoading(true);
     setErr(null);
     try {
-      const whParam = warehouse
-        ? `&warehouse=${encodeURIComponent(warehouse)}`
-        : "";
-      const [tot, vel, ag, lowres] = await Promise.all([
-        api.get(`stock-balances/totals?${whParam.slice(1)}`),
-        api.get(`inventory/reports/velocity?days=${period}${whParam}`),
-        api.get(`inventory/reports/aging?min_days=60${whParam}`),
-        api.get(`stock-balances/low_stock?threshold=1${whParam}`),
-      ]);
-      setTotals(tot.data as Totals);
-      setVelocity(vel.data as VelocityRow[]);
-      setAging(ag.data as AgingRow[]);
+      const url = new URL("/api/inventory/dashboard", window.location.origin);
+      url.searchParams.set("days", String(period));
+      if (warehouse) url.searchParams.set("warehouse", warehouse);
+      // optional tuning
+      url.searchParams.set("min_days", "60");
+      url.searchParams.set("threshold", "1");
+
+      const res = await fetch(url.toString(), { cache: "no-store" });
+      if (!res.ok) throw new Error(await res.text());
+
+      const data = await res.json();
+      setTotals((data.totals?.results ?? data.totals) as Totals);
+      setVelocity((data.velocity?.results ?? data.velocity) as VelocityRow[]);
+      setAging((data.aging?.results ?? data.aging) as AgingRow[]);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setLow(lowres.data as any[]);
+      setLow((data.low_stock?.results ?? data.low_stock) as any[]);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      setErr(e?.response?.data?.detail || "Failed to load dashboard data.");
+      setErr("Failed to load dashboard data.");
     } finally {
       setLoading(false);
     }
@@ -344,7 +357,7 @@ function RecentReceipts({ warehouse }: { warehouse: string }) {
       const whParam = warehouse
         ? `?warehouse=${encodeURIComponent(warehouse)}`
         : "";
-      const res = await api.get(`inventory/receipts/${whParam}`);
+      const res = await api2.get(`inventory/receipts/${whParam}`);
       setRows(res.data.results || []);
     })();
   }, [warehouse]);
