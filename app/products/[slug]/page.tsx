@@ -1,7 +1,7 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { Spinner } from "@/components/admin/Spinner";
 import ProductPageClient from "@/components/ProductPageClient";
-import { Metadata } from "next";
 
 function PageFallback() {
   return (
@@ -14,17 +14,21 @@ function PageFallback() {
     </main>
   );
 }
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
+  "http://localhost:3000";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
+  "http://localhost:8000";
+
 async function getProduct(slug: string) {
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
-    "http://localhost:8000";
   const res = await fetch(`${API_BASE}/products/${slug}/`, {
-    next: { revalidate: 300 },
     cache: "no-store",
   });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Product fetch failed: ${res.status}`);
-  return res.json() as Promise<{
+  return (await res.json()) as {
     id: number;
     name: string;
     slug: string;
@@ -39,24 +43,24 @@ async function getProduct(slug: string) {
     og_image?: string | null;
     brand?: string | null;
     availability?: "InStock" | "OutOfStock" | "PreOrder";
-  }>;
+  };
 }
-// Build absolute image URL when needed:
+
 function abs(url?: string | null) {
   if (!url) return undefined;
   try {
-    const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
-    return new URL(url, base || "http://localhost:3000").toString();
+    return new URL(url, SITE_URL).toString();
   } catch {
     return url || undefined;
   }
 }
 
-// ✅ Note params is a Promise in Next 15
-export async function generateMetadata(props: {
+export async function generateMetadata({
+  params,
+}: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await props.params;
+  const { slug } = await params; // <-- await the Promise
   const p = await getProduct(slug);
 
   if (!p) {
@@ -64,6 +68,7 @@ export async function generateMetadata(props: {
       title: "Product not found · Elvarra",
       description: "This product may be unavailable or discontinued.",
       robots: { index: false, follow: false },
+      alternates: { canonical: `${SITE_URL}/products/${slug}` },
     };
   }
 
@@ -77,14 +82,14 @@ export async function generateMetadata(props: {
     ? abs(p.og_image)
     : p.images?.length
     ? abs(p.images[0])
-    : "/og/default.jpg";
-  const canonical = `/products/${p.slug}`;
+    : undefined;
+
+  const canonical = `${SITE_URL}/products/${p.slug}`;
 
   return {
     title,
     description,
     openGraph: {
-      // type: "website", // (omit "product" – Next union doesn’t allow it)
       title,
       description,
       url: canonical,
@@ -101,7 +106,12 @@ export async function generateMetadata(props: {
   };
 }
 
-export default function ProductsPage() {
+export default async function ProductsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params; // <-- await the Promise
   return (
     <Suspense fallback={<PageFallback />}>
       <ProductPageClient />
