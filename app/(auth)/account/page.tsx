@@ -798,7 +798,10 @@ export default function AccountSettingsPage() {
 
   return (
     <main className="min-h-dvh bg-zinc-950 text-zinc-100 antialiased">
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10 relative isolate">
+        <div className="absolute inset-0 -z-10 opacity-20 blur-3xl mx-auto   max-w-[90vw] overflow-hidden">
+          <div className="pointer-events-none absolute -inset-0 rounded-[100px] gradient-accent" />
+        </div>
         <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900">
           <div className="grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
             <div className="min-w-0">

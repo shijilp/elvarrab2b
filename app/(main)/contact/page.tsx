@@ -139,7 +139,10 @@ export default function SupportPage() {
 
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
-      <div className="container py-10">
+      <div className="container py-10  relative isolate">
+        <div className="absolute inset-15 -z-10 opacity-10 blur-3xl mx-auto   max-w-[100vw] overflow-hidden">
+          <div className="pointer-events-none absolute -inset-30 rounded-[100px] gradient-accent" />
+        </div>
         <div className="mx-auto max-w-3xl">
           <header className="mb-6">
             <h1 className="text-2xl font-semibold">Contact support</h1>
