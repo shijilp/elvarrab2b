@@ -1,13 +1,13 @@
 // components/FloatingCheckoutButton.tsx
 "use client";
 
+import { useRFQCart } from "@/context/RFQCartContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
-import { useCart } from "@/context/CartContext";
 
 export default function FloatingCheckoutButton() {
-  const { cartItems } = useCart();
+  const { rfq } = useRFQCart();
   const pathname = usePathname();
 
   // Hide on cart/checkout/thank-you style pages
@@ -20,14 +20,15 @@ export default function FloatingCheckoutButton() {
   ];
   const shouldHide =
     hiddenRoutes.some((r) => pathname?.startsWith(r)) ||
-    !cartItems ||
-    cartItems.length === 0;
+    !rfq ||
+    rfq.items.length === 0;
 
   // Derive totals defensively (adjust to your item shape)
   const { count, subtotal } = useMemo(() => {
     const count =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cartItems?.reduce((n: number, it: any) => n + (it.quantity ?? 1), 0) ?? 0;
+      rfq?.items?.reduce((n: number, it: any) => n + (it.quantity ?? 1), 0) ??
+      0;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const toPrice = (p: any) => {
@@ -39,13 +40,13 @@ export default function FloatingCheckoutButton() {
 
     const subtotal =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cartItems?.reduce((sum: number, it: any) => {
+      rfq?.items?.reduce((sum: number, it: any) => {
         const priceRaw = it.price ?? it.product?.price ?? 0;
         return sum + toPrice(priceRaw) * (it.quantity ?? 1);
       }, 0) ?? 0;
 
     return { count, subtotal };
-  }, [cartItems]);
+  }, [rfq]);
 
   if (shouldHide) return null;
 
@@ -83,7 +84,7 @@ export default function FloatingCheckoutButton() {
           >
             {count}
           </span>
-          <span className="tracking-tight">Checkout</span>
+          <span className="tracking-tight">Request Quote</span>
         </div>
 
         <div className="text-right tabular-nums">

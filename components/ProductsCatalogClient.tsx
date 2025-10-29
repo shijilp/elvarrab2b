@@ -1,6 +1,5 @@
 "use client";
 
-import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import { api } from "@/lib/api";
 import { money } from "@/lib/money";
 import type { Product } from "@/types";
@@ -10,6 +9,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import Link from "next/link";
 import { Crown } from "lucide-react";
+import AddToRFQBtn from "./ui/AddToRfqBtn";
 
 type APIList<T> = {
   count: number;
@@ -145,7 +145,7 @@ export default function ProductsCatalogClient() {
     };
 
     api
-      .get<APIList<Product>>("/portfolio/", { params }) // << keep your path
+      .get<APIList<Product>>("/api/elvarra/portfolio/", { params }) // << keep your path
       .then((res) => {
         if (!cancelled) setData(res.data);
       })
@@ -165,7 +165,7 @@ export default function ProductsCatalogClient() {
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([api.get("/categories/")])
+    Promise.all([api.get("/api/elvarra/categories/")])
       .then(([pRes]) => {
         if (!mounted) return;
 
@@ -536,8 +536,7 @@ export default function ProductsCatalogClient() {
                           Details
                         </Link>
                       </div>
-
-                      <AddToCartBtn product={p} />
+                      <AddToRFQBtn product={p} />
                     </div>
                   </div>
                 ))}

@@ -6,7 +6,6 @@ import SectionTitle from "@/components/SectionTitle";
 import ProductCard from "@/components/ProductCard";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import { Product } from "@/types";
-import OccassionTab from "@/components/OccassionTab";
 import { api } from "@/lib/api";
 
 export default function Page() {
@@ -23,7 +22,10 @@ export default function Page() {
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([api.get("/products/"), api.get("/categories/")])
+    Promise.all([
+      api.get("/api/elvarra/products/"),
+      api.get("/api/elvarra/categories/"),
+    ])
       .then(([pRes, cRes]) => {
         if (!mounted) return;
         setProducts(pRes.data.results ?? pRes.data ?? []);
@@ -48,17 +50,6 @@ export default function Page() {
       api.post("/referrals/track/", { code }).catch(() => {});
     }
   }, []);
-
-  // const allCategories = useMemo(() => {
-  //   return [
-  //     "All",
-  //     ...Array.from(
-  //       new Set(
-  //         products.map((p) => p.category?.name).filter(Boolean) as string[]
-  //       )
-  //     ),
-  //   ];
-  // }, [products]);
 
   const allCategoryNames = useMemo(() => {
     return [
@@ -110,36 +101,41 @@ export default function Page() {
         </div>
         <div className="container grid grid-cols-1 gap-8 py-14 lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20 mx-auto">
           <div>
-            <p className="text-xs tracking-[0.25em] opacity-80">ELVARRA</p>
-            <p className="text-xs tracking-[0.25em] opacity-80">{ref_code}</p>
-
+            <p className="text-xs tracking-[0.25em] opacity-80">
+              B2B JEWELRY SUPPLY
+            </p>{" "}
             <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
               Where Elegance Meets Light
             </h1>
-            <p className="mt-4 max-w-xl text-base text-neutral-300">
-              Elvarra brings you hand-finished fashion jewelry crafted in gold,
-              silver, and sparkling stones. Designed to elevate your everyday
-              style and be loved for years to come. Responsibly sourced. Always
-              affordable.
+            <p className="mt-4 max-w-xl text-base text-neutral-600 dark:text-neutral-300">
+              Flexible MOQ from 5 units • Tiered pricing • Private‑label
+              packaging • Fast replenishment. Nickel‑safe, hypoallergenic
+              finishes with consistent plating specs.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
-                href="/products"
-                className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
+                href="#bestsellers"
+                className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 gradient-accent"
               >
-                Explore Collections
+                Browse Wholesale Catalog
               </Link>
               <Link
-                href="/products/premium"
-                className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 btn-gradient-accent"
+                href="#collections"
+                className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
               >
-                ✨ Premium Collections
+                See Tiered Pricing
+              </Link>
+              <Link
+                href="/wholesale-inquiry"
+                className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
+              >
+                Request Line Sheet
               </Link>
             </div>
-            <div className="mt-6  flex  items-center gap-4 text-xs opacity-80">
-              <span>• Elegance in Every Detail</span>
-              <span>• Luxury, Redefined</span>
-              <span className=" hidden sm:block">• Crafted to Captivate</span>
+            <div className="mt-6 flex items-center gap-4 text-xs opacity-80">
+              <span>• MOQ 25 per SKU</span>
+              <span>• Lead time 7–12 days</span>
+              <span>• DDP/DAP available</span>
             </div>
           </div>
           <div className="relative">
@@ -156,101 +152,6 @@ export default function Page() {
           </div>
         </div>
       </section>
-
-      {/* Collections */}
-      {/* <section id="collections" className="container py-12 lg:py-16 mx-auto">
-        <div className="mb-6 flex items-end justify-between">
-          <SectionTitle>Featured Collections</SectionTitle>
-          <Link
-            href="#"
-            className="text-sm underline opacity-80 hover:opacity-100"
-          >
-            View all
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {categories.map((c) => (
-            <a
-              key={c.id}
-              href={`#${c.id}`}
-              className="group relative overflow-hidden rounded-2xl ring-1 ring-neutral-200 dark:ring-neutral-800"
-            >
-              <Image
-                src={c.icon}
-                alt={c.name}
-                width={900}
-                height={1000}
-                className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-3 left-3 text-sm font-medium tracking-wide">
-                {c.name}
-              </div>
-            </a>
-          ))}
-        </div>
-      </section> */}
-
-      {/* --------------- Collections --------------- */}
-      <section id="collections" className="container mx-auto py-12 lg:py-16">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <SectionTitle>Categories</SectionTitle>
-          <Link
-            href="/products"
-            className="text-sm underline opacity-80 hover:opacity-100"
-          >
-            View all
-          </Link>
-        </div>
-
-        {/* Visual collection grid from backend categories */}
-
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              href={{
-                pathname: "/products",
-                query: { category: c.slug ?? c.id },
-              }}
-              className="group relative overflow-hidden rounded-xl md:rounded-2xl ring-1 el-border  ring-neutral-200 dark:ring-neutral-800"
-              aria-label={`Open ${c.name} collection`}
-            >
-              <Image
-                src={c.icon ?? "/images/about-2.jpg"}
-                alt={c.name}
-                width={900}
-                height={600} // reduce height
-                className="aspect-[4/3] md:aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-2 md:bottom-2 left-2 md:left-3 text-xs md:text-sm sm:text-sm font-medium tracking-wide text-white">
-                {c.name}
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Bestsellers */}
-      {/* <section id="bestsellers" className="container py-12 lg:py-16 mx-auto">
-        <div className="mb-6 flex items-end justify-between">
-          <SectionTitle>Bestsellers</SectionTitle>
-          <div className="flex items-center gap-2 text-xs">
-            <button className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-              Filter
-            </button>
-            <button className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-              Sort
-            </button>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section> */}
 
       {/* ---------------- Bestsellers ---------------- */}
       <section id="bestsellers" className="container mx-auto py-12 lg:py-16">
@@ -336,79 +237,43 @@ export default function Page() {
         </div>
       </section>
 
-      <OccassionTab />
-
-      {/* Testimonials */}
-      <section className="container mx-auto py-16 px-4">
-        {/* Header */}
-        {/* <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight gradient-yellow text-transparent bg-clip-text">
-            What Our Customers Say
-          </h2>
-          <p className="mt-3 text-neutral-400 max-w-lg mx-auto">
-            Real stories from people who wear Elvarra — elegance that speaks for
-            itself.
-          </p>
-        </div> */}
-
-        {/* Testimonials */}
-        {/* <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {/* How it works */}
+      <section
+        id="how"
+        className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16"
+      >
+        <h2 className="text-2xl font-semibold">How wholesale works</h2>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
           {[
             {
-              quote:
-                "Stunning quality and shine. I get compliments every time I wear it!",
-              name: "— Aisha, Verified Buyer",
+              step: "1",
+              title: "Send inquiry",
+              desc: "Share SKUs, quantities, and packaging needs. We respond within 24h.",
             },
             {
-              quote: "Perfect everyday pieces. Minimal, elegant, and timeless.",
-              name: "— Noura, Verified Buyer",
+              step: "2",
+              title: "Confirm quote & lead time",
+              desc: "Tiered pricing, MOQ from 25, lead time 7–12 days in‑stock.",
             },
             {
-              quote:
-                "Feels premium, looks gorgeous! The packaging was beautiful too.",
-              name: "— Meera, Verified Buyer",
+              step: "3",
+              title: "Production & ship",
+              desc: "QC per batch; ship from KSA/India with DDP/DAP options.",
             },
-          ].map((item, i) => (
-            <figure
-              key={i}
-              className="rounded-2xl p-6 bg-gradient-to-b from-neutral-900 to-black ring-1 ring-neutral-800 shadow-lg hover:shadow-amber-500/20 transition-all duration-300"
+          ].map((s) => (
+            <div
+              key={s.step}
+              className={`rounded-2xl dark:ring-1 dark:ring-neutral-800 ring-1 ring-neutral-200 dark:bg-neutral-900/70 bg-white/90 p-6`}
             >
-              <blockquote className="text-neutral-200 text-lg leading-relaxed italic">
-                “{item.quote}”
-              </blockquote>
-              <figcaption className="mt-4 text-sm text-amber-400 font-medium">
-                {item.name}
-              </figcaption>
-            </figure>
+              <div className="text-3xl font-semibold">{s.step}</div>
+              <div className="mt-2 text-lg font-medium">{s.title}</div>
+              <p
+                className={`mt-1 text-sm dark:text-neutral-300 text-neutral-600`}
+              >
+                {s.desc}
+              </p>
+            </div>
           ))}
-        </div> */}
-
-        {/* CTA Bar */}
-        <div className="mt-1 text-center">
-          <h3 className="text-2xl md:text-3xl font-semibold tracking-tight gradient-yellow text-transparent bg-clip-text">
-            Discover Why Everyone Loves Elvarra
-          </h3>
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/products/premium"
-              className="px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-semibold hover:scale-105 transition-transform duration-300"
-            >
-              ✨ Premium Collection
-            </Link>
-            <Link
-              href="/products/deal"
-              className="px-5 py-2 rounded-full bg-neutral-800 text-neutral-200 ring-1 ring-neutral-700 hover:bg-neutral-700 transition-colors duration-300"
-            >
-              💎 Explore Deals
-            </Link>
-
-            <Link
-              href="products?tags=new"
-              className="px-5 py-2 rounded-full gradient-elegant text-white font-semibold hover:scale-105 transition-transform duration-300"
-            >
-              💜 New Arrivals
-            </Link>
-          </div>
         </div>
       </section>
 

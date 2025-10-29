@@ -1,20 +1,19 @@
 "use client";
 import Link from "next/link";
-import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import LogoutButton from "./ui/LogoutButton";
-import CartBtnonHeader from "./CartBtnonHeader";
+import CartBtnonHeader from "./RFQBtnonHeader";
 import { useState } from "react";
 import { Menu, X, Home, Package, ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useCart } from "@/context/CartContext"; // ✅ import cart context
 import { useTheme } from "@/context/ThemeContext";
+import { useRFQCart } from "@/context/RFQCartContext";
 
 export default function Header() {
   const { theme } = useTheme();
   const { user } = useAuth();
-  const { cartItems } = useCart(); // ✅ access cart
+  const { rfq } = useRFQCart(); // ✅ access cart
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -23,6 +22,8 @@ export default function Header() {
     // { href: "#how", label: "How it works" },
     { href: "/orders", label: "Orders" },
     { href: "/contact", label: "Contact" },
+    { href: "/rfqs", label: "RFQ" },
+    { href: "/rfqs/cart", label: "RFQCART" },
   ];
 
   const isActive = (href: string) => {
@@ -61,13 +62,6 @@ export default function Header() {
                 </Link>
               ))}
             </nav>
-            {user?.isAdmin && (
-              <nav className="hidden gap-8 text-sm md:flex">
-                <Link className="opacity-90 hover:opacity-100" href={"/admin"}>
-                  Admin{user?.isAdmin ? ` (${user?.role})` : ""}
-                </Link>
-              </nav>
-            )}
 
             <div className="flex items-center gap-2">
               {user && (
@@ -80,7 +74,7 @@ export default function Header() {
                   </div>
                 </Link>
               )}
-              <ThemeToggle />
+
               <div className=" hidden md:block">
                 <CartBtnonHeader />
               </div>
@@ -159,14 +153,14 @@ export default function Header() {
           {/* ✅ Cart with badge */}
           <Tab
             href="/orders/cart"
-            label="Cart"
+            label="RFQ"
             active={isActive("/orders/cart")}
           >
             <div className="relative">
               <ShoppingCart className="h-5 w-5" />
-              {cartItems.length > 0 && (
+              {rfq && rfq?.items.length > 0 && (
                 <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-[10px] font-bold text-neutral-900 shadow">
-                  {cartItems.length}
+                  {rfq?.items.length}
                 </span>
               )}
             </div>

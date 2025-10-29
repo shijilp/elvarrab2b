@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { Spinner } from "@/components/admin/Spinner";
 import ProductPageClient from "@/components/ProductPageClient";
 import { Metadata } from "next";
+import Spinner from "@/components/Spinner";
 
 function PageFallback() {
   return (

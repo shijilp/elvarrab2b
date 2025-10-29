@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const BACKEND = process.env.BACKEND_API_URL!;
+const BACKEND = process.env.BACKEND_URL!;
 
 // Next 15 route context: params is a Promise
 type Ctx = { params: Promise<{ path: string[] }> };

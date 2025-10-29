@@ -20,23 +20,8 @@
 
 }
 
-:root.dark {
-  --accent-start: #eab308; /* yellow-500 */
-  --accent-end: #f59e0b;   /* amber-500 */
-    --btn-start: #eab308; /* yellow-500 */
-  --btn-end: #f59e0b;   /* amber-500 */
 
-  --chip-bg: #f59e0b;      /* amber-500 */
-  --chip-fg: #111827;      /* neutral-900 */
-  --elv-card: #171717b3;
-  --elv-ring: #262626;
-  --elv-subfg: #d4d4d4;
-  --elv-border: #262626;
-  --elv-bg: #0a0a0a;          /* neutral-950 */
-  --elv-fg: #fafafa;          /* neutral-50 */
-  --elv-subfg: #d4d4d4;       /* neutral-300 */
 
-}
 
 html, body {
   height: 100%;
@@ -145,12 +130,14 @@ html, body {
 .gradient-Sapphire{
     @apply bg-gradient-to-r from-blue-500 to-cyan-300;
 }
-
+.gradient-accent{
+    @apply bg-gradient-to-r from-teal-400 via-emerald-400 to-lime-200 ;
+}
 }
 
-.gradient-accent {
+/* .gradient-accent {
   background-image: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-}
+} */
 
 .btn-gradient-accent {
   background-image: linear-gradient(135deg, var(--btn-start), var(--btn-end));

@@ -1,22 +1,22 @@
 "use client";
 import { useMemo } from "react";
-import { useCart } from "@/context/CartContext";
 import { Product } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
-import AddToCartBtn from "./ui/AddToCartBtn";
 import { Crown } from "lucide-react"; // install lucide-react if not already
 import { money } from "@/lib/utils";
+import AddToRFQBtn from "./ui/AddToRfqBtn";
+import { useRFQCart } from "@/context/RFQCartContext";
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { cartItems } = useCart();
+  const { rfq } = useRFQCart();
 
   // Find this product in the cart (adjust to your cart item shape if needed)
   const line = useMemo(
-    () => cartItems?.find((it) => (it?.id ?? it.id) === product.id),
-    [cartItems, product.id]
+    () => rfq?.items?.find((it) => (it?.id ?? it.id) === product.id),
+    [rfq, product.id]
   );
-  const qty = line?.quantity ?? 0;
+  const qty = line?.requested_qty ?? 0;
   const inCart = qty > 0;
   const isOutOfStock = product.stock < 1 ? true : false;
 
@@ -81,9 +81,6 @@ export default function ProductCard({ product }: { product: Product }) {
             <div className="text-sm font-semibold">
               {(product as Product).compare_at_price ? (
                 <>
-                  <span className="mr-1 line-through opacity-50">
-                    {money((product as Product).compare_at_price)}
-                  </span>
                   <span>{money(product.price as number)}</span>
                 </>
               ) : (
@@ -92,8 +89,8 @@ export default function ProductCard({ product }: { product: Product }) {
             </div>
           </div>
         </div>
-
-        <AddToCartBtn product={product} outofStock={isOutOfStock} />
+        <AddToRFQBtn product={product} />
+        {/* <AddToCartBtn product={product} outofStock={isOutOfStock} /> */}
       </div>
     </div>
   );

@@ -10,10 +10,10 @@ import type { Product, Variant } from "@/types";
 // Zoom needs CSS; keep it client-only
 import "react-medium-image-zoom/dist/styles.css";
 
-import AddToCartBtn from "@/components/ui/AddToCartBtn";
 import TagBadge from "@/components/ui/TagBadge";
 import Link from "next/link";
 import { money } from "@/lib/money";
+import AddToRFQBtn from "./ui/AddToRfqBtn";
 
 const Zoom = dynamic(() => import("react-medium-image-zoom"), { ssr: false });
 
@@ -210,9 +210,15 @@ const ProductPageClient: React.FC = () => {
 
           {/* INFO */}
           <div className="w-full">
+            <span
+              className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider bg-elvarra/10 text-elvarra inline-block mb-2`}
+            >
+              {product?.tag}
+            </span>
             <h1 className="text-2xl sm:text-3xl font-semibold">
               {product.name}
             </h1>
+
             {/* Price + compare_at_price */}
             <div className="mt-2 flex items-baseline gap-3">
               <span className="text-lg sm:text-xl font-medium">
@@ -262,9 +268,50 @@ const ProductPageClient: React.FC = () => {
                 {product.description}
               </p>
             )}
+            <div className={`mt-3 grid grid-cols-2 gap-3 text-xs el-subfgn`}>
+              <div className={`rounded-xl el-ringn el-cardn p-3`}>
+                MOQ: <span className="font-medium text-current">25 units</span>
+              </div>
+
+              <div className={`rounded-xl el-ringn el-cardn p-3`}>
+                Lead time:{" "}
+                <span className="font-medium text-current">
+                  {product?.id || 15} days
+                </span>
+              </div>
+            </div>
+            {/* Options */}
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-wider opacity-80">
+                  Metal
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    className={`rounded-xl border el-bordern px-3 py-2 text-sm hover:bg-white/5`}
+                    aria-label={`Choose metal Gold`}
+                  >
+                    {product.spec && product.spec.base_material}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-wider opacity-80">
+                  Length
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    className={`rounded-xl border el-bordern px-3 py-2 text-sm hover:bg-white/5`}
+                    aria-label={`Choose length 16`}
+                  >
+                    16 inches
+                  </button>
+                </div>
+              </div>
+            </div>
             {/* <ul className="mt-6 list-disc space-y-1 pl-5 text-sm"> {product.details.map((d, i) => ( <li key={i}>{d}</li> ))} </ul> */}
             <div className="mt-7 grid grid-cols-2 gap-3">
-              <AddToCartBtn
+              <AddToRFQBtn
                 product={product}
                 outofStock={isOutOfStock}
                 className={`col-span-2 sm:col-span-1 rounded-xl px-5 py-3 text-sm font-medium bg-gradient-to-r from-rose-400 to-pink-500hover:brightness-110 dark:from-yellow-500 dark:to-amber-500 `}
@@ -276,11 +323,59 @@ const ProductPageClient: React.FC = () => {
                 Wishlist
               </button> */}
             </div>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <input
+                type="number"
+                defaultValue={25}
+                min={25}
+                className={`w-28 rounded-xl border el-bordern bg-transparent px-3 py-3 text-sm outline-none`}
+                aria-label="Order quantity (MOQ 25)"
+              />
+              <Link
+                href="/wholesale-inquiry"
+                className={`flex-1 rounded-xl px-5 py-3 text-sm font-medium btn-gradient-accent text-center`}
+              >
+                Request Wholesale Quote
+              </Link>
+              <button
+                className={`rounded-xl border el-bordern px-4 py-3 text-sm`}
+              >
+                Download Spec Sheet
+              </button>
+            </div>
 
-            <div className="mt-6 text-xs opacity-80 space-y-1">
-              <p>• Free shipping over $75</p>
-              <p>• Delivery in 3–5 business days</p>
-              <p>• Easy 30-day returns</p>
+            <div className="mt-6 space-y-3">
+              {[
+                {
+                  q: "Materials & Specs",
+                  a: "Brass base, 18k gold plating (0.3–0.5μm), lab‑grown stone. Individual polybag + insert card; retail box optional.",
+                },
+                {
+                  q: "Packaging Options",
+                  a: "Standard OPP bag, velvet pouch, or branded rigid box. Barcode & price labels available.",
+                },
+                {
+                  q: "Shipping Terms",
+                  a: "FOB, CIF, DAP available. Consolidation support for multi‑SKU POs.",
+                },
+                {
+                  q: "After‑Sales",
+                  a: "2‑year limited warranty. Batch replacement for manufacturing defects.",
+                },
+              ].map((item, i) => (
+                <details
+                  key={i}
+                  className={`group rounded-2xl el-ringn el-cardn p-4`}
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
+                    <span>{item.q}</span>
+                    <span className="ml-4 transition group-open:rotate-45 opacity-60">
+                      ＋
+                    </span>
+                  </summary>
+                  <p className={`mt-2 text-sm el-subfgn`}>{item.a}</p>
+                </details>
+              ))}
             </div>
 
             {/* Attributes grid */}
