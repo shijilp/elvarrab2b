@@ -141,7 +141,7 @@ export default function Page() {
           <div className="relative">
             <div className="rounded-3xl p-2 shadow-2xl ring-1 ring-neutral-200 dark:ring-neutral-800 bg-white/90 dark:bg-neutral-900/70">
               <Image
-                src="/images/about-1.jpg"
+                src="/images/hero.jpg"
                 alt="Hero jewelry"
                 width={640}
                 height={640}
