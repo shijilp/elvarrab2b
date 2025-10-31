@@ -20,7 +20,6 @@ export default function Header() {
   const navLinks = [
     { href: "/products", label: "Catalog" },
     // { href: "#how", label: "How it works" },
-    { href: "/orders", label: "Orders" },
     { href: "/contact", label: "Contact" },
     { href: "/rfqs", label: "RFQ" },
     { href: "/rfqs/cart", label: "RFQCART" },
@@ -117,13 +116,7 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href={"/blog"}
-                className="opacity-90 hover:opacity-100"
-                onClick={() => setOpen(false)}
-              >
-                Blog
-              </Link>
+
               {user ? (
                 <LogoutButton setOpen={setOpen} />
               ) : (
@@ -151,11 +144,7 @@ export default function Header() {
             <Package className="h-5 w-5" />
           </Tab>
           {/* ✅ Cart with badge */}
-          <Tab
-            href="/orders/cart"
-            label="RFQ"
-            active={isActive("/orders/cart")}
-          >
+          <Tab href="/rfqs/cart" label="RFQ" active={isActive("/orders/cart")}>
             <div className="relative">
               <ShoppingCart className="h-5 w-5" />
               {rfq && rfq?.items.length > 0 && (

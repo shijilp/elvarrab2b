@@ -133,9 +133,9 @@ export default function Page() {
               </Link>
             </div>
             <div className="mt-6 flex items-center gap-4 text-xs opacity-80">
-              <span>• MOQ 25 per SKU</span>
-              <span>• Lead time 7–12 days</span>
-              <span>• DDP/DAP available</span>
+              <span>• MOQ 5 per SKU</span>
+              <span>• Lead time 2–10 days</span>
+              <span className=" hidden md:block">• DDP/DAP</span>
             </div>
           </div>
           <div className="relative">

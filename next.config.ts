@@ -19,12 +19,12 @@ const nextConfig: NextConfig = {
       },
          {
         protocol: "https",
-        hostname: "playkopmedia.s3.ap-south-1.amazonaws.com",
+        hostname: "elvarrabucket.s3.ap-south-1.amazonaws.com",
         pathname: "/**",
       },
          {
         protocol: "https",
-        hostname: "playkopmedia.s3.amazonaws.com",
+        hostname: "elvarrabucket.s3.amazonaws.com",
         pathname: "/**",
       },
     ],
