@@ -44,7 +44,7 @@ const ProductPageClient: React.FC = () => {
 
     (async () => {
       try {
-        const res = await api.get(`/products/${slug}/`);
+        const res = await api.get(`/api/elvarra/products/${slug}/`);
         if (cancelled) return;
         setProduct(res.data);
         setSelectedVariant((res.data as Product).variants?.[0] ?? null);
