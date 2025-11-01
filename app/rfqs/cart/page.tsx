@@ -6,7 +6,8 @@ import Image from "next/image";
 import { useRFQCart } from "@/context/RFQCartContext";
 
 export default function RFQCartPage() {
-  const { rfq, updateQty, removeItem, submitRFQ, loading } = useRFQCart();
+  const { rfq, updateQty, removeItem, submitRFQ, loading, clearRFQ } =
+    useRFQCart();
 
   const [customer, setCustomer] = useState({
     name: "",
@@ -29,6 +30,7 @@ export default function RFQCartPage() {
       notes,
     });
     alert("RFQ submitted. We’ll email your quotation shortly.");
+    clearRFQ();
   };
 
   return (

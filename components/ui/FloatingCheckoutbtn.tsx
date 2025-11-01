@@ -60,7 +60,7 @@ export default function FloatingCheckoutButton() {
       aria-live="polite"
     >
       <Link
-        href="/orders/cart"
+        href="/rfqs/cart"
         className="
           group flex items-center justify-between gap-2
           rounded-xl px-3 py-2 text-[13px] font-semibold

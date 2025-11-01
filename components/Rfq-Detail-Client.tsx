@@ -160,29 +160,6 @@ export default function RFQDetailClient({ id }: { id: string }) {
                 </button>
               </>
             )}
-
-            {/* Staff quick actions */}
-            {user?.isAdmin &&
-              (rfq.status === "submitted" ||
-                rfq.status === "under_review" ||
-                rfq.status === "draft") && (
-                <button
-                  onClick={buildQuote}
-                  disabled={busy}
-                  className="rounded-xl border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800"
-                >
-                  {busy ? "Building…" : "Build Quote"}
-                </button>
-              )}
-
-            {user?.isAdmin && rfq.quote?.id && (
-              <Link
-                href={`/admin/quotes/${rfq.quote.id}`}
-                className="rounded-xl border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800"
-              >
-                Edit Quote
-              </Link>
-            )}
           </div>
         </div>
 

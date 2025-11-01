@@ -297,36 +297,3 @@ async function safeResText(res: Response) {
     return "";
   }
 }
-
-/*
-------------------------------------------------------------
-BACKEND CONTRACT
-
-Create a Next.js route handler at `app/api/support/route.ts`:
-
-import { NextResponse } from "next/server";
-
-export async function POST(req: Request) {
-  try {
-    const { name, email, subject, message, orderId } = await req.json();
-    if (!name || !email || !subject || !message) {
-      return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 });
-    }
-
-    // TODO: send email via your provider (Resend, SendGrid, SES, SMTP ...)
-    // Example (pseudo): await sendEmail({ to: "support@elvarra.com", subject: `[Support] ${subject}`, text: `From: ${name} <${email}>\nOrder: ${orderId || "-"}\n\n${message}` });
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
-  }
-}
-
-------------------------------------------------------------
-TESTS (snippets)
-
-// tests/support-validate.test.ts
-// it("rejects invalid email", () => { expect(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test("bad")).toBe(false); });
-// it("requires fields", () => { expect(["name","email","subject","message"].every(Boolean)).toBe(false); });
-//------------------------------------------------------------
-*/

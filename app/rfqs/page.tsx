@@ -86,7 +86,9 @@ export default function RFQListPage() {
       <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">Your RFQs</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">
+              Your Requests for Quotes
+            </h1>
             <p className="mt-1 text-sm text-zinc-400">
               Track request status and access quotes.
             </p>
@@ -94,7 +96,7 @@ export default function RFQListPage() {
 
           <div className="flex items-center gap-2">
             <Link
-              href="/wholesale/rfq"
+              href="/rfqs/cart"
               className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--text-dark)]"
             >
               Open RFQ Cart
@@ -207,33 +209,13 @@ export default function RFQListPage() {
                         View Quote {r.quote.number ? `· ${r.quote.number}` : ""}
                       </Link>
                     )}
-
+                    <Link
+                      href={`/rfqs/${r.id}`}
+                      className="rounded-xl border border-zinc-700 px-3 py-1.5 text-xs hover:bg-zinc-800"
+                    >
+                      View
+                    </Link>
                     {/* Staff quick action: build or edit quote */}
-                    {user?.isAdmin && (
-                      <>
-                        <Link
-                          href={`/rfqs/${r.id}`}
-                          className="rounded-xl border border-zinc-700 px-3 py-1.5 text-xs hover:bg-zinc-800"
-                        >
-                          Admin RFQ
-                        </Link>
-
-                        <Link
-                          href={`/admin/quotes/from-rfq/${r.id}`} // you can also wire a page that calls build-quote then redirects to /admin/quotes/[id]
-                          className="rounded-xl border border-zinc-700 px-3 py-1.5 text-xs hover:bg-zinc-800"
-                        >
-                          Build Quote
-                        </Link>
-                        {r.quote?.id && (
-                          <Link
-                            href={`/admin/quotes/${r.quote.id}`}
-                            className="rounded-xl border border-zinc-700 px-3 py-1.5 text-xs hover:bg-zinc-800"
-                          >
-                            Edit Quote
-                          </Link>
-                        )}
-                      </>
-                    )}
                   </div>
                 </div>
 

@@ -22,7 +22,7 @@ export default function Header() {
     // { href: "#how", label: "How it works" },
     { href: "/contact", label: "Contact" },
     { href: "/rfqs", label: "RFQ" },
-    { href: "/rfqs/cart", label: "RFQCART" },
+    // { href: "/rfqs/cart", label: "Rfq Cart" },
   ];
 
   const isActive = (href: string) => {
