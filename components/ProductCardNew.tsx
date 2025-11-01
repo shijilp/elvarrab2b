@@ -31,8 +31,11 @@ export default function ProductCardNew({ product }: { product: Product }) {
       ? [...arr].sort((a: Tier, b: Tier) => a.min_qty - b.min_qty)
       : [];
   }, [product]);
+  const tierMin = tiers[0]?.min_qty ?? 1;
+  const available = product.stock ?? 0;
+  const moq = available > 0 ? Math.min(available, tierMin) : tierMin;
 
-  const moq = tiers[0]?.min_qty ?? 1;
+  //const moq = tiers[0]?.min_qty ?? 1;
   const fromPrice = tiers[0]?.unit_price ?? product.price;
 
   return (

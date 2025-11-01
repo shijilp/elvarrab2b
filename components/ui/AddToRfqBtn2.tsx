@@ -54,7 +54,7 @@ const AddToRFQBtn2 = ({
 
   const decrement = async () => {
     const next = qty - 1;
-    if (next <= 0) {
+    if (next <= 0 || next < effectiveMin) {
       await removeItem(product.id);
     } else {
       await updateQty(product.id, next);
@@ -77,7 +77,9 @@ const AddToRFQBtn2 = ({
   };
 
   const belowMOQ = qty < Math.max(1, effectiveMin + 1);
-  const disabled = !!outofStock || belowMOQ;
+  //const disabled = !!outofStock || belowMOQ;
+  const disabled = false;
+
   // Optional helper text when blocked by MOQ
   const showMOQWarning =
     !inRFQ &&

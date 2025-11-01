@@ -10,6 +10,8 @@ import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import Link from "next/link";
 import { Crown } from "lucide-react";
 import AddToRFQBtn from "./ui/AddToRfqBtn";
+import AddToRFQBtn2 from "./ui/AddToRfqBtn2";
+import { useRFQCart } from "@/context/RFQCartContext";
 
 type APIList<T> = {
   count: number;
@@ -541,8 +543,12 @@ export default function ProductsCatalogClient() {
                             Details
                           </Link>
                         </div>
-
-                        <AddToRFQBtn product={p} />
+                        <AddToRFQBtn2
+                          product={p}
+                          defaultQty={p.wholesale_price[0]?.min_qty || 1}
+                          minQty={p.wholesale_price[0]?.min_qty || 1}
+                        />
+                        {/*  <AddToRFQBtn product={p} /> */}
                       </div>
                     </div>
                   </div>
