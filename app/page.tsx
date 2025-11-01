@@ -7,6 +7,7 @@ import ProductCard from "@/components/ProductCard";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import { Product } from "@/types";
 import { api } from "@/lib/api";
+import ProductCardNew from "@/components/ProductCardNew";
 
 export default function Page() {
   // const [mounted, setMounted] = useState(false);
@@ -18,12 +19,13 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [sort, setSort] = useState<string>("featured");
-  const [ref_code, setRef_code] = useState("");
 
   useEffect(() => {
     let mounted = true;
+    setLoading(true);
+
     Promise.all([
-      api.get("/api/elvarra/products/"),
+      api.get("/b2b/catalog/?page_size=20"),
       api.get("/api/elvarra/categories/"),
     ])
       .then(([pRes, cRes]) => {
@@ -33,22 +35,10 @@ export default function Page() {
       })
       .catch((err) => console.error("Failed to fetch:", err))
       .finally(() => setLoading(false));
+
     return () => {
       mounted = false;
     };
-  }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("ref");
-    if (code) {
-      // store locally for later checkout use
-      const expires = Date.now() + 30 * 24 * 3600 * 1000; // 30 days
-      localStorage.setItem("elv_ref", code);
-      localStorage.setItem("elv_ref_exp", String(expires));
-      // also notify backend to set its cookie
-      api.post("/referrals/track/", { code }).catch(() => {});
-    }
   }, []);
 
   const allCategoryNames = useMemo(() => {
@@ -85,11 +75,6 @@ export default function Page() {
   // await api.post("orders/send-shipped/", { order_id: 17 });
   // await api.post("/orders/send-delivered/", { order_id: 17 });
   //};
-
-  useEffect(() => {
-    const stored = localStorage.getItem("elv_ref");
-    if (stored) setRef_code(stored);
-  }, []);
 
   return (
     <main className="">
@@ -180,7 +165,8 @@ export default function Page() {
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {visibleProducts.map((p) => (
-              <ProductCard key={p.id} product={p as Product} />
+              //<ProductCard key={p.id} product={p as Product} />
+              <ProductCardNew key={p.id} product={p as Product} />
             ))}
           </div>
         )}

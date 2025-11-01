@@ -145,7 +145,7 @@ export default function ProductsCatalogClient() {
     };
 
     api
-      .get<APIList<Product>>("/api/elvarra/portfolio/", { params }) // << keep your path
+      .get<APIList<Product>>("/b2b/catalog/", { params }) // << keep your path
       .then((res) => {
         if (!cancelled) setData(res.data);
       })
@@ -514,29 +514,36 @@ export default function ProductsCatalogClient() {
                           {p.category?.name}
                         </div>
                       )}
+                      <div className="mt-2 space-y-1">
+                        {p.wholesale_price && p.wholesale_price.length > 0 ? (
+                          <div className="text-xs text-zinc-800">
+                            {p.wholesale_price.map((tier, idx) => (
+                              <div
+                                key={idx}
+                                className="flex justify-between text-xs text-zinc-800 font-medium"
+                              >
+                                <span>{tier.min_qty}+ pcs</span>
+                                <span className="font-semibold text-[var(--color-accent)]">
+                                  ₹{Number(tier.unit_price).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-sm font-semibold">{}</div>
+                        )}
 
-                      <div className="mt-2 flex items-center justify-between">
-                        <div className="text-sm font-semibold">
-                          {(p as Product).compare_at_price > 0 ? (
-                            <>
-                              <span className="mr-1 line-through opacity-70">
-                                {money((p as Product).compare_at_price)}
-                              </span>
-                              <span>{money(p.price as number)}</span>
-                            </>
-                          ) : (
-                            <span>{money(p.price as number)}</span>
-                          )}
+                        <div className="flex items-center justify-between mt-2">
+                          <Link
+                            href={`/product/${p.slug}`}
+                            className="rounded-xl border el-border px-3 py-1.5 text-xs hidden md:block"
+                          >
+                            Details
+                          </Link>
                         </div>
 
-                        <Link
-                          href={`/product/${p.slug}`}
-                          className="rounded-xl border el-border px-3 py-1.5 text-xs  hidden md:block"
-                        >
-                          Details
-                        </Link>
+                        <AddToRFQBtn product={p} />
                       </div>
-                      <AddToRFQBtn product={p} />
                     </div>
                   </div>
                 ))}

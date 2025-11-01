@@ -19,6 +19,11 @@ export interface ProductLite {
   is_active: boolean
 }
 
+interface Wholesale_price{
+  min_qty:number;
+  unit_price:number;
+}
+
 export interface Product {
   id: number
   name: string
@@ -26,6 +31,7 @@ export interface Product {
   description: string
   category:   Category | null
   price: number
+  wholesale_price:Wholesale_price[]
   compare_at_price:number
   image: string
   images: Array<ProductImage | string>

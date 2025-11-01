@@ -14,6 +14,10 @@ import TagBadge from "@/components/ui/TagBadge";
 import Link from "next/link";
 import { money } from "@/lib/money";
 import AddToRFQBtn from "./ui/AddToRfqBtn";
+import AddToRFQBtn2 from "./ui/AddToRfqBtn2";
+import { useRFQCart } from "@/context/RFQCartContext";
+type WholesaleTier = { min_qty: number; unit_price: number | string };
+type ProductWithTiers = Product & { wholesale_price?: WholesaleTier[] };
 
 const Zoom = dynamic(() => import("react-medium-image-zoom"), { ssr: false });
 
@@ -27,16 +31,62 @@ function stockLabel(p: Product) {
   if (p.stock < 1 && p.backorder_allowed) return "Backorder available";
   return "Out of stock";
 }
+const tierForQty = (tiers: WholesaleTier[] = [], qty: number) =>
+  [...tiers]
+    .sort((a, b) => b.min_qty - a.min_qty)
+    .find((t) => qty >= t.min_qty);
+
+// Lowest “from” price
+const lowestTier = (tiers: WholesaleTier[] = []) =>
+  [...tiers].sort((a, b) => Number(a.unit_price) - Number(b.unit_price))[0];
 
 const ProductPageClient: React.FC = () => {
   const params = useParams<ParamShape>();
   const router = useRouter();
+  const { rfq /*, updateQty if you want tier buttons to bump RFQ line too*/ } =
+    useRFQCart();
   const slug = params?.slug;
   const [product, setProduct] = useState<Product | null>(null);
+
+  const rawTiers = (product?.wholesale_price ?? []) as Array<{
+    min_qty: number;
+    unit_price: number;
+  }>;
   const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+
+  const tiers = useMemo(
+    () => [...rawTiers].sort((a, b) => a.min_qty - b.min_qty),
+    [rawTiers]
+  );
+  console.log("Tiers:", tiers);
+  const initialMOQ = tiers.length ? tiers[0].min_qty : 1;
+  console.log("Initial MOQ:", initialMOQ);
+  const [orderQty, setOrderQty] = useState<number>(initialMOQ);
+
+  useEffect(() => {
+    if (tiers.length && orderQty < tiers[0].min_qty) {
+      setOrderQty(tiers[0].min_qty);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tiers?.[0]?.min_qty]);
+  const line = useMemo(
+    () => rfq?.items?.find((it) => it.product === product?.id) ?? null,
+    [rfq?.items, product?.id]
+  );
+  const displayQty = line?.requested_qty ?? orderQty;
+  const activeTier = useMemo(() => {
+    if (!tiers.length) return null;
+    return (
+      [...tiers].reverse().find((t) => displayQty >= t.min_qty) ?? tiers[0]
+    );
+  }, [tiers, displayQty]);
+  const fromTier = lowestTier(tiers);
+  const unit = Number(activeTier?.unit_price ?? product?.price ?? 0);
+  const estimate = useMemo(() => displayQty * unit, [displayQty, unit]);
+
   // Fetch
   useEffect(() => {
     if (!slug) return;
@@ -44,7 +94,7 @@ const ProductPageClient: React.FC = () => {
 
     (async () => {
       try {
-        const res = await api.get(`/api/elvarra/products/${slug}/`);
+        const res = await api.get(`/b2b/catalogs/${slug}/`);
         if (cancelled) return;
         setProduct(res.data);
         setSelectedVariant((res.data as Product).variants?.[0] ?? null);
@@ -101,6 +151,7 @@ const ProductPageClient: React.FC = () => {
       </div>
     );
   }
+
   const isOutOfStock = product ? product.stock < 1 : false;
 
   // Soft 404 in client (avoid server-only notFound())
@@ -218,23 +269,35 @@ const ProductPageClient: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-semibold">
               {product.name}
             </h1>
+            {/* Price */}
+            <div className="mt-2 flex flex-wrap items-baseline gap-3">
+              {tiers.length > 0 ? (
+                <>
+                  {/* “From” price */}
+                  <span className="text-lg sm:text-xl font-medium">
+                    From{" "}
+                    {money(
+                      Number(fromTier?.unit_price ?? product.price),
+                      product.currency
+                    )}
+                  </span>
 
-            {/* Price + compare_at_price */}
-            <div className="mt-2 flex items-baseline gap-3">
-              <span className="text-lg sm:text-xl font-medium">
-                {money(selectedVariant?.price ?? product.price, currency)}
-              </span>
-              {(selectedVariant?.compare_at_price
-                ? Number(selectedVariant.compare_at_price) >
-                  Number(selectedVariant.price)
-                : hasCompare) && (
-                <span className="text-sm line-through opacity-60">
-                  {money(
-                    selectedVariant?.compare_at_price ??
-                      product.compare_at_price!,
-                    currency
+                  {/* Live price for entered qty */}
+                  {activeTier && (
+                    <span className="text-sm rounded-full px-2 py-1 bg-emerald-900/20 ring-1 ring-emerald-700/30 text-emerald-200">
+                      {orderQty} pcs →{" "}
+                      {money(Number(activeTier.unit_price), product.currency)} /
+                      pc
+                    </span>
                   )}
-                </span>
+                </>
+              ) : (
+                // Fallback to retail
+                <>
+                  <span className="text-lg sm:text-xl font-medium">
+                    <p className=" text-zinc-500">Contact for Price</p>
+                  </span>
+                </>
               )}
             </div>
 
@@ -280,6 +343,65 @@ const ProductPageClient: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {tiers.length > 0 && (
+              <div className="mt-3 rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70 p-3">
+                <div className="mb-2 text-xs uppercase tracking-wider opacity-80">
+                  Wholesale tiers
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {tiers.map((t) => {
+                    const isActive =
+                      !!activeTier && activeTier.min_qty === t.min_qty;
+                    return (
+                      <button
+                        key={t.min_qty}
+                        type="button"
+                        onClick={() =>
+                          setOrderQty(Math.max(orderQty, t.min_qty))
+                        }
+                        className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm
+              ${
+                isActive
+                  ? "border-amber-400 bg-amber-400/10 text-amber-200"
+                  : "el-bordern hover:bg-white/5"
+              }`}
+                        title={`${t.min_qty}+ pcs at ${money(
+                          Number(t.unit_price),
+                          product.currency
+                        )} each`}
+                      >
+                        <span>{t.min_qty}+ pcs</span>
+                        <span className="font-semibold">
+                          {money(Number(t.unit_price), product.currency)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Extended calc: line total at current qty */}
+                {/* Estimate (tracks tier buttons until added; RFQ +/- after added) */}
+                {tiers.length > 0 && (
+                  <div className="mt-3 text-sm flex items-center justify-between">
+                    <span className="opacity-80">
+                      Estimate ({displayQty} ×{" "}
+                      {unit.toLocaleString(undefined, {
+                        style: "currency",
+                        currency: product?.currency || "INR",
+                      })}
+                      )
+                    </span>
+                    <span className="font-medium">
+                      {(displayQty * unit).toLocaleString(undefined, {
+                        style: "currency",
+                        currency: product?.currency || "INR",
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Options */}
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <div>
@@ -311,11 +433,6 @@ const ProductPageClient: React.FC = () => {
             </div>
             {/* <ul className="mt-6 list-disc space-y-1 pl-5 text-sm"> {product.details.map((d, i) => ( <li key={i}>{d}</li> ))} </ul> */}
             <div className="mt-7 grid grid-cols-2 gap-3">
-              <AddToRFQBtn
-                product={product}
-                outofStock={isOutOfStock}
-                className={`col-span-2 sm:col-span-1 rounded-xl px-5 py-3 text-sm font-medium bg-gradient-to-r from-rose-400 to-pink-500hover:brightness-110 dark:from-yellow-500 dark:to-amber-500 `}
-              />
               {/* <button
                 type="button"
                 className="col-span-2 sm:col-span-1 rounded-xl border border-elvarra px-5 py-3 text-sm hover:bg-white/5"
@@ -324,19 +441,18 @@ const ProductPageClient: React.FC = () => {
               </button> */}
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <input
-                type="number"
-                defaultValue={25}
-                min={25}
-                className={`w-28 rounded-xl border el-bordern bg-transparent px-3 py-3 text-sm outline-none`}
-                aria-label="Order quantity (MOQ 25)"
-              />
-              <Link
+              {/* <Link
                 href="/wholesale-inquiry"
                 className={`flex-1 rounded-xl px-5 py-3 text-sm font-medium btn-gradient-accent text-center`}
               >
                 Request Wholesale Quote
-              </Link>
+              </Link> */}
+              <AddToRFQBtn2
+                product={product}
+                quantity={orderQty}
+                minQty={initialMOQ}
+              />
+
               <button
                 className={`rounded-xl border el-bordern px-4 py-3 text-sm`}
               >
