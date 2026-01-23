@@ -59,7 +59,7 @@ const ProductPageClient: React.FC = () => {
 
   const tiers = useMemo(
     () => [...rawTiers].sort((a, b) => a.min_qty - b.min_qty),
-    [rawTiers]
+    [rawTiers],
   );
   console.log("Tiers:", tiers);
   const initialMOQ = tiers.length ? tiers[0].min_qty : 1;
@@ -74,7 +74,7 @@ const ProductPageClient: React.FC = () => {
   }, [tiers?.[0]?.min_qty]);
   const line = useMemo(
     () => rfq?.items?.find((it) => it.product === product?.id) ?? null,
-    [rfq?.items, product?.id]
+    [rfq?.items, product?.id],
   );
   const displayQty = line?.requested_qty ?? orderQty;
   const activeTier = useMemo(() => {
@@ -126,7 +126,7 @@ const ProductPageClient: React.FC = () => {
     // dedupe while preserving order
     const seen = new Set<string>();
     return [...primary, ...others].filter((url) =>
-      url && !seen.has(url) ? (seen.add(url), true) : false
+      url && !seen.has(url) ? (seen.add(url), true) : false,
     );
   }, [product]);
 
@@ -278,7 +278,7 @@ const ProductPageClient: React.FC = () => {
                     From{" "}
                     {money(
                       Number(fromTier?.unit_price ?? product.price),
-                      product.currency
+                      product.currency,
                     )}
                   </span>
 
@@ -308,8 +308,8 @@ const ProductPageClient: React.FC = () => {
                   product.stock > 0
                     ? "ring-green-500/40 text-green-400"
                     : product.backorder_allowed
-                    ? "ring-amber-500/40 text-amber-400"
-                    : "ring-rose-500/40 text-rose-400"
+                      ? "ring-amber-500/40 text-amber-400"
+                      : "ring-rose-500/40 text-rose-400"
                 }`}
                 title={`Inventory: ${product.stock}${
                   product.backorder_allowed ? " (backorders allowed)" : ""
@@ -368,7 +368,7 @@ const ProductPageClient: React.FC = () => {
               }`}
                         title={`${t.min_qty}+ pcs at ${money(
                           Number(t.unit_price),
-                          product.currency
+                          product.currency,
                         )} each`}
                       >
                         <span>{t.min_qty}+ pcs</span>

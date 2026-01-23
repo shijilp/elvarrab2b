@@ -1,15 +1,13 @@
 "use client";
 
 import { api } from "@/lib/api";
-import { money } from "@/lib/money";
 import type { Product } from "@/types";
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SkeletonCard } from "@/components/ui/SkeltonCard";
 import Link from "next/link";
-import { Crown } from "lucide-react";
-import AddToRFQBtn from "./ui/AddToRfqBtn";
+import { Crown, FileText, SlidersHorizontal, X } from "lucide-react";
 import AddToRFQBtn2 from "./ui/AddToRfqBtn2";
 import { useRFQCart } from "@/context/RFQCartContext";
 
@@ -36,12 +34,13 @@ export default function ProductsCatalogClient() {
   const pathname = usePathname();
   const router = useRouter();
 
+  const { rfq } = useRFQCart();
+
   const urlTags = (searchParams.get("tags") || "")
     .split(",")
     .map((t) => t.trim().toLowerCase())
     .filter(Boolean);
 
-  // ---------- derive UI state from URL (so links are shareable) ----------
   const urlCategory = searchParams.get("category") || DEFAULTS.category;
   const urlQuery = searchParams.get("q") || DEFAULTS.q;
   const urlMin = Number(searchParams.get("min") || DEFAULTS.min);
@@ -52,7 +51,6 @@ export default function ProductsCatalogClient() {
     searchParams.get("occasion") || DEFAULTS.occasion
   ).toLowerCase();
 
-  // ---------- keep your existing UI states ----------
   const [query, setQuery] = useState(urlQuery);
   const [category, setCategory] = useState<string>(urlCategory);
   const [minPrice, setMinPrice] = useState<number>(urlMin);
@@ -61,10 +59,10 @@ export default function ProductsCatalogClient() {
   const [page, setPage] = useState<number>(urlPage);
   const [occasion, setOccasion] = useState<string>(urlOccasion);
   const [tags, setTags] = useState<string[]>(urlTags);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [categories, setCategories] = useState<any[]>([]);
 
-  // data
   const pageSize = 20;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<APIList<Product>>({
@@ -74,7 +72,6 @@ export default function ProductsCatalogClient() {
     results: [],
   });
 
-  // sync URL -> state (initial load + back/forward)
   useEffect(() => {
     if (urlQuery !== query) setQuery(urlQuery);
     if (urlCategory !== category) setCategory(urlCategory);
@@ -88,21 +85,21 @@ export default function ProductsCatalogClient() {
       .split(",")
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean);
+
     const same =
       freshTags.length === tags.length &&
       freshTags.every((t, i) => t === tags[i]);
-    if (!same) setTags(freshTags);
 
+    if (!same) setTags(freshTags);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlQuery, urlCategory, urlOccasion, urlMin, urlMax, urlSort, urlPage]);
 
-  // map UI sort -> DRF ordering
   const ordering = useMemo(() => {
     if (sort === "price-asc") return "price";
     if (sort === "price-desc") return "-price";
-    if (sort === "popular") return "-sold_count"; // ensure allowed
+    if (sort === "popular") return "-sold_count";
     if (sort === "name") return "name";
-    return undefined; // relevance → server default
+    return undefined;
   }, [sort]);
 
   const isDirty =
@@ -112,8 +109,8 @@ export default function ProductsCatalogClient() {
     maxPrice > DEFAULTS.max ||
     sort !== DEFAULTS.sort ||
     page !== DEFAULTS.page ||
-    occasion !== DEFAULTS.occasion;
-  tags.length > 0;
+    occasion !== DEFAULTS.occasion ||
+    tags.length > 0;
 
   function resetFilters() {
     setCategory(DEFAULTS.category);
@@ -127,12 +124,54 @@ export default function ProductsCatalogClient() {
     router.replace(pathname, { scroll: false });
   }
 
-  // fetch from server whenever filters change
+  function setURL(
+    next: Partial<{
+      category: string;
+      occasion: string;
+      q: string;
+      min: number;
+      max: number;
+      sort: string;
+      page: number;
+      tags: string[];
+    }>,
+  ) {
+    const p = new URLSearchParams(searchParams.toString());
+    const write = (k: string, v?: string | number | null) => {
+      if (v === undefined || v === "" || v === 0 || v === null) p.delete(k);
+      else p.set(k, String(v));
+    };
+
+    if (next.category !== undefined)
+      write("category", next.category === "All" ? "" : next.category);
+    if (next.occasion !== undefined)
+      write("occasion", next.occasion === "all" ? "" : next.occasion);
+    if (next.q !== undefined) write("q", next.q);
+    if (next.min !== undefined) write("min", next.min);
+    if (next.max !== undefined) write("max", next.max);
+    if (next.sort !== undefined) write("sort", next.sort);
+    if (next.page !== undefined) write("page", next.page);
+
+    if (next.tags !== undefined) {
+      const v = (next.tags || []).filter(Boolean).join(",");
+      if (!v) p.delete("tags");
+      else p.set("tags", v);
+    }
+
+    const qstr = p.toString();
+    router.replace(qstr ? `${pathname}?${qstr}` : pathname, { scroll: false });
+  }
+
+  function goto(pn: number, totalPages: number) {
+    const clamped = Math.min(Math.max(1, pn), totalPages);
+    setPage(clamped);
+    setURL({ page: clamped });
+  }
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
 
-    // build API params
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {
       page,
@@ -143,11 +182,11 @@ export default function ProductsCatalogClient() {
       min_price: minPrice || undefined,
       max_price: maxPrice || undefined,
       ordering,
-      tags: tags.length ? tags.join(",") : undefined, // 👈 HERE
+      tags: tags.length ? tags.join(",") : undefined,
     };
 
     api
-      .get<APIList<Product>>("/b2b/catalog/", { params }) // << keep your path
+      .get<APIList<Product>>("/b2b/catalog/", { params })
       .then((res) => {
         if (!cancelled) setData(res.data);
       })
@@ -163,18 +202,18 @@ export default function ProductsCatalogClient() {
     return () => {
       cancelled = true;
     };
-  }, [category, occasion, query, minPrice, maxPrice, ordering, page]);
+  }, [category, occasion, query, minPrice, maxPrice, ordering, page, tags]);
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([api.get("/api/elvarra/categories/")])
-      .then(([pRes]) => {
+    api
+      .get("/api/elvarra/categories/")
+      .then((res) => {
         if (!mounted) return;
-
-        setCategories(pRes.data.results ?? pRes.data ?? []);
+        setCategories(res.data.results ?? res.data ?? []);
       })
-      .catch((err) => console.error("Failed to fetch:", err))
-      .finally(() => setLoading(false));
+      .catch((err) => console.error("Failed to fetch categories:", err));
+
     return () => {
       mounted = false;
     };
@@ -183,95 +222,105 @@ export default function ProductsCatalogClient() {
   const totalPages = Math.max(1, Math.ceil((data?.count || 0) / pageSize));
   const pageItems = data?.results || [];
 
-  // helper to write state -> URL (keeps your UI, just updates the address bar)
-  function setURL(
-    next: Partial<{
-      category: string;
-      occasion: string;
-      q: string;
-      min: number;
-      max: number;
-      sort: string;
-      page: number;
-      tags: string[];
-    }>
-  ) {
-    const p = new URLSearchParams(searchParams.toString()); // important: clone from RO params
-    const write = (k: string, v?: string | number | null) => {
-      if (v === undefined || v === "" || v === 0 || v === null) p.delete(k);
-      else p.set(k, String(v));
-    };
-    if (next.category !== undefined)
-      write("category", next.category === "All" ? "" : next.category);
-    if (next.occasion !== undefined)
-      write("occasion", next.occasion === "all" ? "" : next.occasion);
-    if (next.q !== undefined) write("q", next.q);
-    if (next.min !== undefined) write("min", next.min);
-    if (next.max !== undefined) write("max", next.max);
-    if (next.sort !== undefined) write("sort", next.sort);
-    if (next.page !== undefined) write("page", next.page);
-    if (next.tags !== undefined) {
-      const v = (next.tags || []).filter(Boolean).join(",");
-      if (!v) p.delete("tags");
-      else p.set("tags", v);
-    }
-    const qstr = p.toString();
-    router.replace(qstr ? `${pathname}?${qstr}` : pathname, { scroll: false });
-  }
-
-  function goto(pn: number) {
-    const clamped = Math.min(Math.max(1, pn), totalPages);
-    setPage(clamped);
-    setURL({ page: clamped });
-  }
-
-  // if (loading && page === 1 && data.results.length === 0) {
-  //   // full-screen spinner on first load
-  //   return (
-  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70">
-  //       <ESpinner />
-  //     </div>
-  //   );
-  // }
-
   const allCategoryNames = useMemo(() => {
     return [
       "All",
       ...Array.from(new Set(categories.map((c) => c.name).filter(Boolean))),
     ];
   }, [categories]);
+
   return (
-    <main className="el-text min-h-screen antialiased">
-      <div className="inset-0 -z-10 opacity-30 blur-3xl">
-        <div className="pointer-events-none absolute -inset-10 rounded-[100px] gradient-accent" />
+    <main className="min-h-screen antialiased bg-neutral-950 text-neutral-100">
+      {/* Dark-only background glow */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -inset-24 opacity-25 blur-3xl gradient-accent rounded-[120px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 via-neutral-950 to-black" />
       </div>
 
       {/* Header */}
-      <div className="container mx-auto py-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="container mx-auto py-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold el-textn">Shop All</h1>
-            <p className="mt-1 text-sm el-text-subn">
-              Free shipping over {money(700)} across India.
+            <p className="text-xs tracking-[0.25em] text-neutral-300/80">
+              ELVARRA B2B
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-neutral-50">
+              Wholesale Catalog
+            </h1>
+            <p className="mt-1 text-sm text-neutral-300">
+              View tiers, add items to RFQ, and request a quote.
             </p>
           </div>
-          {/* <a
-            href="/cart/retail"
-            className="rounded-xl px-4 py-2 text-sm font-medium btn-gradient"
-          >
-            View Cart
-          </a> */}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/wholesale-inquiry"
+              className="rounded-xl border border-neutral-800 bg-neutral-950/50 px-4 py-2 text-sm hover:bg-white/5"
+            >
+              Request Line Sheet
+            </Link>
+
+            <Link
+              href="/b2b/rfq"
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-neutral-950 btn-gradient-accent"
+            >
+              <FileText className="h-4 w-4" />
+              View RFQ
+              {rfq ? (
+                <span className="ml-1 rounded-full bg-black/15 px-2 py-0.5 text-xs text-neutral-950">
+                  {rfq.items.length}
+                </span>
+              ) : null}
+            </Link>
+          </div>
+        </div>
+
+        {/* Top chips row */}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {allCategoryNames.length > 1 ? (
+            <CategoryChipsB2B
+              categories={allCategoryNames}
+              current={category}
+              onChange={(c) => {
+                setCategory(c);
+                setPage(1);
+                setURL({ category: c, page: 1 });
+              }}
+            />
+          ) : null}
+
+          {isDirty ? (
+            <button
+              onClick={resetFilters}
+              className="ml-auto inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950/50 px-3 py-1.5 text-xs hover:bg-white/5"
+            >
+              <X className="h-4 w-4" />
+              Clear filters
+            </button>
+          ) : (
+            <div className="ml-auto text-xs text-neutral-400 hidden sm:block">
+              {data.count} items
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Filters + Grid */}
+      {/* Layout */}
       <section className="container mx-auto pb-16">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
-          {/* Sidebar filters */}
-          <aside className="h-max rounded-2xl ring-1 ring-gray-900 el-ring el-card p-4">
-            <div className="space-y-4 text-sm">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Sidebar */}
+          <aside className="h-max rounded-2xl border border-neutral-800 bg-neutral-950/50 p-4">
+            <div className="flex items-center justify-between">
+              <div className="inline-flex items-center gap-2 text-sm font-medium text-neutral-100">
+                <SlidersHorizontal className="h-4 w-4 opacity-80" />
+                Filters
+              </div>
+              <div className="text-xs text-neutral-400">{data.count} items</div>
+            </div>
+
+            <div className="mt-4 space-y-4 text-sm">
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
+                <label className="mb-1 block text-xs uppercase tracking-wider text-neutral-300/80">
                   Search
                 </label>
                 <input
@@ -282,35 +331,38 @@ export default function ProductsCatalogClient() {
                     setPage(1);
                     setURL({ q: v, page: 1 });
                   }}
-                  placeholder="SKU, name, category..."
-                  className="w-full rounded-xl border el-border bg-transparent px-3 py-2 text-sm outline-none"
+                  placeholder="SKU / name / keyword..."
+                  className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/10"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
+                <label className="mb-1 block text-xs uppercase tracking-wider text-neutral-300/80">
                   Category
                 </label>
                 <select
                   value={category}
                   onChange={(e) => {
-                    const c = e.target.value.toLowerCase();
+                    const c = e.target.value;
                     setCategory(c);
                     setPage(1);
                     setURL({ category: c, page: 1 });
                   }}
-                  className="w-full rounded-xl border el-border bg-transparent px-3 py-2 text-sm outline-none"
+                  className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/10"
                 >
                   <option value="All">All</option>
-                  <option value="necklaces">Necklaces</option>
-                  <option value="earrings">Earrings</option>
-                  <option value="rings">Rings</option>
-                  <option value="bracelets">Bracelets</option>
+                  {allCategoryNames
+                    .filter((x) => x !== "All")
+                    .map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
                 </select>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
+                <label className="mb-1 block text-xs uppercase tracking-wider text-neutral-300/80">
                   Occasion
                 </label>
                 <select
@@ -321,7 +373,7 @@ export default function ProductsCatalogClient() {
                     setPage(1);
                     setURL({ occasion: v, page: 1 });
                   }}
-                  className="w-full rounded-xl border el-border bg-transparent px-3 py-2 text-sm outline-none"
+                  className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/10"
                 >
                   <option value="all">All</option>
                   <option value="wedding">Wedding</option>
@@ -332,8 +384,8 @@ export default function ProductsCatalogClient() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                    Min price
+                  <label className="mb-1 block text-xs uppercase tracking-wider text-neutral-300/80">
+                    Min
                   </label>
                   <input
                     type="number"
@@ -345,12 +397,12 @@ export default function ProductsCatalogClient() {
                       setPage(1);
                       setURL({ min: v, page: 1 });
                     }}
-                    className="w-full rounded-xl border el-border bg-transparent px-3 py-2 text-sm outline-none"
+                    className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/10"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                    Max price
+                  <label className="mb-1 block text-xs uppercase tracking-wider text-neutral-300/80">
+                    Max
                   </label>
                   <input
                     type="number"
@@ -362,13 +414,13 @@ export default function ProductsCatalogClient() {
                       setPage(1);
                       setURL({ max: v, page: 1 });
                     }}
-                    className="w-full rounded-xl border el-border bg-transparent px-3 py-2 text-sm outline-none"
+                    className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/10"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
+                <label className="mb-1 block text-xs uppercase tracking-wider text-neutral-300/80">
                   Sort
                 </label>
                 <select
@@ -378,200 +430,85 @@ export default function ProductsCatalogClient() {
                     setSort(v);
                     setURL({ sort: v });
                   }}
-                  className="w-full rounded-xl border el-border bg-transparent px-3 py-2 text-sm outline-none"
+                  className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/10"
                 >
                   <option value="relevance">Relevance</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
+                  <option value="price-asc">Price: Low → High</option>
+                  <option value="price-desc">Price: High → Low</option>
                   <option value="popular">Popular</option>
                   <option value="name">Name</option>
                 </select>
               </div>
 
-              <div className="mt-2 flex justify-around ">
-                <button
-                  disabled={!isDirty}
-                  className="w-1/3 btn-gradient-accent sm:hidden rounded-xl border el-border px-2 py-2 text-sm disabled:opacity-40 hover:bg-white/5"
-                  aria-disabled={!isDirty}
-                >
-                  Go
-                </button>
-                <button
-                  onClick={resetFilters}
-                  disabled={!isDirty}
-                  className=" w-1/3 sm:w-full btn-gradient-accent rounded-xl border el-border px-3 py-2 text-sm disabled:opacity-40 hover:bg-white/5"
-                  aria-disabled={!isDirty}
-                >
-                  Reset filters
-                </button>
-              </div>
+              <button
+                onClick={resetFilters}
+                disabled={!isDirty}
+                className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-sm disabled:opacity-40 hover:bg-white/5"
+              >
+                Reset filters
+              </button>
             </div>
           </aside>
 
-          {/* Results grid */}
+          {/* Results */}
           <div>
             <div className="flex items-center justify-between text-sm">
-              {/* Category chips (filter bestsellers below) */}
-              {allCategoryNames.length > 1 && (
-                <div className="mb-6">
-                  <CategoryChips
-                    categories={allCategoryNames}
-                    current={category}
-                    onChange={setCategory}
-                  />
-                </div>
-              )}
-              <div className=" el-text-subn hidden md:block">
-                {data.count} products
+              <div className="text-xs text-neutral-300">
+                Showing{" "}
+                <span className="font-semibold">{pageItems.length}</span> of{" "}
+                <span className="font-semibold">{data.count}</span> items
               </div>
+
               <div className="hidden gap-2 sm:flex">
                 <button
-                  onClick={() => goto(page - 1)}
+                  onClick={() => goto(page - 1, totalPages)}
                   disabled={page <= 1}
-                  className="rounded-xl border el-bordern el-text-subn px-3  py-1.5 disabled:opacity-50"
+                  className="rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-1.5 text-neutral-200 disabled:opacity-50 hover:bg-white/5"
                 >
                   Prev
                 </button>
-                <div className="px-1 py-1.5 el-text-subn ">
+                <div className="px-1 py-1.5 text-neutral-300">
                   Page {page} / {totalPages}
                 </div>
                 <button
-                  onClick={() => goto(page + 1)}
+                  onClick={() => goto(page + 1, totalPages)}
                   disabled={page >= totalPages}
-                  className="rounded-xl border el-bordern el-text-subn px-3 py-1.5 disabled:opacity-40"
+                  className="rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-1.5 text-neutral-200 disabled:opacity-40 hover:bg-white/5"
                 >
                   Next
                 </button>
               </div>
             </div>
 
-            {loading && (
-              <div className="my-4 text-xs opacity-70">Refreshing…</div>
-            )}
-
-            {loading && (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {loading ? (
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}
               </div>
-            )}
-
-            {!loading && (
-              <div className="  mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {pageItems.map((p) => (
-                  <div
-                    key={p.slug}
-                    className="relative group rounded-2xl ring-1 z-10   el-ring el-card p-2"
-                  >
-                    <Link
-                      href={`/products/${p.slug}`}
-                      className="relative block"
-                    >
-                      <Image
-                        width={640}
-                        height={640}
-                        src={p.image}
-                        alt={p.name}
-                        className="aspect-[4/5] w-full rounded-xl object-cover"
-                      />
-                      {p.tag === "bestseller" && (
-                        <span className="absolute left-2 top-2 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider el-chip">
-                          Bestseller
-                        </span>
-                      )}
-                      {p.tag && (
-                        <span
-                          className={` flex items-center gap-1 absolute left-2 top-2 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full overflow-hidden
-      ${
-        p.tag === "premium"
-          ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-md ring-1 ring-yellow-400"
-          : "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
-      }`}
-                        >
-                          {p.tag === "premium" && (
-                            <Crown className="w-4 h-4 text-yellow-200 drop-shadow-sm" />
-                          )}
-                          {p.tag === "premium" ? "Premium" : p.tag}
-
-                          {/* Glossy highlight overlay */}
-                          {p.tag === "premium" && (
-                            <span className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent rounded-full" />
-                          )}
-                        </span>
-                      )}
-
-                      {p.stock < 1 && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-semibold text-sm z-10">
-                          Out of Stock
-                        </div>
-                      )}
-                    </Link>
-                    <div className="p-2  ">
-                      <div className="text-sm font-medium text-nowrap overflow-hidden text-ellipsis">
-                        {p.name}
-                      </div>
-                      {p.sku && (
-                        <div className="mt-1 text-xs el-text-sub">
-                          {p.category?.name}
-                        </div>
-                      )}
-                      <div className="mt-2 space-y-1">
-                        {p.wholesale_price && p.wholesale_price.length > 0 ? (
-                          <div className="text-xs text-zinc-800">
-                            {p.wholesale_price.map((tier, idx) => (
-                              <div
-                                key={idx}
-                                className="flex justify-between text-xs text-zinc-800 font-medium"
-                              >
-                                <span>{tier.min_qty}+ pcs</span>
-                                <span className="font-semibold text-[var(--color-accent)]">
-                                  ₹{Number(tier.unit_price).toFixed(2)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-sm font-semibold">{}</div>
-                        )}
-
-                        <div className="flex items-center justify-between mt-2">
-                          <Link
-                            href={`/product/${p.slug}`}
-                            className="rounded-xl border el-border px-3 py-1.5 text-xs hidden md:block"
-                          >
-                            Details
-                          </Link>
-                        </div>
-                        <AddToRFQBtn2
-                          product={p}
-                          defaultQty={p.wholesale_price[0]?.min_qty || 1}
-                          minQty={p.wholesale_price[0]?.min_qty || 1}
-                        />
-                        {/*  <AddToRFQBtn product={p} /> */}
-                      </div>
-                    </div>
-                  </div>
+                  <B2BProductCard key={p.slug} p={p} />
                 ))}
               </div>
             )}
 
-            {/* Pagination (mobile) */}
             <div className="mt-6 flex items-center justify-center gap-2 sm:hidden">
               <button
-                onClick={() => goto(page - 1)}
+                onClick={() => goto(page - 1, totalPages)}
                 disabled={page <= 1}
-                className="rounded-xl border el-border el-text-subn px-3 py-1.5 disabled:opacity-40"
+                className="rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-1.5 text-neutral-200 disabled:opacity-40 hover:bg-white/5"
               >
                 Prev
               </button>
-              <div className="px-1 py-1.5 text-sm el-text-subn">
+              <div className="px-1 py-1.5 text-sm text-neutral-300">
                 Page {page} / {totalPages}
               </div>
               <button
-                onClick={() => goto(page + 1)}
+                onClick={() => goto(page + 1, totalPages)}
                 disabled={page >= totalPages}
-                className="rounded-xl border el-border el-text-subn px-3 py-1.5 disabled:opacity-40"
+                className="rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-1.5 text-neutral-200 disabled:opacity-40 hover:bg-white/5"
               >
                 Next
               </button>
@@ -583,7 +520,103 @@ export default function ProductsCatalogClient() {
   );
 }
 
-function CategoryChips({
+/* ----------------- Card (Dark-only) ----------------- */
+
+function B2BProductCard({ p }: { p: Product }) {
+  const tierMin = p?.wholesale_price?.[0]?.min_qty || 1;
+
+  return (
+    <div className="relative group rounded-2xl border border-neutral-800 bg-neutral-950/50 p-2 hover:bg-neutral-900/40 transition">
+      <Link href={`/b2b/catalog/${p.slug}`} className="relative block">
+        <Image
+          width={640}
+          height={640}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          src={(p as any).image}
+          alt={p.name}
+          className="aspect-[4/5] w-full rounded-xl object-cover"
+        />
+
+        {p.tag === "bestseller" && (
+          <span className="absolute left-2 top-2 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider bg-white/10 text-neutral-100 border border-white/10">
+            Bestseller
+          </span>
+        )}
+
+        {!!p.tag && p.tag !== "bestseller" && (
+          <span
+            className={`flex items-center gap-1 absolute left-2 top-2 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full overflow-hidden
+              ${
+                p.tag === "premium"
+                  ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-black shadow-md ring-1 ring-yellow-400"
+                  : "bg-white/10 text-neutral-100 border border-white/10"
+              }`}
+          >
+            {p.tag === "premium" && <Crown className="w-4 h-4 text-black/80" />}
+            {p.tag === "premium" ? "Premium" : p.tag}
+          </span>
+        )}
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {(p as any).stock < 1 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white font-semibold text-sm">
+            Out of Stock
+          </div>
+        )}
+      </Link>
+
+      <div className="p-2">
+        <div className="text-sm font-medium text-neutral-100 text-nowrap overflow-hidden text-ellipsis">
+          {p.name}
+        </div>
+
+        <div className="mt-1 text-xs text-neutral-400">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(p as any).category?.name || "—"}
+        </div>
+
+        <div className="mt-2 space-y-2">
+          {p.wholesale_price && p.wholesale_price.length > 0 ? (
+            <div className="rounded-xl border border-neutral-800 bg-black/30 p-2">
+              {p.wholesale_price.slice(0, 3).map((tier, idx) => (
+                <div
+                  key={idx}
+                  className="flex justify-between text-[11px] font-medium text-neutral-200"
+                >
+                  <span className="text-neutral-400">{tier.min_qty}+ pcs</span>
+                  <span className="font-semibold text-[var(--color-accent)]">
+                    ₹{Number(tier.unit_price).toFixed(2)}
+                  </span>
+                </div>
+              ))}
+              {p.wholesale_price.length > 3 && (
+                <div className="mt-1 text-[10px] text-neutral-500">
+                  + more slabs inside
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-xs text-neutral-400">
+              Wholesale pricing on request
+            </div>
+          )}
+
+          <AddToRFQBtn2 product={p} defaultQty={tierMin} minQty={tierMin} />
+
+          <Link
+            href={`/b2b/catalog/${p.slug}`}
+            className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-xs text-neutral-200 hover:bg-white/5"
+          >
+            View details
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------- Category Chips (Dark-only) ----------------- */
+
+function CategoryChipsB2B({
   categories,
   current,
   onChange,
@@ -598,10 +631,10 @@ function CategoryChips({
         <button
           key={c}
           onClick={() => onChange(c)}
-          className={`rounded-full  border px-3 py-1.5 text-xs transition ${
+          className={`rounded-full border px-3 py-1.5 text-xs transition ${
             current === c
-              ? "btn-gradient-accent border-transparent"
-              : "border-neutral-800  bg-neutral-900 el-text-subn hover:bg-white/5"
+              ? "btn-gradient-accent border-transparent text-neutral-950"
+              : "border-neutral-800 bg-neutral-950/50 text-neutral-200 hover:bg-white/5"
           }`}
           aria-pressed={current === c}
         >
