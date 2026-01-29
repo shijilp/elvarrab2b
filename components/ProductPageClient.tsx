@@ -295,7 +295,7 @@ const ProductPageClient: React.FC = () => {
                 // Fallback to retail
                 <>
                   <span className="text-lg sm:text-xl font-medium">
-                    <p className=" text-zinc-500">Contact for Price</p>
+                    {/* <p className=" text-zinc-500">Contact for Price</p> */}
                   </span>
                 </>
               )}
@@ -333,13 +333,13 @@ const ProductPageClient: React.FC = () => {
             )}
             <div className={`mt-3 grid grid-cols-2 gap-3 text-xs el-subfgn`}>
               <div className={`rounded-xl el-ringn el-cardn p-3`}>
-                MOQ: <span className="font-medium text-current">25 units</span>
+                MOQ: <span className="font-medium text-current">3 units</span>
               </div>
 
               <div className={`rounded-xl el-ringn el-cardn p-3`}>
                 Lead time:{" "}
                 <span className="font-medium text-current">
-                  {product?.id || 15} days
+                  {product?.id && `3 - 10`} days
                 </span>
               </div>
             </div>
@@ -417,7 +417,7 @@ const ProductPageClient: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <div>
+              {/* <div>
                 <label className="mb-2 block text-xs uppercase tracking-wider opacity-80">
                   Length
                 </label>
@@ -429,7 +429,7 @@ const ProductPageClient: React.FC = () => {
                     16 inches
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
             {/* <ul className="mt-6 list-disc space-y-1 pl-5 text-sm"> {product.details.map((d, i) => ( <li key={i}>{d}</li> ))} </ul> */}
             <div className="mt-7 grid grid-cols-2 gap-3">
@@ -453,14 +453,14 @@ const ProductPageClient: React.FC = () => {
                 minQty={initialMOQ}
               />
 
-              <button
+              {/* <button
                 className={`rounded-xl border el-bordern px-4 py-3 text-sm`}
               >
                 Download Spec Sheet
-              </button>
+              </button> */}
             </div>
 
-            <div className="mt-6 space-y-3">
+            {/*    <div className="mt-6 space-y-3">
               {[
                 {
                   q: "Materials & Specs",
@@ -492,7 +492,7 @@ const ProductPageClient: React.FC = () => {
                   <p className={`mt-2 text-sm el-subfgn`}>{item.a}</p>
                 </details>
               ))}
-            </div>
+            </div> */}
 
             {/* Attributes grid */}
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -637,7 +637,7 @@ const ProductPageClient: React.FC = () => {
       </section>
 
       {/* Related */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
+      {/*  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
         <h2 className="text-lg sm:text-xl font-semibold">You may also like</h2>
         <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -661,7 +661,7 @@ const ProductPageClient: React.FC = () => {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
     </main>
   );
 };

@@ -527,7 +527,7 @@ function B2BProductCard({ p }: { p: Product }) {
 
   return (
     <div className="relative group rounded-2xl border border-neutral-800 bg-neutral-950/50 p-2 hover:bg-neutral-900/40 transition">
-      <Link href={`/b2b/catalog/${p.slug}`} className="relative block">
+      <Link href={`/products/${p.slug}`} className="relative block">
         <Image
           width={640}
           height={640}
@@ -572,6 +572,10 @@ function B2BProductCard({ p }: { p: Product }) {
         <div className="mt-1 text-xs text-neutral-400">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {(p as any).category?.name || "—"}
+        </div>
+        <div className="mt-1 text-xs text-neutral-400">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(p as any).sku || "—"}
         </div>
 
         <div className="mt-2 space-y-2">
