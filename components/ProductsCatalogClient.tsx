@@ -232,10 +232,6 @@ export default function ProductsCatalogClient() {
   return (
     <main className="min-h-screen antialiased bg-neutral-950 text-neutral-100">
       {/* Dark-only background glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -inset-24 opacity-25 blur-3xl gradient-accent rounded-[120px]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 via-neutral-950 to-black" />
-      </div>
 
       {/* Header */}
       <div className="container mx-auto py-7">
@@ -253,12 +249,12 @@ export default function ProductsCatalogClient() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Link
+            {/* <Link
               href="/wholesale-inquiry"
               className="rounded-xl border border-neutral-800 bg-neutral-950/50 px-4 py-2 text-sm hover:bg-white/5"
             >
               Request Line Sheet
-            </Link>
+            </Link> */}
 
             <Link
               href="/b2b/rfq"
@@ -607,7 +603,7 @@ function B2BProductCard({ p }: { p: Product }) {
           <AddToRFQBtn2 product={p} defaultQty={tierMin} minQty={tierMin} />
 
           <Link
-            href={`/b2b/catalog/${p.slug}`}
+            href={`/products/${p.slug}`}
             className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-xs text-neutral-200 hover:bg-white/5"
           >
             View details
