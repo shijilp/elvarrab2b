@@ -164,7 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const googleLogin = async (idToken: string) => {
     setLoading(true);
     try {
-      const res = await axios.post("/api/auth/google", { id_token: idToken });
+      const res = await axios.post("/api/login/google", { id_token: idToken });
       const profile = res.data.user as {
         username: string | null;
         isAdmin: boolean;
