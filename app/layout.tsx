@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import FloatingCheckoutButton from "@/components/ui/FloatingCheckoutbtn";
 import { RFQCartProvider } from "@/context/RFQCartContext";
+import { CartProvider } from "@/context/CartContext";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const brand = "Elvarra";
 const defaultTitle = `${brand} – Luxury Fashion Jewelry`;
@@ -58,12 +59,14 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
-            <RFQCartProvider>
-              <Header />
-              {children}
-              <FloatingCheckoutButton />
-              <Footer />
-            </RFQCartProvider>
+            <CartProvider>
+              <RFQCartProvider>
+                <Header />
+                {children}
+                <FloatingCheckoutButton />
+                <Footer />
+              </RFQCartProvider>
+            </CartProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

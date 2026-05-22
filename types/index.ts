@@ -24,6 +24,26 @@ interface Wholesale_price{
   unit_price:number;
 }
 
+export interface Ocassion {
+
+
+   id: number
+  name: string
+  slug: string
+  icon: string
+  description?: string
+}
+
+export interface User {
+  username: string;
+  isAdmin: boolean;
+  email?: string; // 👈 added
+  //access: string; // renamed from 'token' for clarity
+  //refresh?: string; // optional if you want auto-refresh
+  role: string; // optional roles/permissions
+  first_name?: string;
+  is_email_verified?: boolean;
+}
 export interface Product {
   id: number
   name: string
@@ -42,6 +62,10 @@ export interface Product {
   brand?: string
 //  inventory: number
   stock: number
+    audience?: string
+  is_free_shipping: boolean;
+  subcategory?: SubCategory | null;
+
   gtin:string
   mpn:string
   low_stock_threshold: number
@@ -68,10 +92,14 @@ export interface CartProduct   {
   name: string
   slug: string
   price: number
+  is_free_shipping: boolean;
+  wholesale_price:Wholesale_price[]
+
  // in_stock: boolean
-    description: string
-      image: string
+  description: string
+  image: string
   category:   Category | null
+  variants?: Variant[]; 
 
 
 }
@@ -83,19 +111,36 @@ export interface CartItem   {
   slug: string
   description: string
   category:   Category | null
+  product?: number;
   price: number
   image: string
   images?: { id: number; image: string }[]
+  discount:number |0
+  variant_id:number |null
+  coupon_discount:number |0
+    is_free_shipping: boolean;
+
   //in_stock: boolean
 }
-
+export type SubCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  category: number;
+  image?: string | null;
+  category_slug: string;
+};
 export interface Category {
   id: number
   name: string
   slug: string
   description?: string
   image?: string
+   icon?: string | null;
+  subcategories?: SubCategory[];
+
 }
+
 
 
 export interface ProductTiny {
@@ -117,6 +162,8 @@ export interface ProductTiny {
 export interface Order {
   id: number
   full_name: string
+    order_number: string
+
   email: string
   line1: string
   line2:   string
@@ -213,16 +260,16 @@ export type Stone = {
 export type Variant = {
   id: number;
   sku: string;
-  barcode?: string | null;
-  price:string;
-  price_delta: string;               // keep as string because API returns "200.00"
+  product: Product;
+  price:number;
+  value: number;               // keep as string because API returns "200.00"
   compare_at_price?: string | null;
-  currency: string;            // "INR"
+  name: string;            // "INR"
   inventory: number;
   in_stock: boolean;
-  backorder_allowed: boolean;
-  image?: string | null;
-  option_values?: Array<{ name: string; value: string }>;
+  variant_type: string;
+  price_delta: number;
+  price_adjustment: number ;
 };
 
 export type OrderItems={

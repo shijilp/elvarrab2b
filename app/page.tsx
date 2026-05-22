@@ -17,8 +17,8 @@ export default function Page() {
           title: "Growth Retailers",
           subtitle: "Better margins + faster replenishment",
           bullets: [
-            "MOQ 10 per SKU (mix allowed)",
-            "Tiered pricing (deeper slabs)",
+            "MOQ 10 per SKU, mix allowed",
+            "Tiered wholesale slabs",
             "Priority restock alerts",
             "Custom pouch + thank-you cards",
           ],
@@ -32,10 +32,10 @@ export default function Page() {
           title: "Enterprise / Private Label",
           subtitle: "Branding + consistent bulk supply",
           bullets: [
-            "MOQ 25–50 per SKU (based on style)",
+            "MOQ 25–50 per SKU based on style",
             "Private-label packaging options",
-            "Dedicated account manager",
-            "Batch-level QC + compliance documentation",
+            "Dedicated account support",
+            "Batch-level QC + documentation",
           ],
           cta: {
             label: "Talk to Sales",
@@ -44,16 +44,16 @@ export default function Page() {
         };
       default:
         return {
-          title: "Starter (New Retailers)",
+          title: "Starter Trade Account",
           subtitle: "Small MOQ to test demand",
           bullets: [
             "MOQ 3 per SKU",
-            "Starter pricing slabs",
+            "Starter wholesale slabs",
             "Fast dispatch for in-stock pieces",
             "Simple reorder workflow",
           ],
           cta: {
-            label: "Request Pricing",
+            label: "Open Trade Catalog",
             href: "/products",
           },
         };
@@ -61,98 +61,131 @@ export default function Page() {
   }, [tier]);
 
   return (
-    <main>
+    <main className="min-h-screen overflow-hidden bg-[#06111f] text-slate-100">
       {/* HERO */}
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <div className="pointer-events-none absolute -inset-24 opacity-40 blur-3xl gradient-accent rounded-[120px]" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5 dark:to-black/30" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.22),transparent_38%),radial-gradient(circle_at_80%_20%,rgba(14,165,233,0.14),transparent_32%),linear-gradient(180deg,#06111f_0%,#081827_52%,#020617_100%)]" />
+          <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.8)_1px,transparent_1px)] [background-size:48px_48px]" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#020617] to-transparent" />
         </div>
 
-        <div className="container mx-auto grid grid-cols-1 gap-10 py-14 lg:grid-cols-2 lg:items-center lg:py-20">
+        <div className="container mx-auto grid grid-cols-1 gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-20">
           <div>
-            <p className="text-xs tracking-[0.28em] opacity-80">
-              ELVARRA WHOLESALE • B2B SUPPLY
-            </p>
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-200">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              Elvarra Trade Portal
+            </div>
 
-            <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
-              Premium Jewellery Supply{" "}
-              <span className="opacity-80">for Modern Retailers</span>
+            <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
+              Wholesale jewellery supply for{" "}
+              <span className="bg-gradient-to-r from-blue-200 via-sky-300 to-cyan-200 bg-clip-text text-transparent">
+                retailers & resellers
+              </span>
             </h1>
 
-            <p className="mt-4 max-w-xl text-base text-neutral-600 dark:text-neutral-300">
-              Flexible MOQ, tiered pricing, consistent plating specs, and
-              packaging options — built for boutiques, resellers, and gifting
-              businesses.
+            <p className="mt-5 max-w-xl text-base leading-7 text-slate-300">
+              A dedicated B2B buying experience with wholesale slabs, MOQ rules,
+              replenishment-ready stock, and account-based trade support.
             </p>
+            <div className="mt-6 inline-flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 to-orange-500/10 px-5 py-4">
+              <div className="mt-0.5 rounded-full bg-amber-400 p-1">
+                <div className="h-2 w-2 rounded-full bg-[#06111f]" />
+              </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-300">
+                  Trade Policy
+                </div>
+
+                <p className="mt-1 text-sm leading-6 text-slate-200">
+                  Minimum wholesale order value:
+                  <span className="ml-2 font-bold text-white">₹2,000</span>
+                </p>
+
+                <p className="text-xs text-slate-400">
+                  Orders below ₹2,000 are not eligible for wholesale checkout.
+                </p>
+              </div>
+            </div>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link
-                href="/products"
-                className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 hover:brightness-110 dark:text-neutral-900 btn-gradient-accent"
+                href="/catalog"
+                className="group relative overflow-hidden rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 text-sm font-bold text-white shadow-[0_18px_55px_-22px_rgba(59,130,246,.95)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_65px_-22px_rgba(59,130,246,1)]"
               >
-                Open Wholesale Catalog
+                <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent" />
+                <span className="relative z-10">Open Wholesale Catalog</span>
               </Link>
 
               <Link
-                href="/products"
-                className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
+                href="/login"
+                className="rounded-2xl border border-slate-700 bg-slate-950/60 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-blue-400/70 hover:bg-blue-500/10 hover:text-white"
               >
-                Request quote
+                Request Trade Access
               </Link>
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-xs opacity-80">
-              <span className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-                MOQ from 3 / SKU
-              </span>
-              <span className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-                Dispatch 2–10 days
-              </span>
-              {/* <span className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-                DDP / DAP Options
-              </span> */}
-              <span className="rounded-full border border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-                Nickel-safe finishes
-              </span>
+            <div className="mt-7 grid max-w-xl grid-cols-1 gap-3 text-xs text-slate-300 sm:grid-cols-3">
+              {[
+                "MOQ from 3 / SKU",
+                "Trade pricing slabs",
+                "Fast reorder support",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3"
+                >
+                  {item}
+                </div>
+              ))}
             </div>
 
-            {/* Quick trust row */}
             <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                { k: "200+", v: "Styles" },
-                { k: "QC", v: "Quality Products" },
-                { k: "3–5", v: "Pricing slabs" },
+                { k: "200+", v: "Trade SKUs" },
+                { k: "QC", v: "Batch Check" },
+                { k: "3–5", v: "Price Slabs" },
                 { k: "Fast", v: "Reorders" },
               ].map((x) => (
                 <div
                   key={x.k}
-                  className="rounded-2xl border border-neutral-200 bg-white/70 p-4 text-center dark:border-neutral-800 dark:bg-neutral-900/50"
+                  className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-center shadow-[0_12px_40px_-28px_rgba(59,130,246,.7)]"
                 >
-                  <div className="text-lg font-semibold">{x.k}</div>
-                  <div className="mt-1 text-xs opacity-70">{x.v}</div>
+                  <div className="text-xl font-bold text-white">{x.k}</div>
+                  <div className="mt-1 text-xs text-slate-400">{x.v}</div>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="relative">
-            <div className="rounded-3xl p-2 shadow-2xl ring-1 ring-neutral-200 dark:ring-neutral-800 bg-white/90 dark:bg-neutral-900/70">
+            <div className="absolute -inset-4 rounded-[2rem] bg-blue-500/10 blur-2xl" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950/80 p-2 shadow-2xl">
               <Image
                 src="/images/hero2.jpg"
-                alt="Elvarra B2B hero"
+                alt="Elvarra wholesale jewellery supply"
                 width={900}
                 height={900}
-                className="h-[420px] w-full rounded-2xl object-cover"
+                className="h-[420px] w-full rounded-[1.5rem] object-cover opacity-90"
                 priority
               />
-            </div>
 
-            {/* Floating badge */}
-            <div className="absolute -bottom-5 left-6 rounded-2xl border border-neutral-200 bg-white/90 px-4 py-3 shadow-lg dark:border-neutral-800 dark:bg-neutral-950/70">
-              <div className="text-xs opacity-70">Wholesale Program</div>
-              <div className="text-sm font-medium">
-                Boutiques • Resellers • Gifts
+              <div className="absolute left-5 top-5 rounded-2xl border border-blue-400/30 bg-slate-950/80 px-4 py-3 backdrop-blur">
+                <div className="text-[10px] uppercase tracking-[0.25em] text-blue-300">
+                  Trade Account
+                </div>
+                <div className="mt-1 text-sm font-semibold text-white">
+                  Approved B2B Buyers
+                </div>
+              </div>
+
+              <div className="absolute bottom-5 right-5 rounded-2xl border border-slate-700 bg-slate-950/85 px-4 py-3 backdrop-blur">
+                <div className="text-[10px] uppercase tracking-[0.25em] text-slate-400">
+                  Order Flow
+                </div>
+                <div className="mt-1 text-sm font-semibold text-white">
+                  Catalog → MOQ → Checkout
+                </div>
               </div>
             </div>
           </div>
@@ -160,80 +193,90 @@ export default function Page() {
       </section>
 
       {/* VALUE PROPS */}
-      <section className="container mx-auto py-12 lg:py-16">
+      <section className="container mx-auto px-4 py-12 sm:px-6 lg:py-16">
         <div className="mb-6">
-          <SectionTitle>Built for B2B</SectionTitle>
-          <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
-            Everything you need to stock confidently — from consistency to
-            packaging and reorder speed.
+          <B2BSectionTitle>Built for B2B Buying</B2BSectionTitle>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            Separate from retail shopping — this experience is made for stock
+            planning, bulk decisions, reorders, and business margins.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {[
             {
-              title: "Consistent Quality",
-              desc: "Standardized plating specs, nickel-safe finishes, and batch QC checks to reduce returns.",
+              title: "Trade Pricing",
+              desc: "Wholesale slabs designed for resellers, boutiques, gift sellers, and repeat buyers.",
             },
             {
-              title: "Tiered Pricing",
-              desc: "Slabs that improve with volume — designed to protect your margins and simplify reordering.",
-            },
-            // {
-            //   title: "Packaging Options",
-            //   desc: "Branded boxes, pouches, and insert cards available for gifting-ready presentation.",
-            // },
-            {
-              title: "Fast Replenishment",
-              desc: "In-stock dispatch with quick restocks for best sellers and seasonal spikes.",
+              title: "MOQ Control",
+              desc: "Clear quantity and SKU rules before checkout to avoid order rejection.",
             },
             {
-              title: "Catalog-First Workflow",
-              desc: "Browse by collection, place bulk orders, and generate a clean RFQ for approval.",
+              title: "Replenishment Ready",
+              desc: "A catalog workflow built for repeat stock movement and fast restocking.",
             },
             {
-              title: "Support That Responds",
-              desc: "Quotes and confirmations within 48 hours. Clear lead times, no surprises.",
+              title: "Quality Consistency",
+              desc: "Standardized material, plating, and QC checks for repeatable selling confidence.",
+            },
+            {
+              title: "Account Support",
+              desc: "Trade buyers can request quotes, pricing support, and order clarification.",
+            },
+            {
+              title: "Bulk Checkout Flow",
+              desc: "A wholesale cart, eligibility rules, and payment flow separated from retail.",
             },
           ].map((f) => (
             <div
               key={f.title}
-              className="rounded-2xl ring-1 ring-neutral-200 bg-white/80 p-6 dark:ring-neutral-800 dark:bg-neutral-900/50"
+              className="group rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900/80 to-slate-950/80 p-6 transition hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_20px_70px_-40px_rgba(59,130,246,.75)]"
             >
-              <div className="text-lg font-medium">{f.title}</div>
-              <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-                {f.desc}
-              </p>
+              <div className="mb-4 h-10 w-10 rounded-2xl border border-blue-500/30 bg-blue-500/10" />
+              <div className="text-lg font-semibold text-white">{f.title}</div>
+              <p className="mt-2 text-sm leading-6 text-slate-400">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* PRICING TIERS (NO PRODUCT LIST) */}
-      <section id="tiers" className="container mx-auto py-12 lg:py-16">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      {/* PRICING TIERS */}
+      <section
+        id="tiers"
+        className="container mx-auto px-4 py-12 sm:px-6 lg:py-16"
+      >
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <SectionTitle>Tiered Pricing</SectionTitle>
-            <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
-              Choose a tier that matches your scale. You can upgrade anytime.
+            <B2BSectionTitle>Trade Pricing Tiers</B2BSectionTitle>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+              Choose the buying level that matches your current business volume.
             </p>
           </div>
 
-          {/* <TierTabs value={tier} onChange={setTier} /> */}
+          <TierTabs value={tier} onChange={setTier} />
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2 rounded-3xl p-8 ring-1 ring-neutral-200 bg-white/80 dark:ring-neutral-800 dark:bg-neutral-900/50">
-            <div className="text-xl font-semibold">{pricing.title}</div>
-            <div className="mt-1 text-sm opacity-70">{pricing.subtitle}</div>
+          <div className="rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-8 lg:col-span-2">
+            <div className="inline-flex rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-300">
+              Selected Tier
+            </div>
 
-            <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="mt-4 text-2xl font-bold text-white">
+              {pricing.title}
+            </div>
+            <div className="mt-1 text-sm text-slate-400">
+              {pricing.subtitle}
+            </div>
+
+            <ul className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {pricing.bullets.map((b) => (
                 <li
                   key={b}
-                  className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200"
+                  className="flex items-start gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-200"
                 >
-                  <span className="mt-1 inline-block h-2 w-2 rounded-full btn-gradient-accent" />
+                  <span className="mt-1 inline-block h-2 w-2 shrink-0 rounded-full bg-cyan-300" />
                   <span>{b}</span>
                 </li>
               ))}
@@ -242,53 +285,54 @@ export default function Page() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href={pricing.cta.href}
-                className="rounded-full px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 btn-gradient-accent"
+                className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
               >
                 {pricing.cta.label}
               </Link>
               <Link
-                href="/b2b/catalog"
-                className="rounded-full border border-neutral-200 px-5 py-3 text-sm hover:bg-white/5 dark:border-neutral-800"
+                href="/catalog"
+                className="rounded-2xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200 transition hover:border-blue-400 hover:bg-blue-500/10"
               >
                 Browse Catalog
               </Link>
             </div>
 
-            <div className="mt-6 text-xs opacity-70">
-              * Slabs & MOQ may vary by collection. Final confirmation shared on
-              quote.
+            <div className="mt-6 text-xs text-slate-500">
+              * Slabs & MOQ may vary by collection. Final confirmation is shared
+              on quote/order approval.
             </div>
           </div>
 
-          <div className="rounded-3xl p-8 ring-1 ring-neutral-800 bg-neutral-900/70">
-            <div className="text-sm tracking-[0.22em] opacity-70">
-              QUICK QUOTE
+          <div className="rounded-[2rem] border border-blue-500/20 bg-blue-950/20 p-8">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.25em] text-blue-300">
+              Quick Quote
             </div>
-            <div className="mt-2 text-xl font-semibold">
-              Get a line sheet in 24h
+            <div className="mt-3 text-2xl font-bold text-white">
+              Get a trade line sheet
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
-              Share your store name, country, and expected monthly quantity —
-              we’ll respond with pricing + lead time.
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              Share your store name, country, and expected monthly quantity.
+              We’ll respond with pricing and lead time.
             </p>
 
             <div className="mt-6 grid gap-3">
               <Link
-                href="/wholesale-inquiry"
-                className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-900 btn-gradient-accent"
+                href="/catalog"
+                className="inline-flex items-center justify-center rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-400"
               >
-                Request Quote
+                Catalog
               </Link>
               <Link
-                href="/b2b/login"
-                className="inline-flex items-center justify-center rounded-xl border border-neutral-800 px-5 py-3 text-sm hover:bg-white/5"
+                href="/login"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200 transition hover:border-blue-400 hover:bg-blue-500/10"
               >
                 Already approved? Login
               </Link>
             </div>
 
-            <div className="mt-6 text-xs text-neutral-300/80">
-              WhatsApp support + email confirmations available for bulk orders.
+            <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-xs leading-5 text-slate-400">
+              WhatsApp support + email confirmations are available for approved
+              wholesale buyers.
             </div>
           </div>
         </div>
@@ -299,70 +343,70 @@ export default function Page() {
         id="how"
         className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16"
       >
-        <h2 className="text-2xl font-semibold">How wholesale works</h2>
-        <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
-          Simple, clear steps — from inquiry to delivery.
+        <B2BSectionTitle>How Wholesale Works</B2BSectionTitle>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+          A simple trade flow from account access to bulk dispatch.
         </p>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-3">
           {[
             {
-              step: "1",
-              title: "Apply / Inquiry",
-              desc: "Tell us your business details, country, and what you plan to stock. We reply within 24 hours.",
+              step: "01",
+              title: "Apply / Login",
+              desc: "Trade buyers access the wholesale catalog after login or inquiry approval.",
             },
             {
-              step: "2",
-              title: "Quote + Tier",
-              desc: "We share tiered pricing, MOQ, and lead time. You confirm the tier and packaging requirements.",
+              step: "02",
+              title: "Build Bulk Order",
+              desc: "Add SKUs, meet wholesale value and Qty/SKU rules, then proceed to checkout.",
             },
             {
-              step: "3",
-              title: "QC + Dispatch",
-              desc: "Batch QC → packing → shipping options (DDP/DAP). Tracking shared as soon as dispatched.",
+              step: "03",
+              title: "Confirm + Dispatch",
+              desc: "Order is confirmed, packed with QC, and tracking is shared after dispatch.",
             },
           ].map((s) => (
             <div
               key={s.step}
-              className="rounded-2xl ring-1 ring-neutral-200 bg-white/90 p-6 dark:ring-neutral-800 dark:bg-neutral-900/70"
+              className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6"
             >
-              <div className="text-3xl font-semibold">{s.step}</div>
-              <div className="mt-2 text-lg font-medium">{s.title}</div>
-              <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-                {s.desc}
-              </p>
+              <div className="text-4xl font-black text-blue-500/30">
+                {s.step}
+              </div>
+              <div className="mt-4 text-lg font-semibold text-white">
+                {s.title}
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-400">{s.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ABOUT (keep, but rewrite as B2B oriented) */}
-
       {/* FAQ */}
-      <section className="container mx-auto py-12 lg:py-16">
+      <section className="container mx-auto px-4 py-12 sm:px-6 lg:py-16">
         <div className="mb-6">
-          <SectionTitle>Wholesale FAQs</SectionTitle>
-          <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
-            Quick answers for retailers and resellers.
+          <B2BSectionTitle>Wholesale FAQs</B2BSectionTitle>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            Quick answers for retailers, resellers, and bulk buyers.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FaqItem
-            q="Do you require a business registration?"
-            a="For standard wholesale access, yes (GST / business proof helps). For starter tier, we can review on a case-by-case basis."
+            q="Do users need to login?"
+            a="Yes. Wholesale pages can be protected so only logged-in trade users can access catalog and checkout."
           />
           <FaqItem
-            q="What’s the MOQ?"
-            a="MOQ starts from 5 per SKU for starter. Higher tiers have better slabs and packaging options."
+            q="What is the minimum wholesale order?"
+            a="The order should meet your wholesale rules: minimum order value and required Qty/SKU ratio before checkout."
           />
           <FaqItem
-            q="Do you offer private label?"
-            a="Yes. Packaging and inserts can be customized on enterprise tier, subject to MOQ and lead time."
+            q="Can I request special pricing?"
+            a="Yes. Growth and enterprise buyers can request pricing based on order volume and repeat purchase plan."
           />
           <FaqItem
-            q="Where do you ship from?"
-            a="We support dispatch from KSA/India depending on stock and order type. DDP/DAP options can be arranged."
+            q="Is this different from retail shopping?"
+            a="Yes. This B2B flow uses a separate trade theme, wholesale cart, eligibility checks, and business-focused checkout."
           />
         </div>
       </section>
@@ -372,6 +416,19 @@ export default function Page() {
 
 /* ---------------- Components ---------------- */
 
+function B2BSectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-300">
+        Elvarra Wholesale
+      </div>
+      <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
+        {children}
+      </h2>
+    </div>
+  );
+}
+
 function TierTabs({
   value,
   onChange,
@@ -379,22 +436,22 @@ function TierTabs({
   value: "starter" | "growth" | "enterprise";
   onChange: (v: "starter" | "growth" | "enterprise") => void;
 }) {
-  const tabs: { key: typeof value; label: string }[] = [
+  const tabs: { key: "starter" | "growth" | "enterprise"; label: string }[] = [
     { key: "starter", label: "Starter" },
     { key: "growth", label: "Growth" },
     { key: "enterprise", label: "Enterprise" },
   ];
 
   return (
-    <div className="inline-flex rounded-full border border-neutral-200 p-1 dark:border-neutral-800">
+    <div className="inline-flex rounded-2xl border border-slate-800 bg-slate-950/70 p-1">
       {tabs.map((t) => (
         <button
           key={t.key}
           onClick={() => onChange(t.key)}
-          className={`rounded-full px-4 py-2 text-xs transition ${
+          className={`rounded-xl px-4 py-2 text-xs font-semibold transition ${
             value === t.key
-              ? "btn-gradient-accent text-neutral-900"
-              : "hover:bg-white/5"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-950/40"
+              : "text-slate-400 hover:bg-slate-900 hover:text-white"
           }`}
           aria-pressed={value === t.key}
         >
@@ -407,30 +464,9 @@ function TierTabs({
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <div className="rounded-2xl ring-1 ring-neutral-200 bg-white/80 p-6 dark:ring-neutral-800 dark:bg-neutral-900/50">
-      <div className="text-sm font-medium">{q}</div>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">{a}</p>
+    <div className="rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900/70 to-slate-950/70 p-6">
+      <div className="text-sm font-semibold text-white">{q}</div>
+      <p className="mt-2 text-sm leading-6 text-slate-400">{a}</p>
     </div>
-  );
-}
-
-function InstagramIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-    >
-      <path
-        d="M7 2C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 
-      0 5-2.24 5-5V7c0-2.76-2.24-5-5-5H7zm0-2h10c3.87 
-      0 7 3.13 7 7v10c0 3.87-3.13 7-7 7H7c-3.87 
-      0-7-3.13-7-7V7c0-3.87 3.13-7 7-7zm5 
-      7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 
-      2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm4.5-3a1.5 
-      1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"
-      />
-    </svg>
   );
 }

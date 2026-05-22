@@ -175,7 +175,7 @@ const ProductPageClient: React.FC = () => {
   const hasCompare =
     product.compare_at_price &&
     Number(product.compare_at_price) > Number(product.price);
-  const currency = selectedVariant?.currency || product.currency;
+  const currency = selectedVariant || product.currency;
 
   return (
     <main className="min-h-screen bg-elvarra text-elvarra antialiased">

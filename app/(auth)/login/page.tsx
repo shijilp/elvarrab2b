@@ -75,7 +75,7 @@ export default function LoginPage() {
       setError(
         err?.response?.data?.detail ||
           err?.response?.data?.error ||
-          err?.message
+          err?.message,
       );
     }
   }

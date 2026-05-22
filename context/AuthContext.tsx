@@ -7,10 +7,13 @@ import {
   useState,
   ReactNode,
   useRef,
+  useCallback,
 } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
+import { User } from "@/types";
+import { apiMe } from "@/lib/api";
 
 //import { api } from "@/lib/api"; // <-- use the single axios client
 interface JWTPayload {
@@ -20,15 +23,7 @@ interface JWTPayload {
   exp: number;
 }
 
-interface User {
-  username: string;
-  isAdmin: boolean;
-  email?: string; // 👈 added
-  //access: string; // renamed from 'token' for clarity
-  //refresh?: string; // optional if you want auto-refresh
-  role: string; // optional roles/permissions
-  first_name?: string;
-}
+type AuthUser = User | null;
 
 interface AuthContextType {
   user: User | null;
@@ -38,6 +33,7 @@ interface AuthContextType {
   initialized: boolean;
   googleLogin: (idToken: string) => Promise<void>;
   refreshAccess?: () => Promise<string | null>;
+  refreshUser: () => Promise<AuthUser>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,6 +79,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   //     setAuthToken(null);
   //   }
   // };
+  const refreshUser = useCallback(async () => {
+    try {
+      const me = await apiMe();
+      setUser(me);
+      return me;
+    } catch {
+      // if cookie expired / not logged in
+      setUser(null);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("user");
@@ -226,6 +233,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loading,
         initialized,
         googleLogin,
+        refreshUser,
+
         //refreshAccess,
       }}
     >
