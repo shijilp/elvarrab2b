@@ -13,7 +13,9 @@ async function handle(req: NextRequest, ctx: Ctx) {
 
 
   const cookieStore = await cookies();
-  const access = cookieStore.get("access")?.value;
+  //const access = cookieStore.get("access")?.value;
+  const access = cookieStore.get("access_token")?.value;
+  console.log("Proxying request to:", BACKEND, "with path:", path.join("/"), "and access token:", access);
 const joined = path.join("/");
 const qs = req.nextUrl.search ?? "";
 const needsSlash = joined.length > 0 && !joined.endsWith("/");
