@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   const minDays = sp.get("min_days") ?? "60";
   const threshold = sp.get("threshold") ?? "1";
 
-  const access = (await cookies()).get("access_token")?.value;
+  const access = (await cookies()).get("access")?.value;
 
   // Build upstream URLs and attach query params
   const totalsUrl = u("/stock-balances/totals");

@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
   // 3) Set tokens in httpOnly cookies (hidden from JS)
   const cookieStore = await cookies();
-  cookieStore.set("access_token", data.access, {
+  cookieStore.set("access", data.access, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     maxAge: accessMaxAge,
   });
   if (data.refresh) {
-    cookieStore.set("refresh_token", data.refresh, {
+    cookieStore.set("refresh", data.refresh, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",

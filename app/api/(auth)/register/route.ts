@@ -29,7 +29,7 @@ async function setAuthCookies(access: string, refresh?: string) {
   const refreshMaxAge = 60 * 60 * 24 * 30; // adjust to match your backend
 
   const cookieStore = await cookies();
-  cookieStore.set("access_token", access, {
+  cookieStore.set("access", access, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
@@ -37,7 +37,7 @@ async function setAuthCookies(access: string, refresh?: string) {
     maxAge: accessMaxAge,
   });
   if (refresh) {
-    cookieStore.set("refresh_token", refresh, {
+    cookieStore.set("refresh", refresh, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",

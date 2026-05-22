@@ -31,7 +31,7 @@ export async function POST() {
   const exp = JSON.parse(Buffer.from(base64, "base64").toString("utf8"))?.exp;
   const maxAge = exp ? exp - now : 15 * 60;
 
-  cookieStore.set("access_token", data.access, {
+  cookieStore.set("access", data.access, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   req.nextUrl.searchParams.forEach((v, k) => upstream.searchParams.set(k, v));
 
   // Pull access token from httpOnly cookie if you use one
-  const access = (await cookies()).get("access_token")?.value;
+  const access = (await cookies()).get("access")?.value;
 
   const headers = new Headers({
     Accept: "application/json",
