@@ -93,6 +93,14 @@ export default function CartPage() {
     }
   };
 
+  const increment = (stockAvailable: number, qty: number) => {
+    if (qty + 1 > stockAvailable) {
+      //setShowAlert(true);
+      return;
+    }
+    //updateQuantity(product.id, qty + 1, variant?.id ?? null);
+  };
+
   return (
     <main className="min-h-dvh bg-[#07111f] text-slate-100">
       <section className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-[#07111f] via-slate-950 to-slate-900">
