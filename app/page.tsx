@@ -123,6 +123,15 @@ export default function Page() {
               >
                 Request Trade Access
               </Link>
+
+              <Link
+                href="https://whatsapp.com/channel/0029Vb7xcDhEKyZKRpiYxa3v"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-6 py-3 text-sm font-semibold text-emerald-300 transition hover:border-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200"
+              >
+                Join WhatsApp Channel
+              </Link>
             </div>
 
             <div className="mt-7 grid max-w-xl grid-cols-1 gap-3 text-xs text-slate-300 sm:grid-cols-3">

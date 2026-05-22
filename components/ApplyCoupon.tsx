@@ -101,6 +101,7 @@ export default function ApplyCoupon({
               Remove
             </button>
           )}
+          
         </div>
       </div>
       <AlertModal

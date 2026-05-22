@@ -63,7 +63,10 @@ export default function CartPage() {
     () => cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
     [cartItems],
   );
-
+  let ref_code = "";
+  if (typeof window !== "undefined") {
+    ref_code = localStorage.getItem("elv_ref") || "";
+  }
   const totalSku = cartItems.length;
 
   const qtyPerSku = useMemo(() => {
@@ -71,7 +74,7 @@ export default function CartPage() {
   }, [totalQty, totalSku]);
 
   const minWholesaleValue = 2000;
-  const minQtyPerSku = 1.4;
+  const minQtyPerSku = ref_code ? 2 : 1.4;
 
   const isValueEligible = wholesaleOrderValue >= minWholesaleValue;
   const isQtyEligible = qtyPerSku >= minQtyPerSku;
