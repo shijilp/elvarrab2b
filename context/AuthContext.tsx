@@ -12,8 +12,8 @@ import {
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
-import { User } from "@/types";
 import { apiMe } from "@/lib/api";
+import { User } from "@/types";
 
 //import { api } from "@/lib/api"; // <-- use the single axios client
 interface JWTPayload {
@@ -23,6 +23,16 @@ interface JWTPayload {
   exp: number;
 }
 
+// interface User {
+//   username: string;
+//   isAdmin: boolean;
+//   email?: string; // 👈 added
+//   //access: string; // renamed from 'token' for clarity
+//   //refresh?: string; // optional if you want auto-refresh
+//   role: string; // optional roles/permissions
+//   first_name?: string;
+//   is_email_verified?: boolean;
+// }
 type AuthUser = User | null;
 
 interface AuthContextType {
@@ -234,7 +244,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         initialized,
         googleLogin,
         refreshUser,
-
         //refreshAccess,
       }}
     >

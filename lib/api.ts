@@ -32,7 +32,7 @@ api.interceptors.response.use(
       return Promise.reject(err);
     }
     // Don’t try to refresh while hitting the refresh endpoint itself
-    if (typeof original.url === "string" && original.url.includes("/api/refresh")) {
+    if (typeof original.url === "string" && original.url.includes("/api/token/refresh")) {
       return Promise.reject(err);
     }
 
@@ -48,7 +48,7 @@ api.interceptors.response.use(
     isRefreshing = true;
     try {
       // 🔄 Ask Next server to refresh access cookie using refresh cookie
-      await axios.post("/api/refresh"); // same origin; cookies included automatically
+      await axios.post("/api/token/refresh"); // same origin; cookies included automatically
 
       // ✅ After refresh succeeds, retry original request (no Authorization header needed)
       queue.forEach((cb) => cb());
@@ -64,7 +64,6 @@ api.interceptors.response.use(
     }
   }
 );
-
 type CouponAllocation = {
   cart_index: number;
   product_id: number;
