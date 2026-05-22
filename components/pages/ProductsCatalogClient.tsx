@@ -296,7 +296,7 @@ export default function ProductsCatalogClient() {
     setLoading(true);
 
     api
-      .get<APIList<Product>>("/portfolio-lite/", { params })
+      .get<APIList<Product>>("/b2b/catalog/", { params })
       .then((res) => !cancelled && setData(res.data))
       .catch(
         () =>

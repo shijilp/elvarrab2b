@@ -10,23 +10,10 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import OrderRepay from "@/components/ui/OrderRepay";
 import { money } from "@/lib/money";
 
-/**
- * Customer Orders — layout adapted to match the "first page" style
- * - Zinc shell bg, Header/Footer
- * - Filter bar with search + status chips
- * - Card list with order summary + items peek
- * - Gradient primary buttons using CSS vars
- *
- * Logic retained from original customer orders page.
- */
-
-// ------- helpers (kept, small tweaks) -------
-
 export default function CustomerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // UI filters (preserved)
   const [status, setStatus] = useState<"all" | OrderStatus>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("date-desc");
@@ -36,11 +23,10 @@ export default function CustomerOrdersPage() {
 
   const { user } = useAuth();
 
-  // fetch logic (preserved)
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await api.get("my-orders/");
+        const res = await api.get("b2b/my-orders/");
         setOrders(res.data ?? []);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -48,11 +34,11 @@ export default function CustomerOrdersPage() {
         setLoading(false);
       }
     };
+
     if (user) fetchOrders();
     else setLoading(false);
   }, [user]);
 
-  // filter/sort/paginate (preserved)
   const filtered = useMemo(() => {
     let list = orders.slice();
 
@@ -60,19 +46,23 @@ export default function CustomerOrdersPage() {
 
     if (query.trim()) {
       const q = query.toLowerCase();
+
       list = list.filter((o) =>
         [
           o.id,
+          o.order_number,
           o.status,
-          // try item names if present
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ...(Array.isArray((o as any).items)
             ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (o as any).items.map((i: any) => i?.name ?? "")
+              (o as any).items.map(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (i: any) => i?.product?.name ?? i?.name ?? "",
+              )
             : []),
         ]
           .filter(Boolean)
-          .some((x) => String(x).toLowerCase().includes(q))
+          .some((x) => String(x).toLowerCase().includes(q)),
       );
     }
 
@@ -94,83 +84,151 @@ export default function CustomerOrdersPage() {
   }, [status, query, sort, orders]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
   const pageItems = useMemo(
     () => filtered.slice((page - 1) * pageSize, page * pageSize),
-    [filtered, page]
+    [filtered, page],
   );
+
   const goto = (p: number) => setPage(Math.min(Math.max(1, p), totalPages));
+
+  const orderStats = useMemo(() => {
+    const total = orders.length;
+    const pending = orders.filter((o) =>
+      ["new", "confirmed", "processing", "packed"].includes(String(o.status)),
+    ).length;
+    const shipped = orders.filter((o) => o.status === "shipped").length;
+    const delivered = orders.filter((o) => o.status === "delivered").length;
+
+    return { total, pending, shipped, delivered };
+  }, [orders]);
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 dark:bg-black/70">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#06111f]/90">
         <ESpinner />
       </div>
     );
   }
 
   return (
-    <main className="min-h-dvh bg-zinc-950 text-zinc-100">
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
-        {/* Page header row */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">My Orders</h1>
-            <p className="mt-1 text-sm text-zinc-400">
-              View and track your orders.
-            </p>
-          </div>
-          <div className="text-sm text-zinc-400">
-            {filtered.length} order(s)
-          </div>
-        </div>
+    <main className="min-h-dvh bg-[#06111f] text-slate-100">
+      <section className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-slate-950 via-[#06111f] to-blue-950/70">
+        <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute right-0 top-20 h-72 w-72 rounded-full bg-blue-600/10 blur-3xl" />
 
-        {/* Filters bar — search + chips + sort + CTA (styled like first page) */}
-        <div className="mt-6 grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* search */}
-            <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                className="opacity-70"
-              >
-                <path
-                  d="M21 21l-4.3-4.3"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <circle
-                  cx="11"
-                  cy="11"
-                  r="7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-              </svg>
-              <input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setPage(1);
-                }}
-                placeholder="Search orders (ID, status, item)"
-                className="bg-transparent text-sm outline-none placeholder:text-zinc-500"
-              />
+        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:py-12">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
+                B2B Trade Orders
+              </div>
+
+              <h1 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                My Wholesale Orders
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                Track your trade purchases, payment status, dispatch updates and
+                reorder details from one wholesale account dashboard.
+              </p>
             </div>
 
-            {/* status chips */}
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: "all", label: "All" },
-                { id: "new", label: "New" },
-                { id: "confirmed", label: "Confirmed" },
-                { id: "shipped", label: "Shipped" },
-                { id: "delivered", label: "Delivered" },
-                { id: "cancelled", label: "Cancelled" },
-              ].map((s) => (
+            <Link
+              href="/products"
+              className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 shadow-[0_10px_40px_-20px_rgba(34,211,238,.7)] transition hover:bg-cyan-500/20"
+            >
+              Continue Wholesale Shopping
+            </Link>
+          </div>
+
+          <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="Total Orders" value={orderStats.total} />
+            <StatCard label="Active Orders" value={orderStats.pending} />
+            <StatCard label="Shipped" value={orderStats.shipped} />
+            <StatCard label="Delivered" value={orderStats.delivered} />
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+        <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4 shadow-[0_20px_80px_-40px_rgba(15,23,42,.9)]">
+          <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-2xl border border-slate-800 bg-[#06111f] px-4 py-3">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="text-cyan-300/80"
+                >
+                  <path
+                    d="M21 21l-4.3-4.3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="7"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                </svg>
+
+                <input
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder="Search order number, status or item"
+                  className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-[#06111f] px-3 py-2">
+                <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  Sort
+                </span>
+
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 outline-none"
+                >
+                  <option value="date-desc">Newest first</option>
+                  <option value="date-asc">Oldest first</option>
+                  <option value="total-desc">Highest total</option>
+                  <option value="total-asc">Lowest total</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="text-sm text-slate-400">
+              Showing{" "}
+              <span className="font-semibold text-cyan-300">
+                {filtered.length}
+              </span>{" "}
+              order(s)
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[
+              { id: "all", label: "All" },
+              { id: "new", label: "New" },
+              { id: "confirmed", label: "Confirmed" },
+              { id: "shipped", label: "Shipped" },
+              { id: "delivered", label: "Delivered" },
+              { id: "cancelled", label: "Cancelled" },
+            ].map((s) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const active = status === (s.id as any);
+
+              return (
                 <button
                   key={s.id}
                   onClick={() => {
@@ -178,187 +236,204 @@ export default function CustomerOrdersPage() {
                     setStatus(s.id as any);
                     setPage(1);
                   }}
-                  className={`rounded-full border px-3 py-1 text-sm ${
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    status === (s.id as any)
-                      ? "border-[var(--color-primary)] bg-zinc-900"
-                      : "border-zinc-800 bg-zinc-900/60"
-                  }`}
+                  className={[
+                    "rounded-full border px-4 py-2 text-sm font-medium transition",
+                    active
+                      ? "border-cyan-400/50 bg-cyan-500/15 text-cyan-200"
+                      : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-white",
+                  ].join(" ")}
                 >
                   {s.label}
                 </button>
-              ))}
-            </div>
-
-            {/* sort */}
-            <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-2 py-1">
-              <span className="px-2 text-xs text-zinc-400">Sort</span>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="rounded-lg bg-zinc-950 px-2 py-1 text-sm outline-none"
-              >
-                <option value="date-desc">Newest first</option>
-                <option value="date-asc">Oldest first</option>
-                <option value="total-desc">Highest total</option>
-                <option value="total-asc">Lowest total</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="justify-self-start md:justify-self-end">
-            <Link
-              href="/products"
-              className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm hover:bg-zinc-800"
-            >
-              Continue shopping
-            </Link>
+              );
+            })}
           </div>
         </div>
 
-        {/* Orders list (cards) */}
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 space-y-4">
           {pageItems.length === 0 && (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 text-center text-zinc-300">
-              No orders found.
+            <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-10 text-center">
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-slate-800 bg-[#06111f] text-cyan-300">
+                ▣
+              </div>
+
+              <h2 className="mt-4 text-lg font-semibold text-white">
+                No wholesale orders found
+              </h2>
+
+              <p className="mt-2 text-sm text-slate-400">
+                Try changing your filter or start a new wholesale order.
+              </p>
             </div>
           )}
 
-          {pageItems.map((o) => (
-            <div
-              key={o.id}
-              className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900"
-            >
-              <div className="grid gap-4 p-4 sm:grid-cols-[1fr_auto] sm:items-center sm:p-5">
-                {/* left: id + meta */}
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Link
-                      href={`/orders/${o.id}`}
-                      className="font-semibold text-white hover:underline"
-                    >
-                      Order {o.order_number}
-                    </Link>
-                    {o.status && <StatusPill status={o.status} />}
-                  </div>
-                  <div className="mt-1 text-sm text-zinc-400">
-                    Placed on {new Date(o.created_at).toLocaleDateString()}
-                  </div>
-                </div>
+          {pageItems.map((o) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const isWholesale = Boolean((o as any).is_wholesale ?? true);
 
-                {/* right: total + CTA */}
-                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm">
-                    Total: {money(o.total_amount ?? 0)}
-                  </div>
-
-                  {/* Cancel button (only for cancellable statuses) */}
-                  {/* {["new", "confirmed", "processing", "packed"].includes(
-                    o.status
-                  ) && (
-                    <button
-                      onClick={async () => {
-                        const ok = window.confirm(
-                          "Are you sure you want to cancel this order?"
-                        );
-                        if (!ok) return;
-
-                        try {
-                          await api.post(`orders/${o.id}/cancel/`);
-                          alert(
-                            "Order cancelled successfully. Amount credited to wallet."
-                          );
-                          // Refresh orders
-                          const res = await api.get("my-orders/");
-                          setOrders(res.data.results ?? []);
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        } catch (err: any) {
-                          console.error("Cancel failed:", err);
-                          const msg =
-                            err?.response?.data?.error ||
-                            err?.response?.data?.detail ||
-                            "Unable to cancel order.";
-                          alert(msg);
-                        }
-                      }}
-                      className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-rose-400 hover:bg-zinc-800"
-                    >
-                      Cancel
-                    </button>
-                  )} */}
-                  {!o.is_paid && <OrderRepay order_id={o.id} />}
-                  <Link
-                    href={`/orders/${encodeURIComponent(String(o.id))}`}
-                    className="rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--text-dark)]"
-                  >
-                    View
-                  </Link>
-                </div>
-              </div>
-
-              {/* Items peek (if items exist) */}
-              {"items" in o &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                Array.isArray((o as any).items) &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (o as any).items.length > 0 && (
-                  <div className="border-t border-zinc-800 p-3 sm:p-4">
-                    <div className="flex snap-x gap-3 overflow-x-auto">
-                      {(o as Order).items.map((i: OrderItems, idx: number) => (
-                        <div
-                          key={i?.id ?? idx}
-                          className="snap-start inline-flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950 pr-3"
+            return (
+              <div
+                key={o.id}
+                className={[
+                  "overflow-hidden rounded-3xl border bg-slate-950/70 shadow-[0_20px_80px_-45px_rgba(15,23,42,.9)] transition",
+                  isWholesale
+                    ? "border-cyan-500/20 ring-1 ring-cyan-500/5"
+                    : "border-slate-800",
+                ].join(" ")}
+              >
+                <div className="border-b border-slate-800 bg-gradient-to-r from-slate-950 via-[#071827] to-blue-950/30 p-4 sm:p-5">
+                  <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Link
+                          href={`/orders/${o.id}`}
+                          className="text-lg font-bold text-white hover:text-cyan-200"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={
-                              i?.product.image ??
-                              i?.product.images ??
-                              "/images/placeholders/box.png"
-                            }
-                            alt={i?.product.name ?? "Item"}
-                            className="h-14 w-14 rounded-l-xl object-cover"
-                          />
-                          <div className="min-w-0">
-                            <Link href={`/products/${i?.product.slug}`}>
-                              <div className="line-clamp-1 text-sm text-zinc-200">
-                                {i?.product.name ?? "Item"}
-                              </div>
-                            </Link>
-                            <div className="text-xs text-zinc-400">
-                              Qty {i?.quantity ?? i?.quantity ?? 1}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                          Order {o.order_number}
+                        </Link>
+
+                        {isWholesale && (
+                          <span className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
+                            B2B
+                          </span>
+                        )}
+
+                        {o.status && <StatusPill status={o.status} />}
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                        <span>
+                          Placed on{" "}
+                          <span className="text-slate-200">
+                            {new Date(o.created_at).toLocaleDateString()}
+                          </span>
+                        </span>
+
+                        <span className="hidden h-1 w-1 rounded-full bg-slate-600 sm:block" />
+
+                        <span>
+                          Trade channel:{" "}
+                          <span className="font-semibold text-cyan-300">
+                            Wholesale
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                      <div className="rounded-2xl border border-slate-800 bg-[#06111f] px-4 py-2 text-sm text-slate-300">
+                        Total{" "}
+                        <span className="ml-2 font-bold text-cyan-200">
+                          {money(o.total_amount ?? 0)}
+                        </span>
+                      </div>
+
+                      {!o.is_paid && <OrderRepay order_id={o.id} />}
+
+                      <Link
+                        href={`/orders/${encodeURIComponent(String(o.id))}`}
+                        className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/20"
+                      >
+                        View Details
+                      </Link>
                     </div>
                   </div>
-                )}
-            </div>
-          ))}
+                </div>
+
+                {"items" in o &&
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  Array.isArray((o as any).items) &&
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (o as any).items.length > 0 && (
+                    <div className="p-4 sm:p-5">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                          Order Items
+                        </div>
+
+                        <div className="text-xs text-slate-500">
+                          {(o as Order).items.length} SKU(s)
+                        </div>
+                      </div>
+
+                      <div className="flex snap-x gap-3 overflow-x-auto pb-1">
+                        {(o as Order).items.map(
+                          (i: OrderItems, idx: number) => (
+                            <div
+                              key={i?.id ?? idx}
+                              className="snap-start inline-flex min-w-[260px] items-center gap-3 rounded-2xl border border-slate-800 bg-[#06111f] pr-3"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={
+                                  i?.product.image ??
+                                  i?.product.images ??
+                                  "/images/placeholders/box.png"
+                                }
+                                alt={i?.product.name ?? "Item"}
+                                className="h-16 w-16 rounded-l-2xl object-cover"
+                              />
+
+                              <div className="min-w-0 flex-1">
+                                <Link href={`/products/${i?.product.slug}`}>
+                                  <div className="line-clamp-1 text-sm font-medium text-slate-100 hover:text-cyan-200">
+                                    {i?.product.name ?? "Item"}
+                                  </div>
+                                </Link>
+
+                                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                                  <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-cyan-300">
+                                    Qty {i?.quantity ?? 1}
+                                  </span>
+                                  <span>Wholesale item</span>
+                                </div>
+                              </div>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Pagination (compact) */}
         <div className="mt-6 flex items-center justify-center gap-2 text-sm">
           <button
             onClick={() => goto(page - 1)}
             disabled={page <= 1}
-            className="rounded-xl border border-zinc-800 px-3 py-1.5 disabled:opacity-40"
+            className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-2 text-slate-300 transition hover:border-cyan-500/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             Prev
           </button>
-          <div className="px-1 py-1.5">
-            Page {page} / {totalPages}
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-2 text-slate-400">
+            Page <span className="font-semibold text-cyan-300">{page}</span> /{" "}
+            {totalPages}
           </div>
+
           <button
             onClick={() => goto(page + 1)}
             disabled={page >= totalPages}
-            className="rounded-xl border border-zinc-800 px-3 py-1.5 disabled:opacity-40"
+            className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-2 text-slate-300 transition hover:border-cyan-500/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             Next
           </button>
         </div>
       </section>
     </main>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+        {label}
+      </div>
+
+      <div className="mt-2 text-2xl font-bold text-white">{value}</div>
+    </div>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
+
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { OrderStatus, Variant } from "@/types";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { useRouter } from "next/navigation";
@@ -11,100 +12,15 @@ import { StatusPill } from "../ui/StatusPill";
 import ConfirmModal from "../modals/ConfirmModal";
 import OrderRepay from "../ui/OrderRepay";
 
-// ------------------------------------------------------------
-// Elvarra / Elvara — RETAIL ORDER DETAILS PAGE (Robust params)
-// Route: app/account/orders/[id]/page.tsx
-// Fix: Guard against undefined `params` / `params.id` and add fallbacks.
-// ------------------------------------------------------------
-
-type ThemeMode = "dark" | "light";
-type Palette = {
-  bg: string;
-  fg: string;
-  subfg: string;
-  card: string;
-  border: string;
-  button: string;
-  ring: string;
-  chip: string;
-};
-
-function paletteForTheme(theme: ThemeMode): Palette {
-  return theme === "dark"
-    ? {
-        bg: "bg-neutral-950",
-        fg: "text-neutral-50",
-        subfg: "text-neutral-300",
-        card: "bg-neutral-900/70",
-        border: "border-neutral-800",
-        button:
-          "bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110",
-        ring: "ring-1 ring-neutral-800",
-        chip: "bg-yellow-500 text-neutral-900",
-      }
-    : {
-        bg: "bg-neutral-50",
-        fg: "text-neutral-900",
-        subfg: "text-neutral-600",
-        card: "bg-white/90",
-        border: "border-neutral-200",
-        button:
-          "bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110",
-        ring: "ring-1 ring-neutral-200",
-        chip: "bg-neutral-900 text-neutral-50",
-      };
-}
-
-// ---------------------------
-// Types & mock data (replace with real API)
-// ---------------------------
-
-export type RetailOrderItem = {
-  sku: string;
-  title: string;
-  image: string;
-  unit: number;
-  qty: number;
-};
-
-/* export type RetailOrder = {
-  id: string;
-  createdAt: string; // ISO
-  status: "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
-  currency: string;
-  subtotal: number;
-  tax: number; // VAT
-  shipping: number;
-  customer: {
-    first: string;
-    last: string;
-    email: string;
-  };
-  address: {
-    line1: string;
-    line2?: string;
-    city: string;
-    province: string;
-    zip: string;
-    country: string;
-  };
-  delivery: {
-    method: "standard" | "express";
-    trackingId?: string;
-    carrier?: string;
-  };
-  items: RetailOrderItem[];
-  timeline: { label: string; at: string }[]; // ISO timestamps
-}; */
-
-function money(n: number, currency = "USD") {
+function money(n: number, currency = "INR") {
   try {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency,
-    }).format(n);
+      maximumFractionDigits: 2,
+    }).format(Number(n || 0));
   } catch {
-    return `$${n.toFixed(2)}`;
+    return `₹${Number(n || 0).toFixed(2)}`;
   }
 }
 
@@ -115,6 +31,7 @@ type OrderDetail = {
   total_amount: number;
   status: OrderStatus;
   is_paid: boolean;
+  is_wholesale?: boolean;
   full_name: string;
   line1: string;
   line2: string;
@@ -142,15 +59,8 @@ type OrderDetail = {
     price: number;
   }[];
 };
-// ------------------------------------------------------------
-// Page Component (App Router dynamic route)
-// - Accepts optional `params` and safely resolves `id`.
-// - Fallbacks: try window.location pathname when params are missing.
-// ------------------------------------------------------------
 
 export default function OrderDetailsPage({ id }: { id: string }) {
-  const theme: ThemeMode = "dark";
-  const palette = useMemo(() => paletteForTheme(theme), [theme]);
   const { user } = useAuth();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -158,17 +68,14 @@ export default function OrderDetailsPage({ id }: { id: string }) {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-  // const order = useMemo(
-  //   () => (id ? MOCK_ORDERS.find((o) => o.id === id) : undefined),
-  //   [id]
-  // );
-
   useEffect(() => {
     if (!user || !id) return;
+
     setLoading(true);
+
     const fetchOrder = async () => {
       try {
-        const res = await api.get(`/my-orders/${id}/`, {});
+        const res = await api.get(`api/elvarra/my-orders/${id}/`, {});
         setOrder(res.data);
       } catch (error) {
         console.error("Failed to fetch order:", error);
@@ -179,15 +86,33 @@ export default function OrderDetailsPage({ id }: { id: string }) {
 
     fetchOrder();
   }, [user, id]);
-  if (!id && !loading) {
+
+  if (loading) {
     return (
-      <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
-        <div className="container py-12">
-          <Link href="/orders" className="underline">
+      <main className="min-h-screen bg-[#06111f] text-white">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <div className="h-10 w-44 animate-pulse rounded-xl bg-slate-800" />
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
+            <div className="h-96 animate-pulse rounded-3xl border border-slate-800 bg-slate-900/60" />
+            <div className="h-80 animate-pulse rounded-3xl border border-slate-800 bg-slate-900/60" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!id) {
+    return (
+      <main className="min-h-screen bg-[#06111f] text-white">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <Link
+            href="/orders"
+            className="text-sm text-cyan-300 hover:text-cyan-200"
+          >
             ← Back to My Orders
           </Link>
-          <h1 className="mt-4 text-2xl font-semibold">Order ID missing</h1>
-          <p className={`mt-2 text-sm ${palette.subfg}`}>
+          <h1 className="mt-5 text-2xl font-semibold">Order ID missing</h1>
+          <p className="mt-2 text-sm text-slate-400">
             We couldn&apos;t determine which order to display. Please open this
             page from your orders list.
           </p>
@@ -198,13 +123,16 @@ export default function OrderDetailsPage({ id }: { id: string }) {
 
   if (!order) {
     return (
-      <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
-        <div className="container py-12">
-          <Link href="/orders" className="underline">
+      <main className="min-h-screen bg-[#06111f] text-white">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <Link
+            href="/orders"
+            className="text-sm text-cyan-300 hover:text-cyan-200"
+          >
             ← Back to My Orders
           </Link>
-          <h1 className="mt-4 text-2xl font-semibold">Order not found</h1>
-          <p className={`mt-2 text-sm ${palette.subfg}`}>
+          <h1 className="mt-5 text-2xl font-semibold">Order not found</h1>
+          <p className="mt-2 text-sm text-slate-400">
             We couldn&apos;t find an order with ID “{id}”.
           </p>
         </div>
@@ -212,39 +140,111 @@ export default function OrderDetailsPage({ id }: { id: string }) {
     );
   }
 
-  const total = order ? order.total_amount : 0;
+  const total = order.total_amount || 0;
+  const itemCount = order.items.reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  );
 
   return (
-    <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
-      <div className="container pt-7 mx-auto">
-        <Link href="/orders" className="underline">
+    <main className="min-h-screen bg-[#06111f] text-slate-100 antialiased">
+      <LoadingOverlay show={cancelLoading} />
+
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_34%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%)]" />
+
+      <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <Link
+          href="/orders"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950/70 px-4 py-2 text-sm text-cyan-300 transition hover:border-cyan-500/50 hover:bg-cyan-500/10"
+        >
           ← Back to My Orders
         </Link>
-        <LoadingOverlay show={cancelLoading} />
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">
-              Order {order.order_number}
-            </h1>
-            <p className={`mt-1 text-sm ${palette.subfg}`}>
-              Placed on {new Date(order.created_at).toLocaleString()}
-            </p>
-          </div>
-          <span
-            className={`inline-block rounded-full px-3 py-1 text-xs font-semibold 
-            `}
-          >
-            <div className=" flex gap-1">
-              <StatusPill status={order.status} />
+        {/* Header */}
+        <section className="mt-5 overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-950 via-[#0b1728] to-blue-950/50 p-5 shadow-[0_24px_80px_-50px_rgba(34,211,238,.45)] sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-300">
+                  {order.is_wholesale ? "B2B Wholesale Order" : "Retail Order"}
+                </span>
+
+                {order.is_wholesale && (
+                  <span className="rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-200">
+                    Trade Account
+                  </span>
+                )}
+
+                <StatusPill status={order.status} />
+              </div>
+
+              <h1 className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                Order {order.order_number}
+              </h1>
+
+              <p className="mt-2 text-sm text-slate-400">
+                Placed on {new Date(order.created_at).toLocaleString("en-IN")}
+              </p>
             </div>
-          </span>
+
+            <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[420px]">
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                  Order Type
+                </div>
+                <div
+                  className={
+                    order.is_wholesale
+                      ? "mt-1 font-semibold text-cyan-300"
+                      : "mt-1 font-semibold text-amber-300"
+                  }
+                >
+                  {order.is_wholesale ? "B2B" : "Retail"}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                  Items
+                </div>
+                <div className="mt-1 font-semibold text-white">
+                  {itemCount} units
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                  Payment
+                </div>
+                <div
+                  className={
+                    order.is_paid
+                      ? "mt-1 font-semibold text-emerald-300"
+                      : "mt-1 font-semibold text-rose-300"
+                  }
+                >
+                  {order.is_paid ? "Paid" : "Pending"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {order.is_wholesale && (
+            <div className="mt-5 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-slate-200">
+              <span className="font-semibold text-cyan-300">
+                Wholesale note:
+              </span>{" "}
+              This is a B2B trade order. Pricing, quantity checks, packing and
+              dispatch may follow wholesale processing rules.
+            </div>
+          )}
+
           {["new", "confirmed", "processing", "packed"].includes(
             order.status,
           ) && (
             <button
               onClick={() => setShowCancelConfirm(true)}
-              className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-rose-400 hover:bg-zinc-800"
+              className="mt-5 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-5 py-2.5 text-sm font-semibold text-rose-300 transition hover:border-rose-400 hover:bg-rose-500/20"
             >
               Cancel Order
             </button>
@@ -262,14 +262,11 @@ export default function OrderDetailsPage({ id }: { id: string }) {
               setShowCancelConfirm(false);
             }}
             onConfirm={async () => {
-              // ✅ CLOSE MODAL IMMEDIATELY
               setShowCancelConfirm(false);
-
-              // Optional: show page-level loader instead
               setCancelLoading(true);
 
               try {
-                await api.post(`orders/${order.id}/cancel/`);
+                await api.post(`api/elvarra/orders/${order.id}/cancel/`);
                 router.push("/orders");
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
               } catch (err: any) {
@@ -283,41 +280,76 @@ export default function OrderDetailsPage({ id }: { id: string }) {
               }
             }}
           />
-        </div>
-        {/* Grid: Left details / Right summary */}
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+        </section>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
           {/* LEFT */}
           <section className="space-y-6">
             {/* Items */}
-            <div className={`rounded-2xl ${palette.ring} ${palette.card} p-4`}>
-              <div className="text-lg font-semibold">Items</div>
-              <div className="mt-3 space-y-3 text-sm">
+            <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/70 shadow-[0_20px_70px_-50px_rgba(34,211,238,.35)]">
+              <div className="border-b border-slate-800 bg-slate-900/60 px-5 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">
+                      {order.is_wholesale ? "Trade Order Items" : "Order Items"}
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-400">
+                      SKU, variant and quantity details
+                    </p>
+                  </div>
+
+                  {order.is_wholesale && (
+                    <span className="rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-300">
+                      Wholesale
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="divide-y divide-slate-800">
                 {order.items.map((it) => (
                   <div
-                    key={it.product.sku}
-                    className="flex items-center justify-between gap-4"
+                    key={it.id}
+                    className="flex flex-col gap-4 p-4 transition hover:bg-slate-900/50 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex items-center gap-3">
-                      <Image
-                        width={64}
-                        height={64}
-                        src={it.product.image}
-                        alt={it.product.name}
-                        className="h-14 w-14 rounded-lg object-cover"
-                      />
-                      <div>
-                        <div className="font-medium">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+                        <Image
+                          width={80}
+                          height={80}
+                          src={it.product.image}
+                          alt={it.product.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold text-white">
                           {it.product.name}{" "}
                           {it.variant && `[${it.variant.name}]`}
                         </div>
-                        <div className={`${palette.subfg}`}>
-                          SKU: {it.variant ? it.variant.sku : it.product.sku} ·
-                          Qty {it.quantity}
+
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                          <span>
+                            SKU: {it.variant ? it.variant.sku : it.product.sku}
+                          </span>
+                          <span className="h-1 w-1 rounded-full bg-slate-600" />
+                          <span>Qty {it.quantity}</span>
+                          {order.is_wholesale && (
+                            <>
+                              <span className="h-1 w-1 rounded-full bg-slate-600" />
+                              <span className="text-cyan-300">B2B Line</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="font-medium">
-                      {money(it.price * it.quantity, "INR")}
+
+                    <div className="text-left sm:text-right">
+                      <div className="text-xs text-slate-500">Line Total</div>
+                      <div className="font-semibold text-cyan-100">
+                        {money(it.price * it.quantity, "INR")}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -325,108 +357,138 @@ export default function OrderDetailsPage({ id }: { id: string }) {
             </div>
 
             {/* Shipping */}
-            <div className={`rounded-2xl ${palette.ring} ${palette.card} p-4`}>
-              <div className="text-lg font-semibold">Shipping</div>
-              <div className={`mt-2 text-sm ${palette.subfg}`}>
-                <div>{order.full_name}</div>
+            <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-5">
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  {order.line1}
-                  {order.line2 ? ", " + order.line2 : ""}
+                  <h2 className="text-lg font-semibold text-white">
+                    Shipping Details
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Delivery address and tracking information
+                  </p>
                 </div>
-                <div>
-                  {order.city}, {order.state} {order.pincode}
-                </div>
-                <div>{order.country}</div>
-                <div className="mt-2">
-                  Method:{" "}
-                  {/* {order.method === "express" ? "Express" : "Standard"} */}
-                </div>
-                {order.tracking_no && (
-                  <div className="mt-1">
-                    Tracking:{" "}
-                    <a
-                      className="underline"
-                      href={`https://www.17track.net/en?nums=${encodeURIComponent(
-                        order.tracking_no,
-                      )}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {order.tracking_no}
-                    </a>{" "}
-                    ({order.carrier})
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-300">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Ship To
                   </div>
-                )}
+                  <div className="mt-3 font-semibold text-white">
+                    {order.full_name}
+                  </div>
+                  <div className="mt-1">
+                    {order.line1}
+                    {order.line2 ? `, ${order.line2}` : ""}
+                  </div>
+                  <div>
+                    {order.city}, {order.state} {order.pincode}
+                  </div>
+                  <div>{order.country}</div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-300">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Tracking
+                  </div>
+
+                  {order.tracking_no ? (
+                    <div className="mt-3">
+                      <a
+                        className="font-semibold text-cyan-300 underline underline-offset-4 hover:text-cyan-200"
+                        href={`https://www.17track.net/en?nums=${encodeURIComponent(order.tracking_no)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {order.tracking_no}
+                      </a>
+                      <div className="mt-1 text-slate-400">{order.carrier}</div>
+                    </div>
+                  ) : (
+                    <div className="mt-3 text-slate-400">
+                      Tracking details will appear after dispatch.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-
-            {/* Timeline */}
-            {/* <div className={`rounded-2xl ${palette.ring} ${palette.card} p-4`}>
-              <div className="text-lg font-semibold">Timeline</div>
-              <ol className="mt-3 space-y-2 text-sm">
-                {order.timeline.map((t, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="mt-1 h-2 w-2 rounded-full bg-current"></span>
-                    <div>
-                      <div className="font-medium">{t.label}</div>
-                      <div className={`${palette.subfg}`}>
-                        {new Date(t.at).toLocaleString()}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div> */}
           </section>
 
           {/* RIGHT */}
-          <aside
-            className={`h-max rounded-2xl ${palette.ring} ${palette.card} p-4`}
-          >
-            <div className="text-lg font-semibold">Summary</div>
-            <div className="mt-3 space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="opacity-80">Subtotal</span>
-                <span>{money(order.subtotal, "INR")}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="opacity-80">Shipping</span>
-                <span>{money(order.shipping, "INR")}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="opacity-80">Discount</span>
-                <span>-{money(order.discount, "INR")}</span>
+          <aside className="h-max rounded-3xl border border-slate-800 bg-slate-950/80 p-5 shadow-[0_20px_70px_-50px_rgba(34,211,238,.45)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Payment Summary
+                </h2>
+                <p className="mt-1 text-xs text-slate-400">
+                  {order.is_wholesale ? "B2B trade billing" : "Retail billing"}
+                </p>
               </div>
 
-              <div className="flex items-center justify-between border-t pt-2">
-                <span className="font-medium">Total</span>
-                <span className="font-semibold">{money(total, "INR")}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="opacity-80">Wallet used</span>
-                <span>-{money(order.wallet_used, "INR")}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-medium">
-                  {order.is_paid ? "Net Paid" : "Net Payable"}
+              {order.is_wholesale && (
+                <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">
+                  B2B
                 </span>
-                <span className="font-medium">
-                  {money(order.net_amount, "INR")}
+              )}
+            </div>
+
+            <div className="mt-5 space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Subtotal</span>
+                <span className="text-slate-100">
+                  {money(order.subtotal, "INR")}
                 </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Shipping</span>
+                <span className="text-slate-100">
+                  {money(order.shipping, "INR")}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Discount</span>
+                <span className="text-emerald-300">
+                  -{money(order.discount, "INR")}
+                </span>
+              </div>
+
+              <div className="border-t border-slate-800 pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-white">Total</span>
+                  <span className="font-bold text-white">
+                    {money(total, "INR")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Wallet used</span>
+                <span className="text-emerald-300">
+                  -{money(order.wallet_used, "INR")}
+                </span>
+              </div>
+
+              <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-cyan-200">
+                    {order.is_paid ? "Net Paid" : "Net Payable"}
+                  </span>
+                  <span className="text-xl font-bold text-white">
+                    {money(order.net_amount, "INR")}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3">
-              {/* <Link
-                href={`/invoices/${encodeURIComponent(order.id)}`}
-                className={`rounded-xl border ${palette.border} px-4 py-2 text-center text-sm`}
-              >
-                Download Invoice (PDF)
-              </Link> */}
+            <div className="mt-5 grid grid-cols-1 gap-3">
               {!order.is_paid && <OrderRepay order_id={order.id} />}
+
               <Link
                 href="/contact"
-                className={`rounded-xl px-4 py-2 text-center text-sm btn-gradient-accent`}
+                className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-slate-200 transition hover:border-cyan-500/50 hover:bg-cyan-500/10 hover:text-cyan-200"
               >
                 Need Help?
               </Link>
