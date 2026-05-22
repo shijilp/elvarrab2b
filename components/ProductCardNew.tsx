@@ -13,11 +13,11 @@ type Tier = { min_qty: number; unit_price: number | string };
 
 export default function ProductCardNew({ product }: { product: Product }) {
   const { rfq } = useRFQCart();
-
+  //te
   // ✅ RFQ line lookup (items have `product` id, not `id`)
   const line = useMemo(
     () => rfq?.items?.find((it) => it.product === product.id),
-    [rfq?.items, product.id]
+    [rfq?.items, product.id],
   );
   const qty = line?.requested_qty ?? 0;
   const inCart = qty > 0;
@@ -108,7 +108,7 @@ export default function ProductCardNew({ product }: { product: Product }) {
                     className="px-2 py-0.5 rounded-full text-[10px] bg-zinc-800 text-zinc-200"
                     title={`${t.min_qty}+ pcs @ ${money(
                       Number(t.unit_price),
-                      product.currency
+                      product.currency,
                     )}`}
                   >
                     {t.min_qty}+ pcs —{" "}
