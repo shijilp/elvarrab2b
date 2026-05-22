@@ -13,9 +13,13 @@ async function handle(req: NextRequest, ctx: Ctx) {
 
 
   const cookieStore = await cookies();
-  const access = cookieStore.get("access_token")?.value;
+  const access = cookieStore.get("access")?.value;
+const joined = path.join("/");
+const qs = req.nextUrl.search ?? "";
+const needsSlash = joined.length > 0 && !joined.endsWith("/");
+const targetUrl = `${BACKEND}/${joined}${needsSlash ? "/" : ""}${qs}`;
 
-  const targetUrl = `${BACKEND}/${path.join("/")}${req.nextUrl.search}${req.method==="GET" ? "":"/"}`;
+ // const targetUrl = `${BACKEND}/${path.join("/")}${req.nextUrl.search}${req.method==="GET" ? "":"/"}`;
 
   const headers = new Headers(req.headers);
   headers.set("host", new URL(BACKEND).host);
@@ -32,11 +36,19 @@ async function handle(req: NextRequest, ctx: Ctx) {
     method: req.method,
     headers,
     body,
+     cache: "no-store",
   });
+const outHeaders = new Headers(r.headers);
+// Force clients/CDNs to NOT cache API responses
+outHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+outHeaders.set("Pragma", "no-cache");
+outHeaders.set("Expires", "0");
+// Optional: remove validators that can encourage caching behavior
+outHeaders.delete("etag");
 
   return new NextResponse(r.body, {
     status: r.status,
-    headers: r.headers,
+    headers: outHeaders,
   });
 }
 
