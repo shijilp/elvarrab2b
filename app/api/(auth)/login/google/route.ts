@@ -52,11 +52,11 @@ export async function POST(req: Request) {
   const refreshMaxAge = 60 * 60 * 24 * 30; // adjust to backend policy
 
   const cookieStore = await cookies();
-  cookieStore.set("access_token", access, {
+  cookieStore.set("access", access, {
     httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: accessMaxAge,
   });
   if (refresh) {
-    cookieStore.set("refresh_token", refresh, {
+    cookieStore.set("refresh", refresh, {
       httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: refreshMaxAge,
     });
   }

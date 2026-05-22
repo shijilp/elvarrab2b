@@ -13,8 +13,9 @@ async function handle(req: NextRequest, ctx: Ctx) {
 
 
   const cookieStore = await cookies();
-  const access = cookieStore.get("access")?.value;
-const joined = path.join("/");
+const access = cookieStore.get("access")?.value;
+
+  const joined = path.join("/");
 const qs = req.nextUrl.search ?? "";
 const needsSlash = joined.length > 0 && !joined.endsWith("/");
 const targetUrl = `${BACKEND}/${joined}${needsSlash ? "/" : ""}${qs}`;
