@@ -52,7 +52,7 @@ export default function OrderConfirmationClient() {
       }
 
       try {
-        const res = await api.get(`/my-orders/${orderId}/`);
+        const res = await api.get(`/api/elvarra/my-orders/${orderId}/`);
         setPayload(res.data);
       } catch (error) {
         console.error("Failed to fetch order:", error);

@@ -45,7 +45,7 @@ const AddToCartBtn = ({
 
         // assuming backend returns: { product: number, variant: number | null, ... }
         return (
-          it.product === product.id && (it.variant_id ?? null) === variantId
+          it.product?.id === product.id && (it.variant_id ?? null) === variantId
         );
       }),
     [cartItems, product.id, effectiveVariant?.id],

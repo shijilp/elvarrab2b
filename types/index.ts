@@ -100,6 +100,7 @@ export interface CartProduct   {
   image: string
   category:   Category | null
   variants?: Variant[]; 
+  stock: number
 
 
 }
@@ -111,7 +112,7 @@ export interface CartItem   {
   slug: string
   description: string
   category:   Category | null
-  product?: number;
+  product?: CartProduct;
   price: number
   image: string
   images?: { id: number; image: string }[]
@@ -119,6 +120,7 @@ export interface CartItem   {
   variant_id:number |null
   coupon_discount:number |0
     is_free_shipping: boolean;
+  stock: number
 
   //in_stock: boolean
 }

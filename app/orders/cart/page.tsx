@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import Image from "next/image";
+import { CartProduct } from "@/types";
+import AlertModal from "@/components/AlertModal";
 
 function formatMoney(n: number) {
   return n.toLocaleString(undefined, {
@@ -20,6 +22,7 @@ type GuestDiscountResponse = {
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
+  const [showAlert, setShowAlert] = useState(false);
 
   const [discountInfo, setDiscountInfo] =
     useState<GuestDiscountResponse | null>(null);
@@ -63,10 +66,7 @@ export default function CartPage() {
     () => cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
     [cartItems],
   );
-  let ref_code = "";
-  if (typeof window !== "undefined") {
-    ref_code = localStorage.getItem("elv_ref") || "";
-  }
+
   const totalSku = cartItems.length;
 
   const qtyPerSku = useMemo(() => {
@@ -74,7 +74,7 @@ export default function CartPage() {
   }, [totalQty, totalSku]);
 
   const minWholesaleValue = 2000;
-  const minQtyPerSku = ref_code ? 2 : 1.4;
+  const minQtyPerSku = 2;
 
   const isValueEligible = wholesaleOrderValue >= minWholesaleValue;
   const isQtyEligible = qtyPerSku >= minQtyPerSku;
@@ -95,13 +95,13 @@ export default function CartPage() {
       updateQuantity(pid, next, vid ?? null);
     }
   };
-
-  const increment = (stockAvailable: number, qty: number) => {
-    if (qty + 1 > stockAvailable) {
-      //setShowAlert(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const increment = (product: CartProduct, qty: number, vid?: any) => {
+    if (qty + 1 > product.stock) {
+      setShowAlert(true);
       return;
     }
-    //updateQuantity(product.id, qty + 1, variant?.id ?? null);
+    updateQuantity(product.id, qty + 1, vid ?? null);
   };
 
   return (
@@ -251,8 +251,19 @@ export default function CartPage() {
                               }
                               className="w-16 bg-transparent text-center text-base font-bold text-blue-300 outline-none"
                             />
-
                             <button
+                              onClick={() =>
+                                increment(
+                                  it.product as CartProduct,
+                                  it.quantity,
+                                  it.variant_id,
+                                )
+                              }
+                              className="grid h-9 w-9 place-items-center rounded-xl border border-blue-700/50 bg-blue-950/40 text-blue-200 transition hover:border-blue-400 hover:bg-blue-500/15 hover:text-white"
+                            >
+                              +
+                            </button>
+                            {/* <button
                               onClick={() =>
                                 updateQuantity(
                                   it.id,
@@ -263,7 +274,7 @@ export default function CartPage() {
                               className="grid h-9 w-9 place-items-center rounded-xl border border-blue-700/50 bg-blue-950/40 text-blue-200 transition hover:border-blue-400 hover:bg-blue-500/15 hover:text-white"
                             >
                               +
-                            </button>
+                            </button> */}
                           </div>
                         </div>
                       </div>
@@ -339,7 +350,7 @@ export default function CartPage() {
                         isQtyEligible ? "text-emerald-300" : "text-amber-300"
                       }
                     >
-                      {qtyPerSku.toFixed(2)} / 1.40
+                      {qtyPerSku.toFixed(2)} / {minQtyPerSku}
                     </span>
                   </div>
 
@@ -454,6 +465,14 @@ export default function CartPage() {
           </div>
         )}
       </section>
+      <AlertModal
+        show={showAlert}
+        title="Stock Warning"
+        message={`No enough items available in stock.`}
+        type="warning"
+        autoCloseMs={0}
+        onClose={() => setShowAlert(false)}
+      />
     </main>
   );
 }

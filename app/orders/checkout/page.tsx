@@ -239,9 +239,9 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (qtyPerSku < 1.4) {
+    if (qtyPerSku < 2) {
       const alertMsg =
-        "Minimum wholesale quantity ratio should be 1.4 or above. Please increase quantity or reduce SKUs.";
+        "Minimum wholesale quantity ratio should be 2 or above. Please increase quantity or reduce SKUs.";
       setError(alertMsg);
       alert(alertMsg);
       return;

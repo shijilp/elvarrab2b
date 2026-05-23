@@ -207,7 +207,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             discount: x.disount || 0,
             variant_id: x.variant_id || null,
             coupon_discount: x.coupon_discount ?? 0,
-
+            stock: x.stock || 0,
             // in_stock: x.in_stock || false, // add in_stock with default value
           }));
           //await syncComboDiscounts(items);
@@ -224,10 +224,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const exists = cartItems.find((item) => {
       if (variant_id) {
         // ⭐ variant-based match
-        return item.product === product.id && item.variant_id === variant_id;
+        return (
+          item.product?.id === product.id && item.variant_id === variant_id
+        );
       } else {
         return (
-          item.product === product.id &&
+          item.product?.id === product.id &&
           (item.variant_id === null || item.variant_id === undefined)
         );
       }
@@ -243,7 +245,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       price: price,
       quantity: 1,
       image: product.image,
-      product: product.id,
+      product: product,
       slug: product.slug,
       description: product.description,
       is_free_shipping: product.is_free_shipping,
@@ -251,6 +253,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       discount: 0,
       variant_id: variant_id,
       coupon_discount: 0,
+      stock: variant ? (variant.inventory ?? 0) : (product.stock ?? 0),
     };
     const newItems = exists
       ? cartItems.map((item) =>
@@ -297,7 +300,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     variant_id: number | null,
   ) => {
     const updated = cartItems.map((item) => {
-      const sameProduct = item.product === productId;
+      const sameProduct = item.product?.id === productId;
       const sameVariant = (item.variant_id ?? null) === (variant_id ?? null);
 
       return sameProduct && sameVariant ? { ...item, quantity } : item;
@@ -324,7 +327,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     const item = cartItems.find(
       (i) =>
-        i.product === productId &&
+        i.product?.id === productId &&
         (i.variant_id ?? null) === (variant_id ?? null),
     );
     if (!item) return;
@@ -334,7 +337,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const updatedCart = cartItems.filter(
       (i) =>
         !(
-          i.product === productId &&
+          i.product?.id === productId &&
           (i.variant_id ?? null) === (variant_id ?? null)
         ),
     );
