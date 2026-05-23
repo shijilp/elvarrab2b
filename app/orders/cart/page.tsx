@@ -37,7 +37,7 @@ export default function CartPage() {
     [cartItems],
   );
 
-  const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(3500) - 1;
+  const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(3000) - 1;
   const SHIPPING_FEE = hasFreeShippingItem ? 0 : Number(40);
 
   const discountTotal = useMemo(() => {

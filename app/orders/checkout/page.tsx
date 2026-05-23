@@ -118,7 +118,7 @@ export default function CheckoutPage() {
     () => cartItems.some((it) => it.is_free_shipping === true),
     [cartItems],
   );
-  const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(2500) - 1;
+  const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(3000) - 1;
   const SHIPPING_FEE = Number(40);
   const shippingDiscount = Number(coupon?.shipping_discount || 0);
   // Payment (demo only)
