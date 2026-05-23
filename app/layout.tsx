@@ -8,32 +8,71 @@ import FloatingCheckoutButton from "@/components/ui/FloatingCheckoutbtn";
 import { RFQCartProvider } from "@/context/RFQCartContext";
 import { CartProvider } from "@/context/CartContext";
 import FloatingCheckoutButtonOne from "@/components/ui/FloatingCheckoutbtn_one";
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const siteUrl = "https://b2b.elvarra.in";
 const brand = "Elvarra";
-const defaultTitle = `${brand} – Luxury Fashion Jewelry`;
+const defaultTitle =
+  "Elvarra Wholesale India | Anti Tarnish Jewellery Supplier";
+
 const defaultDescription =
-  "Elegant, feminine jewelry for daily wear and special moments. Hand-finished pieces in gold, silver, and stones.";
+  "Elvarra Wholesale India offers anti tarnish jewellery for retailers, resellers and boutique stores. Shop wholesale fashion jewellery, stainless steel jewellery, gold plated jewellery and bulk jewellery supplies in India.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+
   title: {
-    default: "Elvarra — Luxury Fashion Jewelry",
-    template: "%s · Elvarra",
+    default: defaultTitle,
+    template: "%s · Elvarra Wholesale",
   },
+
   description: defaultDescription,
+
+  keywords: [
+    "anti tarnish jewellery wholesale",
+    "anti tarnish jewellery India",
+    "wholesale jewellery India",
+    "fashion jewellery wholesale India",
+    "stainless steel jewellery wholesale",
+    "gold plated jewellery wholesale",
+    "Elvarra wholesale",
+    "B2B jewellery supplier India",
+    "jewellery reseller India",
+    "bulk jewellery supplier India",
+    "anti tarnish rings wholesale",
+    "anti tarnish earrings wholesale",
+    "anti tarnish necklaces wholesale",
+    "wholesale accessories India",
+  ],
+
   applicationName: brand,
-  category: "fashion",
+  category: "fashion jewellery wholesale",
+
   alternates: {
-    canonical: "/", // will be overridden on pages
+    canonical: "/",
   },
+
   openGraph: {
     type: "website",
-    siteName: brand,
+    siteName: "Elvarra Wholesale",
     title: defaultTitle,
     description: defaultDescription,
     url: siteUrl,
-    images: ["/images/about-3.jpg"], // put a default OG image in /public/og/default.jpg
+    images: [
+      {
+        url: "/images/hero2.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Elvarra Wholesale Anti Tarnish Jewellery India",
+      },
+    ],
   },
+
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: defaultDescription,
+    images: ["/images/hero2.jpg"],
+  },
+
   robots: {
     index: true,
     follow: true,
