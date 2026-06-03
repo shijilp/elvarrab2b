@@ -41,6 +41,9 @@ const targetUrl = `${BACKEND}/${joined}${needsSlash ? "/" : ""}${qs}`;
   });
 const outHeaders = new Headers(r.headers);
 // Force clients/CDNs to NOT cache API responses
+  outHeaders.delete("content-encoding");
+outHeaders.delete("transfer-encoding");
+  
 outHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
 outHeaders.set("Pragma", "no-cache");
 outHeaders.set("Expires", "0");
