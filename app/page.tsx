@@ -2,13 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SectionTitle from "@/components/SectionTitle";
+import { trackEvent } from "@/lib/analytics";
 
 export default function Page() {
   const [tier, setTier] = useState<"starter" | "growth" | "enterprise">(
     "starter",
   );
+  useEffect(() => {
+    trackEvent({
+      event_type: "B2b_entry",
+    });
+  }, []);
 
   const pricing = useMemo(() => {
     switch (tier) {
@@ -47,7 +53,7 @@ export default function Page() {
           title: "Starter Trade Account",
           subtitle: "Small MOQ to test demand",
           bullets: [
-            "MOQ 3 per SKU",
+            "MOQ 1-2 per SKU",
             "Starter wholesale slabs",
             "Fast dispatch for in-stock pieces",
             "Simple reorder workflow",
@@ -139,7 +145,7 @@ export default function Page() {
 
               <div className="mt-7 grid max-w-xl grid-cols-1 gap-3 text-xs text-slate-300 sm:grid-cols-3">
                 {[
-                  "MOQ from 3 / SKU",
+                  "MOQ from 1-3 / SKU",
                   "Trade pricing slabs",
                   "Fast reorder support",
                 ].map((item) => (
