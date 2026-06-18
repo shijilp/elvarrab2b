@@ -8,6 +8,10 @@ import FloatingCheckoutButton from "@/components/ui/FloatingCheckoutbtn";
 import { RFQCartProvider } from "@/context/RFQCartContext";
 import { CartProvider } from "@/context/CartContext";
 import FloatingCheckoutButtonOne from "@/components/ui/FloatingCheckoutbtn_one";
+import { StoreSettingsProvider } from "@/context/StoreSettingsProvider";
+import { StoreSettings } from "@/lib/storeSettings.types";
+import { getStoreSettings } from "@/lib/getStoreSettings";
+
 const siteUrl = "https://b2b.elvarra.in";
 const brand = "Elvarra";
 const defaultTitle =
@@ -86,11 +90,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getStoreSettings();
+  console.log("La", settings);
   return (
     <html lang="en" className="dark overflow-x-clip" suppressHydrationWarning>
       <body
@@ -99,14 +105,16 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
-            <CartProvider>
-              <RFQCartProvider>
-                <Header />
-                {children}
-                <FloatingCheckoutButtonOne />
-                <Footer />
-              </RFQCartProvider>
-            </CartProvider>
+            <StoreSettingsProvider value={settings}>
+              <CartProvider>
+                <RFQCartProvider>
+                  <Header />
+                  {children}
+                  <FloatingCheckoutButtonOne />
+                  <Footer />
+                </RFQCartProvider>
+              </CartProvider>
+            </StoreSettingsProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

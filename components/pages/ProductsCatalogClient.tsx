@@ -471,7 +471,7 @@ export default function ProductsCatalogClient() {
                   <span className="text-sm text-slate-300">
                     Qty / SKU ratio
                   </span>
-                  <span className="font-bold text-white">1.40+</span>
+                  <span className="font-bold text-white">2.00+</span>
                 </div>
                 <div className="flex items-center justify-between rounded-2xl bg-slate-900 p-4">
                   <span className="text-sm text-slate-300">
