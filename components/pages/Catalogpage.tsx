@@ -7,7 +7,6 @@ import MaintenancePage from "./Maintenance";
 
 const Catalogpage = () => {
   const settings = useStoreSettings();
-  console.log(settings);
   return (
     <div>
       {settings.b2bmaint ? <MaintenancePage /> : <ProductsCatalogClient />}

@@ -6,7 +6,6 @@ export const runtime = "nodejs";
 export async function POST() {
   const cookieStore = await cookies();
   const refresh = cookieStore.get("refresh")?.value;
-  console.log(cookieStore.getAll(),"rf")
   if (!refresh)
     return NextResponse.json({ detail: "No refresh token" }, { status: 401 });
 

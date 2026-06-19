@@ -85,7 +85,7 @@ export default function ProductsCatalogClient() {
 
   const [showFilters, setShowFilters] = useState(false);
   const { user, initialized } = useAuth();
-  const FREE_SHIP_THRESHOLD = 500;
+  const FREE_SHIP_THRESHOLD = 3000;
 
   const pageSize = 18;
   const [loading, setLoading] = useState(false);

@@ -6,15 +6,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { CartItem, CartProduct, Variant } from "@/types";
 import AlertModal from "@/components/AlertModal";
+import { calculateWholesaleEligibility } from "@/lib/wholesaleRules";
+import WholesaleEligibilityCard from "@/components/order/WholesaleEligibilityCard";
+import { useAuth } from "@/context/AuthContext";
 
 function formatMoney(n: number) {
-  return n.toLocaleString(undefined, {
+  return Number(n || 0).toLocaleString("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 2,
   });
 }
-
 type GuestDiscountResponse = {
   line_discounts: { product_id: number; line_discount: string }[];
   discount_total: string;
@@ -26,6 +28,7 @@ export default function CartPage() {
   const [busyItemKey, setBusyItemKey] = useState<string | null>(null);
   const [successItemKey, setSuccessItemKey] = useState<string | null>(null);
   const [cartNotice, setCartNotice] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const [discountInfo, setDiscountInfo] =
     useState<GuestDiscountResponse | null>(null);
@@ -112,24 +115,33 @@ export default function CartPage() {
     [cartItems],
   );
 
+  const wholesaleEligibility = useMemo(() => {
+    return calculateWholesaleEligibility({
+      cartItems,
+      subtotal,
+      discount,
+      user,
+    });
+  }, [cartItems, subtotal, discount]);
+
   const totalSku = cartItems.length;
 
-  const qtyPerSku = useMemo(() => {
-    return totalSku > 0 ? totalQty / totalSku : 0;
-  }, [totalQty, totalSku]);
+  // const qtyPerSku = useMemo(() => {
+  //   return totalSku > 0 ? totalQty / totalSku : 0;
+  // }, [totalQty, totalSku]);
 
-  const minWholesaleValue = 2000;
-  const minQtyPerSku = 2;
+  //const minWholesaleValue = 2000;
+  //const minQtyPerSku = 2;
 
-  const isValueEligible = wholesaleOrderValue >= minWholesaleValue;
-  const isQtyEligible = qtyPerSku >= minQtyPerSku;
-  const isWholesaleEligible = isValueEligible && isQtyEligible;
+  // const isValueEligible = wholesaleOrderValue >= minWholesaleValue;
+  // const isQtyEligible = qtyPerSku >= minQtyPerSku;
+  //const isWholesaleEligible = isValueEligible && isQtyEligible;
 
-  const valueRequired = Math.max(0, minWholesaleValue - wholesaleOrderValue);
-  const qtyNeededForRatio = Math.max(
-    0,
-    Math.ceil(minQtyPerSku * totalSku - totalQty),
-  );
+  //const valueRequired = Math.max(0, minWholesaleValue - wholesaleOrderValue);
+  //const qtyNeededForRatio = Math.max(
+  // 0,
+  // Math.ceil(minQtyPerSku * totalSku - totalQty),
+  // );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -418,8 +430,13 @@ export default function CartPage() {
                   Wholesale Checkout
                 </h2>
               </div>
-
-              <div
+              {cartItems.length > 0 && (
+                <WholesaleEligibilityCard
+                  eligibility={wholesaleEligibility}
+                  className="mb-5"
+                />
+              )}
+              {/*  <div
                 className={`rounded-3xl border p-4 ${
                   isWholesaleEligible
                     ? "border-emerald-500/40 bg-emerald-500/10"
@@ -438,7 +455,9 @@ export default function CartPage() {
                         : "bg-amber-400 text-slate-950"
                     }`}
                   >
-                    {isWholesaleEligible ? "Approved" : "Pending"}
+                    {wholesaleEligibility.isWholesaleEligible
+                      ? "Approved"
+                      : "Pending"}
                   </span>
                 </div>
 
@@ -529,7 +548,7 @@ export default function CartPage() {
                     )}
                   </div>
                 )}
-              </div>
+              </div> */}
 
               <div className="space-y-3 rounded-3xl border border-slate-800 bg-slate-950/70 p-4 text-sm">
                 <div className="flex justify-between">
@@ -559,7 +578,7 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {isWholesaleEligible ? (
+              {wholesaleEligibility.isWholesaleEligible ? (
                 <Link
                   href="/orders/checkout"
                   className="block w-full rounded-2xl border border-blue-500/50 bg-blue-600 px-5 py-3 text-center font-bold text-white shadow-[0_20px_60px_-25px_rgba(59,130,246,.95)] transition hover:bg-blue-500"

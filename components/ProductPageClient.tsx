@@ -61,9 +61,7 @@ const ProductPageClient: React.FC = () => {
     () => [...rawTiers].sort((a, b) => a.min_qty - b.min_qty),
     [rawTiers],
   );
-  console.log("Tiers:", tiers);
   const initialMOQ = tiers.length ? tiers[0].min_qty : 1;
-  console.log("Initial MOQ:", initialMOQ);
   const [orderQty, setOrderQty] = useState<number>(initialMOQ);
 
   useEffect(() => {

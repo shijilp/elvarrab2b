@@ -10,6 +10,8 @@ import { loadRazorpay } from "@/lib/razorpay";
 import Image from "next/image";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import ApplyCoupon from "@/components/ApplyCoupon";
+import { useAuth } from "@/context/AuthContext";
+import { calculateWholesaleEligibility } from "@/lib/wholesaleRules";
 
 // Theme palette utilities (local)
 type ThemeMode = "dark" | "light";
@@ -108,6 +110,7 @@ export default function CheckoutPage() {
   const [wallet, setWallet] = useState<WalletSummary | null>(null);
   const [walletWillUse, setWalletWillUse] = useState<number>(0);
   const [refWalletWillUse, setRefWalletWillUse] = useState<number>(0);
+  const { user } = useAuth();
 
   const [payableNow, setPayableNow] = useState<number>(0);
 
@@ -127,6 +130,7 @@ export default function CheckoutPage() {
   if (typeof window !== "undefined") {
     ref_code = localStorage.getItem("elv_ref") || "";
   }
+
   // Totals
   const subtotal = useMemo(
     () => cartItems.reduce((s, it) => s + it.price * it.quantity, 0),
@@ -151,6 +155,15 @@ export default function CheckoutPage() {
   //   if (subtotal === 0) setShipping(0);
   //   else if (subtotal >= 999) setShipping(0);
   // }, [subtotal]);
+
+  const wholesaleEligibility = useMemo(() => {
+    return calculateWholesaleEligibility({
+      cartItems,
+      subtotal,
+      discount,
+      user,
+    });
+  }, [cartItems, subtotal]);
   useEffect(() => {
     let ignore = false;
     (async () => {
@@ -232,19 +245,20 @@ export default function CheckoutPage() {
     const totalSku = cartItems.length;
     const qtyPerSku = totalSku > 0 ? totalQty / totalSku : 0;
 
-    if (subtotal < 2000) {
-      const alertMsg = "Minimum wholesale order value should be ₹2,000.";
-      setError(alertMsg);
-      alert(alertMsg);
-      return;
-    }
-
-    if (qtyPerSku < 2) {
-      const alertMsg =
-        "Minimum wholesale quantity ratio should be 2 or above. Please increase quantity or reduce SKUs.";
-      setError(alertMsg);
-      alert(alertMsg);
-      return;
+    if (!wholesaleEligibility.isWholesaleEligible) {
+      if (subtotal < wholesaleEligibility.minWholesaleValue) {
+        const alertMsg = "Minimum wholesale order value should be ₹2,000.";
+        setError(alertMsg);
+        alert(alertMsg);
+        return;
+      }
+      if (qtyPerSku < wholesaleEligibility.qtyNeededForRatio) {
+        const alertMsg =
+          "Minimum wholesale quantity ratio should be 2 or above. Please increase quantity or reduce SKUs.";
+        setError(alertMsg);
+        alert(alertMsg);
+        return;
+      }
     }
 
     if (addr?.full_name == null || addr.email == null || addr.phone == null) {
@@ -363,6 +377,7 @@ export default function CheckoutPage() {
 
     return () => controller.abort();
   }, [addr?.pincode]);
+
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.22),transparent_35%),radial-gradient(circle_at_top_right,rgba(14,165,233,0.14),transparent_32%)]" />
@@ -594,7 +609,12 @@ export default function CheckoutPage() {
               <ApplyCoupon email={addr?.email} shippingcost={shipping} />
             </div>
             <BtnElvarra
-              disabled={placing || cartItems.length === 0 || !addr}
+              disabled={
+                !wholesaleEligibility.isWholesaleEligible ||
+                placing ||
+                cartItems.length === 0 ||
+                !addr
+              }
               onClick={placeOrder}
               className={`w-full rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_60px_-28px_rgba(59,130,246,.9)] transition hover:-translate-y-[1px] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-30`}
             >

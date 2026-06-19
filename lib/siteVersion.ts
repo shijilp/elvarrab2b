@@ -49,7 +49,6 @@ export function ensureSiteVersion(serverVersionRaw: string | number | null | und
     const localVersion = localStorage.getItem(VERSION_KEY);
 
     if (!localVersion || localVersion !== serverVersion) {
-      console.log("🔄 Elvarra version changed. Purging client storage...");
 
       purgeLocalStorage();
       purgeCookies();

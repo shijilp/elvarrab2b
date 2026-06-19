@@ -97,7 +97,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settings = await getStoreSettings();
-  console.log("La", settings);
   return (
     <html lang="en" className="dark overflow-x-clip" suppressHydrationWarning>
       <body
