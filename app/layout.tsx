@@ -11,6 +11,7 @@ import FloatingCheckoutButtonOne from "@/components/ui/FloatingCheckoutbtn_one";
 import { StoreSettingsProvider } from "@/context/StoreSettingsProvider";
 import { StoreSettings } from "@/lib/storeSettings.types";
 import { getStoreSettings } from "@/lib/getStoreSettings";
+import SiteVersionGate from "@/components/SiteVersionGate";
 
 const siteUrl = "https://b2b.elvarra.in";
 const brand = "Elvarra";
@@ -106,6 +107,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <StoreSettingsProvider value={settings}>
+              <SiteVersionGate />
               <CartProvider>
                 <RFQCartProvider>
                   <Header />
