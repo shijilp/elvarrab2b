@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import Image from "next/image";
-import { CartProduct } from "@/types";
+import { CartItem, CartProduct, Variant } from "@/types";
 import AlertModal from "@/components/AlertModal";
 
 function formatMoney(n: number) {
@@ -165,6 +165,29 @@ export default function CartPage() {
     );
   };
 
+  const getCartItemVariant = (item: CartItem): Variant | null => {
+    if (!item.variant_id) return null;
+
+    return (
+      item.product?.variants?.find(
+        (v) => Number(v.id) === Number(item.variant_id),
+      ) ?? null
+    );
+  };
+  const getVariantName = (variant: Variant | null) => {
+    if (!variant) return "";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const v = variant as any;
+
+    return (
+      v.name ||
+      v.variant_name ||
+      v.title ||
+      [v.size, v.color, v.material, v.coating].filter(Boolean).join(" / ") ||
+      `Variant #${variant.id}`
+    );
+  };
+
   return (
     <main className="min-h-dvh bg-[#07111f] text-slate-100">
       <section className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-[#07111f] via-slate-950 to-slate-900">
@@ -237,7 +260,8 @@ export default function CartPage() {
                 const itemKey = getItemKey(it.id, it.variant_id ?? null);
                 const isBusy = busyItemKey === itemKey;
                 const isSuccess = successItemKey === itemKey;
-
+                const selectedVariant = getCartItemVariant(it);
+                const variantName = getVariantName(selectedVariant);
                 return (
                   <div
                     key={`${it.id}-${it.variant_id ?? "no-variant"}`}
@@ -273,6 +297,11 @@ export default function CartPage() {
                             <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-blue-300">
                               Wholesale SKU
                             </div>
+                            {selectedVariant && (
+                              <div className="mt-1 inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-300">
+                                {variantName}
+                              </div>
+                            )}
                           </div>
 
                           <button

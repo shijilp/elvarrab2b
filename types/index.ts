@@ -119,7 +119,7 @@ export interface CartItem   {
   discount:number |0
   variant_id:number |null
   coupon_discount:number |0
-    is_free_shipping: boolean;
+  is_free_shipping: boolean;
   stock: number
 
   //in_stock: boolean

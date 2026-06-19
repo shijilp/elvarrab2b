@@ -24,66 +24,115 @@ const AddToCartBtn = ({
   const { cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
 
   const [showAlert, setShowAlert] = useState(false);
+  const [showVariantPopup, setShowVariantPopup] = useState(false);
 
-  // const line = useMemo(
-  //   () => cartItems?.find((it) => (it?.id ?? it.id) === product.id),
-  //   [cartItems, product.id]
+  const variants = product.variants ?? [];
 
-  // );
+  const hasMultipleVariants = !variant && variants.length > 1;
 
-  const effectiveVariant = useMemo<Variant | null>(() => {
+  /**
+   * Important:
+   * Do NOT auto-select first variant when there are multiple variants.
+   * Only use directVariant when:
+   * 1. parent already passed selected variant
+   * 2. product has only one variant
+   * 3. product has no variant
+   */
+  const directVariant = useMemo<Variant | null>(() => {
     if (variant) return variant;
-    if (product.variants && product.variants.length > 0) {
-      return product.variants[0];
+
+    if (variants.length === 1) {
+      return variants[0];
     }
+
     return null;
-  }, [variant, product]);
+  }, [variant, variants]);
+
   const line = useMemo(
     () =>
       cartItems?.find((it) => {
-        const variantId = effectiveVariant?.id ?? null;
+        const variantId = directVariant?.id ?? null;
 
-        // assuming backend returns: { product: number, variant: number | null, ... }
         return (
           it.product?.id === product.id && (it.variant_id ?? null) === variantId
         );
       }),
-    [cartItems, product.id, effectiveVariant?.id],
+    [cartItems, product.id, directVariant?.id],
   );
 
   const qty = line?.quantity ?? 0;
   const inCart = qty > 0;
-  // const stockAvailable = product.stock ?? 0;
-  const stockAvailable = variant
-    ? (variant.inventory ?? 0)
-    : (product.stock ?? 0);
+
+  const getVariantStock = (v: Variant) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return Number((v as any).inventory ?? (v as any).stock ?? 0);
+  };
+
+  const stockAvailable = directVariant
+    ? getVariantStock(directVariant)
+    : Number(product.stock ?? 0);
+
+  const getVariantLabel = (v: Variant) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const item = v as any;
+
+    return (
+      item.name ||
+      item.variant_name ||
+      item.title ||
+      [item.size, item.color, item.material, item.coating]
+        .filter(Boolean)
+        .join(" / ") ||
+      `Variant ${v.id}`
+    );
+  };
+
+  const getVariantPrice = (v: Variant) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const item = v as any;
+    return item.price ?? item.selling_price ?? item.unit_price ?? null;
+  };
 
   const increment = () => {
     if (qty + 1 > stockAvailable) {
       setShowAlert(true);
       return;
     }
-    updateQuantity(product.id, qty + 1, variant?.id ?? null);
+
+    updateQuantity(product.id, qty + 1, directVariant?.id ?? null);
   };
 
   const decrement = () => {
     const next = qty - 1;
+
     if (next <= 0) {
-      removeFromCart?.(product.id, variant?.id ?? null);
+      removeFromCart?.(product.id, directVariant?.id ?? null);
     } else {
-      updateQuantity(product.id, next, variant?.id ?? null);
+      updateQuantity(product.id, next, directVariant?.id ?? null);
     }
   };
 
   const handleAddToCart = async () => {
-    if (outofStock) return;
-    // 1) normal cart logic
-    addToCart(product, effectiveVariant?.id ?? null);
+    if (outofStock || noPrice) return;
 
-    // 2) build cart product ids (include this product)
-    const cartProductIds = Array.from(
-      new Set([...cartItems.map((it) => it.id as number), product.id]),
-    );
+    if (hasMultipleVariants) {
+      setShowVariantPopup(true);
+      return;
+    }
+
+    addToCart(product, directVariant?.id ?? null);
+  };
+
+  const handleVariantAdd = (selectedVariant: Variant) => {
+    const selectedStock = getVariantStock(selectedVariant);
+
+    if (selectedStock <= 0) {
+      setShowAlert(true);
+      return;
+    }
+
+    addToCart(product, selectedVariant.id);
+    setShowVariantPopup(false);
   };
 
   return (
@@ -125,10 +174,8 @@ const AddToCartBtn = ({
             className ?? "",
           ].join(" ")}
         >
-          {/* top highlight */}
           <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/70 to-transparent" />
 
-          {/* animated trade glow */}
           {!outofStock && (
             <span className="absolute inset-0 overflow-hidden">
               <span className="absolute -left-[150%] top-0 h-full w-[120%] skew-x-[-18deg] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent group-hover:left-[120%] transition-all duration-1000" />
@@ -142,9 +189,11 @@ const AddToCartBtn = ({
               ? "Out of Stock"
               : noPrice
                 ? "Request Quote"
-                : "Add to Wholesale Order"}
+                : hasMultipleVariants
+                  ? "Choose Variant"
+                  : "Add to Wholesale Order"}
 
-            {!outofStock && (
+            {!outofStock && !noPrice && (
               <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] uppercase tracking-widest text-blue-300">
                 Trade
               </span>
@@ -153,34 +202,30 @@ const AddToCartBtn = ({
         </button>
       ) : (
         <div className="mt-3 relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-[#07111f] p-1 shadow-[0_10px_40px_-20px_rgba(37,99,235,.45)]">
-          {/* subtle top line */}
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/60 to-transparent" />
 
           <div className="flex h-14 items-center gap-2">
-            {/* DECREASE */}
             <button
               onClick={decrement}
               aria-label="Decrease quantity"
               className="
-        h-11 w-11 shrink-0
-        rounded-xl
-        grid place-items-center
-        border border-slate-700
-        bg-slate-900
-        text-slate-200
-        hover:border-red-500/60
-        hover:bg-red-500/10
-        hover:text-red-300
-        active:scale-95
-        transition-all
-      "
+                h-11 w-11 shrink-0
+                rounded-xl
+                grid place-items-center
+                border border-slate-700
+                bg-slate-900
+                text-slate-200
+                hover:border-red-500/60
+                hover:bg-red-500/10
+                hover:text-red-300
+                active:scale-95
+                transition-all
+              "
             >
               <span className="text-xl leading-none">−</span>
             </button>
 
-            {/* CENTER */}
             <div className="min-w-0 flex-1 text-center">
-              {/* Desktop */}
               <div className="hidden sm:block">
                 <div className="text-[10px] uppercase tracking-[0.25em] text-blue-300">
                   Wholesale Qty
@@ -197,32 +242,119 @@ const AddToCartBtn = ({
                 </div>
               </div>
 
-              {/* Mobile */}
               <div className="sm:hidden">
                 <span className="text-lg font-bold text-blue-300">{qty}</span>
               </div>
             </div>
 
-            {/* INCREASE */}
             <button
               onClick={increment}
               aria-label="Increase quantity"
               className="
-        h-11 w-11 shrink-0
-        rounded-xl
-        grid place-items-center
-        border border-blue-700/50
-        bg-blue-950/40
-        text-blue-200
-        hover:border-blue-400
-        hover:bg-blue-500/15
-        hover:text-white
-        active:scale-95
-        transition-all
-      "
+                h-11 w-11 shrink-0
+                rounded-xl
+                grid place-items-center
+                border border-blue-700/50
+                bg-blue-950/40
+                text-blue-200
+                hover:border-blue-400
+                hover:bg-blue-500/15
+                hover:text-white
+                active:scale-95
+                transition-all
+              "
             >
               <span className="text-xl leading-none">+</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* VARIANT SELECTION POPUP */}
+      {showVariantPopup && (
+        <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/70 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
+          <div className="w-full max-w-md overflow-hidden rounded-3xl border border-blue-800/40 bg-gradient-to-b from-slate-950 via-slate-900 to-[#07111f] shadow-[0_30px_100px_-40px_rgba(59,130,246,.9)]">
+            <div className="border-b border-slate-800 px-5 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-white">
+                    Choose Variant
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Select the option you want to add to wholesale order.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowVariantPopup(false)}
+                  className="grid h-9 w-9 place-items-center rounded-full border border-slate-700 bg-slate-900 text-slate-300 hover:border-red-400 hover:text-red-300"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto p-4">
+              <div className="space-y-3">
+                {variants.map((v) => {
+                  const vStock = getVariantStock(v);
+                  const vPrice = getVariantPrice(v);
+                  const disabled = vStock <= 0;
+
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => handleVariantAdd(v)}
+                      className={[
+                        "w-full rounded-2xl border p-4 text-left transition-all",
+                        disabled
+                          ? "cursor-not-allowed border-slate-800 bg-slate-900/50 opacity-50"
+                          : "border-slate-700 bg-slate-900/80 hover:border-blue-400 hover:bg-blue-500/10 active:scale-[0.99]",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-white">
+                            {getVariantLabel(v)}
+                          </div>
+
+                          <div className="mt-1 text-xs text-slate-400">
+                            {disabled
+                              ? "Out of stock"
+                              : `${vStock} item(s) available`}
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 text-right">
+                          {vPrice !== null && (
+                            <div className="text-sm font-bold text-blue-300">
+                              ₹{vPrice}
+                            </div>
+                          )}
+
+                          <div className="mt-1 rounded-full bg-blue-500/15 px-2 py-1 text-[10px] uppercase tracking-widest text-blue-300">
+                            Add
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-t border-slate-800 px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setShowVariantPopup(false)}
+                className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
