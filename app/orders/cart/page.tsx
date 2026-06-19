@@ -23,9 +23,15 @@ type GuestDiscountResponse = {
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
   const [showAlert, setShowAlert] = useState(false);
+  const [busyItemKey, setBusyItemKey] = useState<string | null>(null);
+  const [successItemKey, setSuccessItemKey] = useState<string | null>(null);
+  const [cartNotice, setCartNotice] = useState<string | null>(null);
 
   const [discountInfo, setDiscountInfo] =
     useState<GuestDiscountResponse | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getItemKey = (pid: number, vid?: any) =>
+    `${pid}-${vid ?? "no-variant"}`;
 
   const subtotal = useMemo(
     () => cartItems.reduce((s, it) => s + it.price * it.quantity, 0),
@@ -36,6 +42,40 @@ export default function CartPage() {
     () => cartItems.some((it) => it.is_free_shipping === true),
     [cartItems],
   );
+
+  const runCartAction = async (
+    key: string,
+    successMessage: string,
+    action: () => void | Promise<void>,
+  ) => {
+    setBusyItemKey(key);
+    setSuccessItemKey(null);
+    setCartNotice(null);
+
+    try {
+      await Promise.resolve(action());
+
+      setSuccessItemKey(key);
+      setCartNotice(successMessage);
+
+      window.setTimeout(() => {
+        setSuccessItemKey((current) => (current === key ? null : current));
+      }, 800);
+
+      window.setTimeout(() => {
+        setCartNotice((current) =>
+          current === successMessage ? null : current,
+        );
+      }, 1800);
+    } catch {
+      setCartNotice("Something went wrong. Please try again.");
+    } finally {
+      // keep loading visible briefly even if cart context updates instantly
+      window.setTimeout(() => {
+        setBusyItemKey((current) => (current === key ? null : current));
+      }, 300);
+    }
+  };
 
   const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(3000) - 1;
   const SHIPPING_FEE = hasFreeShippingItem ? 0 : Number(40);
@@ -88,20 +128,41 @@ export default function CartPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const decrement = (qty: number, pid: number, vid?: any) => {
+    const key = getItemKey(pid, vid);
     const next = qty - 1;
+
     if (next <= 0) {
-      removeFromCart?.(pid, vid ?? null);
+      runCartAction(key, "Item removed from cart.", () =>
+        removeFromCart?.(pid, vid ?? null),
+      );
     } else {
-      updateQuantity(pid, next, vid ?? null);
+      runCartAction(key, "Cart quantity updated.", () =>
+        updateQuantity(pid, next, vid ?? null),
+      );
     }
   };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const increment = (product: CartProduct, qty: number, vid?: any) => {
     if (qty + 1 > product.stock) {
       setShowAlert(true);
       return;
     }
-    updateQuantity(product.id, qty + 1, vid ?? null);
+
+    const key = getItemKey(product.id, vid);
+
+    runCartAction(key, "Cart quantity updated.", () =>
+      updateQuantity(product.id, qty + 1, vid ?? null),
+    );
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const changeQuantity = (pid: number, value: number, vid?: any) => {
+    const key = getItemKey(pid, vid);
+    const nextQty = Math.max(1, Number(value) || 1);
+
+    runCartAction(key, "Cart quantity updated.", () =>
+      updateQuantity(pid, nextQty, vid ?? null),
+    );
   };
 
   return (
@@ -151,6 +212,11 @@ export default function CartPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+        {cartNotice && (
+          <div className="mb-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 shadow-[0_14px_40px_-28px_rgba(16,185,129,.9)]">
+            {cartNotice}
+          </div>
+        )}
         {cartItems.length === 0 && (
           <div className="mt-8 rounded-3xl border border-slate-800 bg-slate-950/80 p-10 text-center shadow-[0_24px_80px_-45px_rgba(59,130,246,.8)]">
             <p className="text-slate-300">Your wholesale cart is empty.</p>
@@ -167,103 +233,131 @@ export default function CartPage() {
         {cartItems.length > 0 && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px]">
             <div className="space-y-4">
-              {cartItems.map((it) => (
-                <div
-                  key={`${it.id}-${it.variant_id ?? "no-variant"}`}
-                  className="overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-[#07111f] p-3 shadow-[0_14px_50px_-35px_rgba(37,99,235,.8)] sm:p-4"
-                >
-                  <div className="flex gap-4">
-                    <Image
-                      src={it.image}
-                      alt={it.name}
-                      width={104}
-                      height={104}
-                      className="h-24 w-24 flex-none rounded-2xl object-cover ring-1 ring-slate-800 sm:h-28 sm:w-28"
-                    />
+              {cartItems.map((it) => {
+                const itemKey = getItemKey(it.id, it.variant_id ?? null);
+                const isBusy = busyItemKey === itemKey;
+                const isSuccess = successItemKey === itemKey;
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <div className="line-clamp-2 font-semibold text-white">
-                            {it.name}
-                          </div>
-
-                          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-blue-300">
-                            Wholesale SKU
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() =>
-                            removeFromCart(it.id, it.variant_id ?? null)
-                          }
-                          className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm text-red-200 transition hover:border-red-400 hover:bg-red-500/20"
-                        >
-                          Remove
-                        </button>
+                return (
+                  <div
+                    key={`${it.id}-${it.variant_id ?? "no-variant"}`}
+                    className={`relative overflow-hidden rounded-3xl border bg-gradient-to-r from-slate-950 via-slate-900 to-[#07111f] p-3 shadow-[0_14px_50px_-35px_rgba(37,99,235,.8)] transition-all duration-200 sm:p-4 ${
+                      isSuccess
+                        ? "border-emerald-400/60 ring-2 ring-emerald-400/30"
+                        : isBusy
+                          ? "scale-[0.995] border-blue-400/60 opacity-80 ring-2 ring-blue-400/30"
+                          : "border-slate-800"
+                    }`}
+                  >
+                    {isBusy && (
+                      <div className="absolute inset-x-0 top-0 h-1 bg-blue-500/20">
+                        <div className="h-full w-1/2 animate-pulse bg-blue-400" />
                       </div>
+                    )}
+                    <div className="flex gap-4">
+                      <Image
+                        src={it.image}
+                        alt={it.name}
+                        width={104}
+                        height={104}
+                        className="h-24 w-24 flex-none rounded-2xl object-cover ring-1 ring-slate-800 sm:h-28 sm:w-28"
+                      />
 
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3">
-                          <p className="text-[11px] uppercase tracking-widest text-slate-400">
-                            Line Value
-                          </p>
-                          <p className="mt-1 text-base font-bold text-white">
-                            {formatMoney(it.price * it.quantity)}
-                          </p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <div className="line-clamp-2 font-semibold text-white">
+                              {it.name}
+                            </div>
 
-                          {it.discount > 0 && (
-                            <p className="mt-1 text-xs text-emerald-300">
-                              Discount: {formatMoney(it.discount)}
-                            </p>
-                          )}
+                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-blue-300">
+                              Wholesale SKU
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() =>
+                              runCartAction(
+                                itemKey,
+                                "Item removed from cart.",
+                                () =>
+                                  removeFromCart(it.id, it.variant_id ?? null),
+                              )
+                            }
+                            className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm text-red-200 transition active:scale-95 hover:border-red-400 hover:bg-red-500/20 disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {isBusy ? "Removing..." : "Remove"}
+                          </button>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3">
-                          <p className="text-[11px] uppercase tracking-widest text-slate-400">
-                            Trade Quantity
-                          </p>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3">
+                            <p className="text-[11px] uppercase tracking-widest text-slate-400">
+                              Line Value
+                            </p>
+                            <p className="mt-1 text-base font-bold text-white">
+                              {formatMoney(it.price * it.quantity)}
+                            </p>
 
-                          <div className="mt-2 inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-[#07111f] p-1">
-                            <button
-                              onClick={() =>
-                                decrement(
-                                  it.quantity,
-                                  it.id,
-                                  it.variant_id ?? null,
-                                )
-                              }
-                              className="grid h-9 w-9 place-items-center rounded-xl border border-slate-700 bg-slate-900 text-slate-200 transition hover:border-red-500/60 hover:bg-red-500/10 hover:text-red-300"
-                            >
-                              –
-                            </button>
+                            {it.discount > 0 && (
+                              <p className="mt-1 text-xs text-emerald-300">
+                                Discount: {formatMoney(it.discount)}
+                              </p>
+                            )}
+                          </div>
 
-                            <input
-                              type="number"
-                              value={it.quantity}
-                              min={1}
-                              onChange={(e) =>
-                                updateQuantity(
-                                  it.id,
-                                  Number(e.target.value) || 1,
-                                  it.variant_id ?? null,
-                                )
-                              }
-                              className="w-16 bg-transparent text-center text-base font-bold text-blue-300 outline-none"
-                            />
-                            <button
-                              onClick={() =>
-                                increment(
-                                  it.product as CartProduct,
-                                  it.quantity,
-                                  it.variant_id,
-                                )
-                              }
-                              className="grid h-9 w-9 place-items-center rounded-xl border border-blue-700/50 bg-blue-950/40 text-blue-200 transition hover:border-blue-400 hover:bg-blue-500/15 hover:text-white"
-                            >
-                              +
-                            </button>
-                            {/* <button
+                          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3">
+                            <p className="text-[11px] uppercase tracking-widest text-slate-400">
+                              Trade Quantity
+                            </p>
+
+                            <div className="mt-2 inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-[#07111f] p-1">
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() =>
+                                  decrement(
+                                    it.quantity,
+                                    it.id,
+                                    it.variant_id ?? null,
+                                  )
+                                }
+                                className="grid h-9 w-9 place-items-center rounded-xl border border-slate-700 bg-slate-900 text-slate-200 transition active:scale-95 hover:border-red-500/60 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-wait disabled:opacity-60"
+                              >
+                                {isBusy ? "…" : "–"}
+                              </button>
+
+                              <input
+                                type="number"
+                                value={it.quantity}
+                                min={1}
+                                disabled={isBusy}
+                                onChange={(e) =>
+                                  changeQuantity(
+                                    it.id,
+                                    Number(e.target.value) || 1,
+                                    it.variant_id ?? null,
+                                  )
+                                }
+                                className="w-16 bg-transparent text-center text-base font-bold text-blue-300 outline-none disabled:cursor-wait disabled:opacity-60"
+                              />
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() =>
+                                  increment(
+                                    it.product as CartProduct,
+                                    it.quantity,
+                                    it.variant_id,
+                                  )
+                                }
+                                className="grid h-9 w-9 place-items-center rounded-xl border border-blue-700/50 bg-blue-950/40 text-blue-200 transition active:scale-95 hover:border-blue-400 hover:bg-blue-500/15 hover:text-white disabled:cursor-wait disabled:opacity-60"
+                              >
+                                {isBusy ? "…" : "+"}
+                              </button>
+                              {/* <button
                               onClick={() =>
                                 updateQuantity(
                                   it.id,
@@ -275,13 +369,14 @@ export default function CartPage() {
                             >
                               +
                             </button> */}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <aside className="h-fit space-y-4 rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-[#07111f] p-5 shadow-[0_24px_80px_-45px_rgba(59,130,246,.9)]">
