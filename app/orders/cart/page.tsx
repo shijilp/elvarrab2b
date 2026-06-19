@@ -37,6 +37,11 @@ export default function CartPage() {
     () => cartItems.reduce((s, it) => s + it.price * it.quantity, 0),
     [cartItems],
   );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cleanVariantId = (vid?: any) => {
+    if (vid === null || vid === undefined || vid === "") return undefined;
+    return vid;
+  };
 
   const hasFreeShippingItem = useMemo(
     () => cartItems.some((it) => it.is_free_shipping === true),
@@ -127,18 +132,15 @@ export default function CartPage() {
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const decrement = (qty: number, pid: number, vid?: any) => {
-    const key = getItemKey(pid, vid);
+    const variantId = cleanVariantId(vid);
     const next = qty - 1;
 
     if (next <= 0) {
-      runCartAction(key, "Item removed from cart.", () =>
-        removeFromCart?.(pid, vid ?? null),
-      );
+      removeFromCart(pid, variantId);
     } else {
-      runCartAction(key, "Cart quantity updated.", () =>
-        updateQuantity(pid, next, vid ?? null),
-      );
+      updateQuantity(pid, next, variantId);
     }
   };
 
@@ -149,12 +151,10 @@ export default function CartPage() {
       return;
     }
 
-    const key = getItemKey(product.id, vid);
-
-    runCartAction(key, "Cart quantity updated.", () =>
-      updateQuantity(product.id, qty + 1, vid ?? null),
-    );
+    const variantId = cleanVariantId(vid);
+    updateQuantity(product.id, qty + 1, variantId);
   };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const changeQuantity = (pid: number, value: number, vid?: any) => {
     const key = getItemKey(pid, vid);
@@ -258,6 +258,8 @@ export default function CartPage() {
             <div className="space-y-4">
               {cartItems.map((it) => {
                 const itemKey = getItemKey(it.id, it.variant_id ?? null);
+                const productId =
+                  (it.product as CartProduct | undefined)?.id ?? it.id;
                 const isBusy = busyItemKey === itemKey;
                 const isSuccess = successItemKey === itemKey;
                 const selectedVariant = getCartItemVariant(it);
@@ -312,7 +314,10 @@ export default function CartPage() {
                                 itemKey,
                                 "Item removed from cart.",
                                 () =>
-                                  removeFromCart(it.id, it.variant_id ?? null),
+                                  removeFromCart(
+                                    productId,
+                                    it.variant_id ?? null,
+                                  ),
                               )
                             }
                             className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm text-red-200 transition active:scale-95 hover:border-red-400 hover:bg-red-500/20 disabled:cursor-wait disabled:opacity-60"
@@ -347,11 +352,7 @@ export default function CartPage() {
                                 type="button"
                                 disabled={isBusy}
                                 onClick={() =>
-                                  decrement(
-                                    it.quantity,
-                                    it.id,
-                                    it.variant_id ?? null,
-                                  )
+                                  decrement(it.quantity, it.id, it.variant_id)
                                 }
                                 className="grid h-9 w-9 place-items-center rounded-xl border border-slate-700 bg-slate-900 text-slate-200 transition active:scale-95 hover:border-red-500/60 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-wait disabled:opacity-60"
                               >
@@ -364,10 +365,10 @@ export default function CartPage() {
                                 min={1}
                                 disabled={isBusy}
                                 onChange={(e) =>
-                                  changeQuantity(
+                                  updateQuantity(
                                     it.id,
                                     Number(e.target.value) || 1,
-                                    it.variant_id ?? null,
+                                    cleanVariantId(it.variant_id),
                                   )
                                 }
                                 className="w-16 bg-transparent text-center text-base font-bold text-blue-300 outline-none disabled:cursor-wait disabled:opacity-60"

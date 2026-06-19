@@ -48,6 +48,14 @@ const AddToCartBtn = ({
     return null;
   }, [variant, variants]);
 
+  const totalProductQty = useMemo(() => {
+    return (cartItems ?? [])
+      .filter((it) => it.product?.id === product.id || it.id === product.id)
+      .reduce((sum, it) => sum + Number(it.quantity ?? 0), 0);
+  }, [cartItems, product.id]);
+
+  const hasAnyQtyInCart = totalProductQty > 0;
+
   const line = useMemo(
     () =>
       cartItems?.find((it) => {
@@ -61,7 +69,7 @@ const AddToCartBtn = ({
   );
 
   const qty = line?.quantity ?? 0;
-  const inCart = qty > 0;
+  const inCart = hasMultipleVariants ? hasAnyQtyInCart : qty > 0;
 
   const getVariantStock = (v: Variant) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,7 +145,7 @@ const AddToCartBtn = ({
 
   return (
     <div>
-      {!inCart ? (
+      {!inCart || hasMultipleVariants ? (
         <button
           onClick={handleAddToCart}
           disabled={outofStock || noPrice}
@@ -189,9 +197,11 @@ const AddToCartBtn = ({
               ? "Out of Stock"
               : noPrice
                 ? "Request Quote"
-                : hasMultipleVariants
-                  ? "Choose Variant"
-                  : "Add to Wholesale Order"}
+                : hasMultipleVariants && totalProductQty > 0
+                  ? `Added Qty: ${totalProductQty}`
+                  : hasMultipleVariants
+                    ? "Choose Variant"
+                    : "Add to Wholesale Order"}
 
             {!outofStock && !noPrice && (
               <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] uppercase tracking-widest text-blue-300">

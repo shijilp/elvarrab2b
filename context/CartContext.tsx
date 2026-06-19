@@ -79,6 +79,46 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     volumePct: 0,
   });
 
+  const normalizeVariantId = (variantId: any): number | null => {
+    if (variantId === null || variantId === undefined || variantId === "") {
+      return null;
+    }
+
+    const n = Number(variantId);
+    return Number.isNaN(n) ? null : n;
+  };
+
+  const getCartProductId = (item: any): number => {
+    if (typeof item.product === "object" && item.product !== null) {
+      return Number(item.product.id);
+    }
+
+    return Number(item.product ?? item.productId ?? item.id);
+  };
+
+  const getCartVariantId = (item: any): number | null => {
+    if (item.variant_id !== undefined && item.variant_id !== null) {
+      return normalizeVariantId(item.variant_id);
+    }
+
+    if (typeof item.variant === "object" && item.variant !== null) {
+      return normalizeVariantId(item.variant.id);
+    }
+
+    return normalizeVariantId(item.variant);
+  };
+
+  const isSameCartLine = (
+    item: any,
+    productId: number,
+    variantId: number | null,
+  ) => {
+    return (
+      getCartProductId(item) === Number(productId) &&
+      getCartVariantId(item) === normalizeVariantId(variantId)
+    );
+  };
+
   // ✅ helper: save guest cart to localStorage
   const persistGuestCart = (items: CartItem[]) => {
     if (user) return;
@@ -159,24 +199,38 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const res = await api.get("/b2b/cart/", {});
 
           // product may be an ID (number) OR a nested object (if you later change serializer)
+          //const items = (res.data || []).map((item: any) => {
+          //const p = typeof item.product === "object" ? item.product : null;
+          //const productId = p?.id ?? item.product;
+          //const itemprice = item.price || 0;
+
           const items = (res.data || []).map((item: any) => {
             const p = typeof item.product === "object" ? item.product : null;
-            const productId = p?.id ?? item.product;
-            const itemprice = item.price || 0;
+            const productId = p?.id ?? item.product_id ?? item.product;
+            const variantId =
+              item.variant_id ??
+              (typeof item.variant === "object" && item.variant !== null
+                ? item.variant.id
+                : item.variant) ??
+              null;
+            const itemprice = Number(item.price || 0);
 
             return {
               id: productId,
-              name: p?.name || "", // default to empty string if undefined
-              price: itemprice, // default to 0 if undefined
-              quantity: Number(item.quantity),
-              image: p?.image_url || p?.image || "", // default to empty string if undefined
-              product: productId,
-              slug: p?.slug || "", // add slug with default value
-              description: p?.description || "", // add description with default value
-              category: p?.category || "", // add category with default value
+              name: p?.name || item.name || "",
+              price: itemprice,
+              quantity: Number(item.quantity || 1),
+              image: p?.image_url || p?.image || item.image || "",
+              product: p ?? productId,
+              slug: p?.slug || item.slug || "",
+              description: p?.description || item.description || "",
+              category: p?.category || item.category || "",
               discount: 0,
               variant: item.variant || null,
-              // in_stock: p?.in_stock || false, // add in_stock with default value
+              variant_id: normalizeVariantId(variantId),
+              coupon_discount: 0,
+              stock: item.stock ?? p?.stock ?? 0,
+              is_free_shipping: p?.is_free_shipping ?? false,
             };
           });
           // ✅ after loading, ask backend for combo discounts
@@ -211,7 +265,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             // in_stock: x.in_stock || false, // add in_stock with default value
           }));
           //await syncComboDiscounts(items);
-          //setCartItems(items);
+          setCartItems(items);
         }
       } catch {}
     };
@@ -221,103 +275,92 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Add or update quantity
   const addToCart = async (product: CartProduct, variant_id: number | null) => {
-    const exists = cartItems.find((item) => {
-      if (variant_id) {
-        // ⭐ variant-based match
-        return (
-          item.product?.id === product.id && item.variant_id === variant_id
-        );
-      } else {
-        return (
-          item.product?.id === product.id &&
-          (item.variant_id === null || item.variant_id === undefined)
-        );
-      }
+    const normalizedVariantId = normalizeVariantId(variant_id);
 
-      // ⭐ non-variant product match
-    });
-    const variant = product.variants?.find((v) => v.id === variant_id) ?? null;
-    const price = product.wholesale_price?.[0]?.unit_price ?? 0;
-    // const exists = cartItems.find((item) => item.id === product.id);
+    const exists = cartItems.find((item) =>
+      isSameCartLine(item, product.id, normalizedVariantId),
+    );
+
+    const variant =
+      product.variants?.find((v) => v.id === normalizedVariantId) ?? null;
+
+    const price = Number(product.wholesale_price?.[0]?.unit_price ?? 0);
+
     const baseItem: CartItem = {
       id: product.id,
       name: product.name,
-      price: price,
+      price,
       quantity: 1,
       image: product.image,
-      product: product,
+      product,
       slug: product.slug,
       description: product.description,
       is_free_shipping: product.is_free_shipping,
       category: product.category,
       discount: 0,
-      variant_id: variant_id,
+      variant_id: normalizedVariantId,
       coupon_discount: 0,
       stock: variant ? (variant.inventory ?? 0) : (product.stock ?? 0),
     };
+
     const newItems = exists
       ? cartItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+          isSameCartLine(item, product.id, normalizedVariantId)
+            ? { ...item, quantity: Number(item.quantity || 0) + 1 }
             : item,
         )
       : [...cartItems, baseItem];
 
-    // const newItems = exists
-    //   ? cartItems.map((item) =>
-    //       item.id === product.id
-    //         ? { ...item, quantity: item.quantity + 1 }
-    //         : item
-    //     )
-    //   : [...cartItems, { ...product, quantity: 1 }];
-
     setCartItems(newItems);
     persistGuestCart(newItems);
+
     if (user) {
       try {
         if (exists) {
-          await api.patch(`b2b/cart/${product.id}/`, {
-            quantity: exists.quantity + 1,
+          await api.patch(`b2b/cart/${product.id}/update/`, {
+            quantity: Number(exists.quantity || 0) + 1,
+            variant_id: normalizedVariantId,
           });
         } else {
           await api.post("b2b/cart/", {
             product_id: product.id,
             quantity: 1,
-            variant_id: variant_id,
-            price: price,
+            variant_id: normalizedVariantId,
+            price,
           });
         }
       } catch (err) {
         console.error("Backend cart sync failed:", err);
       }
     }
-    //  syncComboDiscounts(newItems);
   };
-
   const updateQuantity = async (
     productId: number,
     quantity: number,
     variant_id: number | null,
   ) => {
-    const updated = cartItems.map((item) => {
-      const sameProduct = item.product?.id === productId;
-      const sameVariant = (item.variant_id ?? null) === (variant_id ?? null);
+    const normalizedVariantId = normalizeVariantId(variant_id);
+    const safeQty = Math.max(1, Number(quantity || 1));
 
-      return sameProduct && sameVariant ? { ...item, quantity } : item;
-    });
+    const updated = cartItems.map((item) =>
+      isSameCartLine(item, productId, normalizedVariantId)
+        ? { ...item, quantity: safeQty }
+        : item,
+    );
+
     setCartItems(updated);
     persistGuestCart(updated);
+
     if (user) {
       try {
         await api.patch(`b2b/cart/${productId}/update/`, {
-          quantity: quantity,
-          variant_id: variant_id ?? null,
+          quantity: safeQty,
+          variant_id: normalizedVariantId,
         });
       } catch (err) {
         console.error("Failed to update quantity", err);
       }
     }
-    // syncComboDiscounts(updated);
   };
 
   // Remove or decrement
@@ -325,60 +368,39 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     productId: number,
     variant_id: number | null,
   ) => {
-    const item = cartItems.find(
-      (i) =>
-        i.product?.id === productId &&
-        (i.variant_id ?? null) === (variant_id ?? null),
-    );
-    if (!item) return;
+    const normalizedVariantId = normalizeVariantId(variant_id);
 
-    //let updatedCart: CartItem[];
-    //const updatedCart = cartItems.filter((i) => i.id !== productId);
-    const updatedCart = cartItems.filter(
-      (i) =>
-        !(
-          i.product?.id === productId &&
-          (i.variant_id ?? null) === (variant_id ?? null)
-        ),
+    const item = cartItems.find((i) =>
+      isSameCartLine(i, productId, normalizedVariantId),
     );
+
+    if (!item) {
+      console.warn("Cart item not found for remove:", {
+        productId,
+        variant_id: normalizedVariantId,
+        cartItems,
+      });
+      return;
+    }
+
+    const updatedCart = cartItems.filter(
+      (i) => !isSameCartLine(i, productId, normalizedVariantId),
+    );
+
     setCartItems(updatedCart);
     persistGuestCart(updatedCart);
-    // syncComboDiscounts(updatedCart);
-    // if (item.quantity > 0) {
-    // setCartItems([]);
-    // updatedCart = cartItems.map((i) =>
-    //   i.id === productId ? { ...i, quantity: i.quantity - 1 } : i
-    // );
-    // updatedCart = cartItems.filter((i) => i.id !== productId);
-    //setCartItems(updatedCart);
-    //persistGuestCart(updatedCart);
-    //}
-    // } else {
-    //   updatedCart = cartItems.filter((i) => i.id !== productId);
-    // }
 
     if (user) {
       try {
-        if (item.quantity > 0) {
-          // await api.patch(`/cart/${productId}/update/`, {
-          //   quantity: item.quantity - 1,
-          // });
-
-          await api.delete(`/b2b/cart/${productId}/remove/`, {
-            params: {
-              variant_id: variant_id ?? null,
-            },
-          });
-        } else {
-          await api.delete(`b2b/cart/${productId}/remove/`, {
-            params: { variant_id: variant_id ?? null },
-          });
-        }
+        await api.delete(`/b2b/cart/${productId}/remove/`, {
+          params: {
+            variant_id: normalizedVariantId,
+          },
+        });
       } catch (err) {
         console.error("Backend remove failed:", err);
       }
     }
-    // syncComboDiscounts(updatedCart);
   };
 
   // Clear cart
@@ -387,13 +409,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     clearCoupon();
     persistGuestCart([]);
     localStorage.removeItem("wcart");
-
     if (user) {
       try {
         const res = await api.get("b2b/cart/", {});
+
         await Promise.all(
           res.data.map((item: any) =>
-            api.delete(`b2b/cart/${item.product.id}/remove/`, {}),
+            api.delete(`b2b/cart/${getCartProductId(item)}/remove/`, {
+              params: {
+                variant_id: getCartVariantId(item),
+              },
+            }),
           ),
         );
       } catch (err) {
