@@ -183,12 +183,12 @@ export default function ProductsCatalogClient() {
     };
   }, []);
 
-  // useEffect(() => {
-  //   if (!initialized) return;
-  //   console.log("user from ad", user);
+  useEffect(() => {
+    if (!initialized) return;
+    // console.log("user from ad", user);
 
-  //   if (!user) router.replace("/login");
-  // }, [initialized, user, router]);
+    if (!user) router.replace("/login");
+  }, [initialized, user, router]);
 
   useEffect(() => {
     let cancelled = false;
