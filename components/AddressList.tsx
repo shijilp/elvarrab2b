@@ -15,6 +15,8 @@ import {
   Trash2,
   BadgeCheck,
 } from "lucide-react";
+import { api2 } from "@/lib/api2";
+import { api } from "@/lib/api";
 
 export default function AddressList({
   type = "shipping",
@@ -34,7 +36,7 @@ export default function AddressList({
 
   async function load() {
     if (isLoggedIn) {
-      const data = (await api_backend.get("auth/addresses/")).data;
+      const data = (await api.get("auth/addresses/")).data;
 
       setList(data);
 
