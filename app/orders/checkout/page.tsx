@@ -12,6 +12,7 @@ import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import ApplyCoupon from "@/components/ApplyCoupon";
 import { useAuth } from "@/context/AuthContext";
 import { calculateWholesaleEligibility } from "@/lib/wholesaleRules";
+import { api_backend } from "@/lib/api_backend";
 
 // Theme palette utilities (local)
 type ThemeMode = "dark" | "light";
@@ -310,7 +311,9 @@ export default function CheckoutPage() {
       setPayableNow(finalPayable);
 
       if (!finalPayable || finalPayable <= 0) {
-        await api.post("/payment/zero/", { order_id: data.order_id });
+        await api_backend.post("api/elvarra/payment/zero/", {
+          order_id: data.order_id,
+        });
         clearCart();
         router.push(`/orders/confirmation?order=${data.order_id}`);
         return;
