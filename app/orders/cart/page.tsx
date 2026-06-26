@@ -311,6 +311,9 @@ export default function CartPage() {
                             <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-blue-300">
                               Wholesale SKU
                             </div>
+                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-blue-300">
+                              {formatMoney(it.price)}/PC
+                            </div>
                             {selectedVariant && (
                               <div className="mt-1 inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-300">
                                 {variantName}

@@ -23,3 +23,11 @@ export function money(n: number, currency = "INR") {
     return `$${Number(n ?? 0).toFixed(2)}`;
   }
 }
+
+export function formatMoney(n: number) {
+  return Number(n || 0).toLocaleString("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  });
+}

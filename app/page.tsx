@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import { trackEvent } from "@/lib/analytics";
+import { getWholesaleRules } from "@/lib/wholesaleRules";
+import { formatMoney, money } from "@/lib/utils";
 
 export default function Page() {
   const [tier, setTier] = useState<"starter" | "growth" | "enterprise">(
@@ -65,6 +67,7 @@ export default function Page() {
         };
     }
   }, [tier]);
+  const minOrder = getWholesaleRules(100).minOrderValue;
 
   return (
     <>
@@ -109,11 +112,14 @@ export default function Page() {
 
                   <p className="mt-1 text-sm leading-6 text-slate-200">
                     Minimum wholesale order value:
-                    <span className="ml-2 font-bold text-white">₹2,000</span>
+                    <span className="ml-2 font-bold text-white">
+                      {formatMoney(minOrder)}
+                    </span>
                   </p>
 
                   <p className="text-xs text-slate-400">
-                    Orders below ₹2,000 are not eligible for wholesale checkout.
+                    Orders below {formatMoney(minOrder)} are not eligible for
+                    wholesale checkout.
                   </p>
                 </div>
               </div>

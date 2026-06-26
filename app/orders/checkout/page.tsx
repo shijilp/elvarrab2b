@@ -11,7 +11,10 @@ import Image from "next/image";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import ApplyCoupon from "@/components/ApplyCoupon";
 import { useAuth } from "@/context/AuthContext";
-import { calculateWholesaleEligibility } from "@/lib/wholesaleRules";
+import {
+  calculateWholesaleEligibility,
+  getWholesaleRules,
+} from "@/lib/wholesaleRules";
 import { api_backend } from "@/lib/api_backend";
 
 // Theme palette utilities (local)
@@ -405,11 +408,15 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
                 <div className="text-xs text-slate-500">Min Order</div>
-                <div className="font-semibold text-white">₹2,000</div>
+                <div className="font-semibold text-white">
+                  ₹{getWholesaleRules(100).minOrderValue}
+                </div>
               </div>
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
                 <div className="text-xs text-slate-500">Qty/SKU</div>
-                <div className="font-semibold text-white">1.40+</div>
+                <div className="font-semibold text-white">
+                  {getWholesaleRules(100).minQtyPerSku}+
+                </div>
               </div>
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
                 <div className="text-xs text-slate-500">Payment</div>

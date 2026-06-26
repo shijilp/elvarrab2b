@@ -22,6 +22,10 @@ import {
 } from "lucide-react";
 import AddToCartBtn from "../ui/AddToCartBtn";
 import { useAuth } from "@/context/AuthContext";
+import {
+  calculateWholesaleEligibility,
+  getWholesaleRules,
+} from "@/lib/wholesaleRules";
 
 type APIList<T> = {
   count: number;
@@ -465,7 +469,9 @@ export default function ProductsCatalogClient() {
                   <span className="text-sm text-slate-300">
                     Minimum order value
                   </span>
-                  <span className="font-bold text-white">₹2,000</span>
+                  <span className="font-bold text-white">
+                    ₹{getWholesaleRules(10).minOrderValue}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between rounded-2xl bg-slate-900 p-4">
                   <span className="text-sm text-slate-300">
@@ -475,7 +481,7 @@ export default function ProductsCatalogClient() {
                 </div>
                 <div className="flex items-center justify-between rounded-2xl bg-slate-900 p-4">
                   <span className="text-sm text-slate-300">
-                    Shipping benefit
+                    Wholesale benefit
                   </span>
                   <span className="font-bold text-cyan-300">
                     {money(FREE_SHIP_THRESHOLD)}+
