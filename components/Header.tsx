@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { getWholesaleRules } from "@/lib/wholesaleRules";
+import { formatMoney } from "@/lib/utils";
 
 export default function Header() {
   const { user } = useAuth();
@@ -36,13 +38,13 @@ export default function Header() {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   };
-
+  const minOrder = getWholesaleRules(100).minOrderValue;
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#06111f]/90 backdrop-blur-xl print:hidden">
         <div className="bg-gradient-to-r from-blue-950 via-slate-950 to-cyan-950 px-4 py-1.5 text-center text-[11px] font-medium tracking-wide text-cyan-200">
-          ELVARRA B2B TRADE PORTAL · Minimum Order ₹2,000 · Wholesale RFQ
-          Enabled
+          ELVARRA B2B TRADE PORTAL · Minimum Order {formatMoney(minOrder)} ·
+          Wholesale RFQ Enabled
         </div>
 
         <div className="w-full px-4 sm:px-6 lg:px-8">
