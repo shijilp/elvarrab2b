@@ -61,7 +61,8 @@ export default function WholesaleEligibilityCard({
                 : "text-amber-300"
             }
           >
-            {formatMoney(eligibility.wholesaleOrderValue)} / ₹2,000
+            {formatMoney(eligibility.wholesaleOrderValue)} /{" "}
+            {eligibility.minWholesaleValue}
           </span>
         </div>
 
