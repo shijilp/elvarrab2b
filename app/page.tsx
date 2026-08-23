@@ -449,8 +449,8 @@ export default function Page() {
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "Elvarra Wholesale",
-            url: "https://www.elvarra.in",
-            logo: "https://www.elvarra.in/logo.svg",
+            url: "https://b2b.elvarra.in",
+            logo: "https://b2b.elvarra.in/Logo.svg",
             description:
               "Anti tarnish jewellery wholesale supplier in India for retailers, resellers and boutiques.",
             sameAs: ["https://whatsapp.com/channel/0029Vb7xcDhEKyZKRpiYxa3v"],
@@ -458,14 +458,7 @@ export default function Page() {
               "@type": "Country",
               name: "India",
             },
-            makesOffer: {
-              "@type": "Offer",
-              itemOffered: {
-                "@type": "Product",
-                name: "Anti Tarnish Wholesale Jewellery",
-                category: "Fashion Jewellery",
-              },
-            },
+
           }),
         }}
       />
