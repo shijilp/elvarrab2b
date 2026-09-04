@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { Product, Variant } from "@/types";
 
 import AlertModal from "../AlertModal";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   product: Product;
@@ -12,6 +13,7 @@ interface Props {
   outofStock?: boolean;
   noPrice?: boolean;
   variant: Variant | null;
+  quantity?: number;
 }
 
 const AddToCartBtn = ({
@@ -20,6 +22,7 @@ const AddToCartBtn = ({
   outofStock,
   noPrice,
   variant,
+  quantity = 1,
 }: Props) => {
   const { cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
 
@@ -128,7 +131,28 @@ const AddToCartBtn = ({
       return;
     }
 
-    addToCart(product, directVariant?.id ?? null);
+    if (stockAvailable > 0 && quantity > stockAvailable) {
+      setShowAlert(true);
+      return;
+    }
+    addToCart(product, directVariant?.id ?? null, quantity);
+    trackEvent({
+      event_type: "add_to_cart",
+      product_id: product.id,
+      product_slug: product.slug,
+      category: product.category?.name || "",
+      meta: {
+        ga4: {
+          currency: "INR",
+          value: Number(product.wholesale_price?.[0]?.unit_price ?? 0) * quantity,
+          items: [{
+            item_id: String(product.id),
+            item_name: product.name,
+            quantity,
+          }],
+        },
+      },
+    });
   };
 
   const handleVariantAdd = (selectedVariant: Variant) => {
@@ -139,7 +163,25 @@ const AddToCartBtn = ({
       return;
     }
 
-    addToCart(product, selectedVariant.id);
+    addToCart(product, selectedVariant.id, quantity);
+    trackEvent({
+      event_type: "add_to_cart",
+      product_id: product.id,
+      product_slug: product.slug,
+      category: product.category?.name || "",
+      meta: {
+        ga4: {
+          currency: "INR",
+          value: Number(product.wholesale_price?.[0]?.unit_price ?? 0) * quantity,
+          items: [{
+            item_id: String(product.id),
+            item_name: product.name,
+            item_variant: String(selectedVariant.id),
+            quantity,
+          }],
+        },
+      },
+    });
     setShowVariantPopup(false);
   };
 

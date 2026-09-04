@@ -16,6 +16,8 @@ import {
   getWholesaleRules,
 } from "@/lib/wholesaleRules";
 import { api_backend } from "@/lib/api_backend";
+import { trackEvent } from "@/lib/analytics";
+import { getVisitorId } from "@/lib/visitors";
 
 // Theme palette utilities (local)
 type ThemeMode = "dark" | "light";
@@ -126,7 +128,6 @@ export default function CheckoutPage() {
     [cartItems],
   );
   const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(3000) - 1;
-  const SHIPPING_FEE = Number(40);
   const shippingDiscount = Number(coupon?.shipping_discount || 0);
   // Payment (demo only)
   const [addr, setAddr] = useState<Address | null>(null);
@@ -152,8 +153,29 @@ export default function CheckoutPage() {
 
   //const discount = Number(coupon?.discount ?? discountTotal);
   const taxable = Math.max(0, subtotal - discount);
+  const effectiveShipping = Math.max(0, shipping - shippingDiscount);
   // const vat = useMemo(() => computeVAT(taxable), [taxable]);
-  const total = Math.max(0, taxable + shipping);
+  const total = Math.max(0, taxable + effectiveShipping);
+
+  useEffect(() => {
+    if (!cartItems.length) return;
+    trackEvent({
+      event_type: "begin_checkout",
+      meta: {
+        ga4: {
+          currency: "INR",
+          value: total,
+          coupon: coupon?.code || undefined,
+          items: cartItems.map((item) => ({
+            item_id: String(item.id),
+            item_name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        },
+      },
+    });
+  }, []);
 
   // useEffect(() => {
   //   if (subtotal === 0) setShipping(0);
@@ -190,27 +212,13 @@ export default function CheckoutPage() {
   }, []);
   useEffect(() => {
     // front-end estimate; final source of truth is backend response
-    const gross = Math.max(0, subtotal - discount + shipping);
+    const gross = total;
     const refcanUse = Math.min(wallet?.referral_cleared ?? 0, gross * 0.1); // max 50% of order
     setRefWalletWillUse(refcanUse);
     const canUse = Math.min(wallet?.balance ?? 0, gross - refcanUse);
     setWalletWillUse(canUse);
-    const maxShipDisc =
-      shippingDiscount > 0 ? Math.min(SHIPPING_FEE, shippingDiscount) : 0;
-    console;
-    setShipping(
-      subtotal > FREE_SHIP_THRESHOLD ? 0 : SHIPPING_FEE - maxShipDisc,
-    );
     setPayableNow(Math.max(0, gross - refcanUse - canUse));
-  }, [
-    subtotal,
-    discount,
-    discountTotal,
-    shipping,
-    wallet,
-    FREE_SHIP_THRESHOLD,
-    coupon,
-  ]);
+  }, [total, wallet]);
 
   const validate = (): string | null => {
     const res = AddressSchema.safeParse(addr);
@@ -298,6 +306,7 @@ export default function CheckoutPage() {
         },
         shipping: shipping,
         coupon_code: coupon?.code || "",
+        visitor_id: getVisitorId(),
         subtotal: subtotal,
         ref_code,
       };
@@ -317,6 +326,19 @@ export default function CheckoutPage() {
         await api_backend.post("api/elvarra/payment/zero/", {
           order_id: data.order_id,
         });
+        trackEvent({
+          event_type: "purchase",
+          meta: {
+            orderId: String(data.order_id),
+            ga4: {
+              transaction_id: String(data.order_id),
+              value: 0,
+              currency: data.currency || "INR",
+              coupon: coupon?.code || undefined,
+              payment_type: "wallet",
+            },
+          },
+        });
         clearCart();
         router.push(`/orders/confirmation?order=${data.order_id}`);
         return;
@@ -332,6 +354,20 @@ export default function CheckoutPage() {
       });
 
       if (!ok) return;
+
+      trackEvent({
+        event_type: "purchase",
+        meta: {
+          orderId: String(data.order_id),
+          ga4: {
+            transaction_id: String(data.order_id),
+            value: finalPayable,
+            currency: data.currency || "INR",
+            coupon: coupon?.code || undefined,
+            payment_type: "Razorpay",
+          },
+        },
+      });
 
       clearCart();
       router.push(`/orders/confirmation?order=${data.order_id}`);
@@ -356,7 +392,7 @@ export default function CheckoutPage() {
 
     const load = async () => {
       try {
-        const r = await api.get(`shipping/check/${pin}/`, {
+        const r = await api.get(`/api/elvarra/shipping/check/${pin}/`, {
           signal: controller.signal,
         });
 
@@ -366,7 +402,9 @@ export default function CheckoutPage() {
         if (!data) throw new Error("pincode check failed");
 
         if (data.serviceable) {
-          setShipping(Number(data.charge || 0));
+          setShipping(
+            subtotal > FREE_SHIP_THRESHOLD ? 0 : Number(data.charge || 0),
+          );
           setDeliveryEta(data.delivery_days ?? null);
         } else {
           setShipping(0);
@@ -382,7 +420,7 @@ export default function CheckoutPage() {
     load();
 
     return () => controller.abort();
-  }, [addr?.pincode]);
+  }, [addr?.pincode, subtotal, FREE_SHIP_THRESHOLD]);
 
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
@@ -580,8 +618,14 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="opacity-80">Shipping</span>
-                  <span>{formatMoney(shipping)}</span>
+                  <span>{formatMoney(effectiveShipping)}</span>
                 </div>
+                {shippingDiscount > 0 && (
+                  <div className="flex items-center justify-between text-emerald-300">
+                    <span>Coupon shipping discount</span>
+                    <span>-{formatMoney(shippingDiscount)}</span>
+                  </div>
+                )}
                 {/* <div className="flex items-center justify-between">
                   <span className="opacity-80">VAT (15%)</span>
                   <span>{formatMoney(vat)}</span>

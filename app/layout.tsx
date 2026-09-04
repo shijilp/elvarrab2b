@@ -12,8 +12,12 @@ import { StoreSettingsProvider } from "@/context/StoreSettingsProvider";
 import { StoreSettings } from "@/lib/storeSettings.types";
 import { getStoreSettings } from "@/lib/getStoreSettings";
 import SiteVersionGate from "@/components/SiteVersionGate";
+import VisitorTracker from "@/components/VisitorTracker";
+import Script from "next/script";
 
 const siteUrl = "https://b2b.elvarra.in";
+const gaMeasurementId =
+  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-CWG6C8CX6Y";
 const brand = "Elvarra";
 const defaultTitle =
   "Elvarra Wholesale India | Anti Tarnish Jewellery Supplier";
@@ -99,6 +103,19 @@ export default async function RootLayout({
   const settings = await getStoreSettings();
   return (
     <html lang="en" className="dark overflow-x-clip" suppressHydrationWarning>
+      <head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+          strategy="afterInteractive"
+        />
+        <Script id="elvarra-b2b-ga4" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = window.gtag || gtag;
+            gtag('js', new Date());
+            gtag('config', '${gaMeasurementId}', { send_page_view: false });`}
+        </Script>
+      </head>
       <body
         className={`min-h-dvh el-bgn   overflow-x-clip    text-neutral-50 antialiased `}
         suppressHydrationWarning
@@ -110,6 +127,7 @@ export default async function RootLayout({
               <CartProvider>
                 <RFQCartProvider>
                   <Header />
+                  <VisitorTracker />
                   {children}
                   <FloatingCheckoutButtonOne />
                   <Footer />

@@ -9,7 +9,8 @@ import {
 } from "react";
 import { CartItem, CartProduct, Product, ProductLite, Variant } from "@/types";
 import { useAuth } from "./AuthContext";
-import { api, applyCoupon, removeCoupon, validateCoupon } from "@/lib/api";
+import { api, validateCoupon } from "@/lib/api";
+import { getVisitorId } from "@/lib/visitors";
 type GuestItem = {
   id?: number;
   productId?: number;
@@ -44,7 +45,11 @@ type GuestDiscountsRes = {
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: CartProduct, variant_id: number | null) => void;
+  addToCart: (
+    product: CartProduct,
+    variant_id: number | null,
+    quantity?: number,
+  ) => void;
   coupon: CouponState;
   removeFromCart: (productId: number, variant_id: number | null) => void;
   clearCart: () => void;
@@ -274,8 +279,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   // Add or update quantity
-  const addToCart = async (product: CartProduct, variant_id: number | null) => {
+  const addToCart = async (
+    product: CartProduct,
+    variant_id: number | null,
+    quantity = 1,
+  ) => {
     const normalizedVariantId = normalizeVariantId(variant_id);
+    const requestedQty = Math.max(1, Number(quantity || 1));
 
     const exists = cartItems.find((item) =>
       isSameCartLine(item, product.id, normalizedVariantId),
@@ -284,13 +294,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const variant =
       product.variants?.find((v) => v.id === normalizedVariantId) ?? null;
 
-    const price = Number(product.wholesale_price?.[0]?.unit_price ?? 0);
+    const priceTier = [...(product.wholesale_price || [])]
+      .sort((a, b) => b.min_qty - a.min_qty)
+      .find((tier) => requestedQty >= tier.min_qty);
+    const price = Number(
+      priceTier?.unit_price ?? product.wholesale_price?.[0]?.unit_price ?? 0,
+    );
 
     const baseItem: CartItem = {
       id: product.id,
       name: product.name,
       price,
-      quantity: 1,
+      quantity: requestedQty,
       image: product.image,
       product,
       slug: product.slug,
@@ -303,14 +318,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       stock: variant ? (variant.inventory ?? 0) : (product.stock ?? 0),
     };
 
-    const newItems = exists
+    const newItems = (exists
       ? cartItems.map((item) =>
           isSameCartLine(item, product.id, normalizedVariantId)
-            ? { ...item, quantity: Number(item.quantity || 0) + 1 }
+            ? {
+                ...item,
+                quantity: Number(item.quantity || 0) + requestedQty,
+                price,
+              }
             : item,
         )
-      : [...cartItems, baseItem];
+      : [...cartItems, baseItem]
+    ).map((item) => ({ ...item, coupon_discount: 0 }));
 
+    setCoupon(null);
     setCartItems(newItems);
     persistGuestCart(newItems);
 
@@ -318,13 +339,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       try {
         if (exists) {
           await api.patch(`b2b/cart/${product.id}/update/`, {
-            quantity: Number(exists.quantity || 0) + 1,
+            quantity: Number(exists.quantity || 0) + requestedQty,
             variant_id: normalizedVariantId,
           });
         } else {
           await api.post("b2b/cart/", {
             product_id: product.id,
-            quantity: 1,
+            quantity: requestedQty,
             variant_id: normalizedVariantId,
             price,
           });
@@ -344,10 +365,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     const updated = cartItems.map((item) =>
       isSameCartLine(item, productId, normalizedVariantId)
-        ? { ...item, quantity: safeQty }
-        : item,
+        ? { ...item, quantity: safeQty, coupon_discount: 0 }
+        : { ...item, coupon_discount: 0 },
     );
 
+    setCoupon(null);
     setCartItems(updated);
     persistGuestCart(updated);
 
@@ -385,8 +407,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     const updatedCart = cartItems.filter(
       (i) => !isSameCartLine(i, productId, normalizedVariantId),
-    );
+    ).map((item) => ({ ...item, coupon_discount: 0 }));
 
+    setCoupon(null);
     setCartItems(updatedCart);
     persistGuestCart(updatedCart);
 
@@ -432,7 +455,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     email?: string,
     shippingcost?: number,
   ) => {
-    const data = await validateCoupon(code, cartItems, email, shippingcost);
+    const data = await validateCoupon(
+      code,
+      cartItems,
+      email,
+      shippingcost,
+      getVisitorId(),
+    );
     setCoupon({
       code: data.coupon.code,
       discount: Number(data.discount),
@@ -451,17 +480,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
         return {
           ...item,
+          price: alloc.unit_price !== undefined
+            ? Number(alloc.unit_price)
+            : item.price,
           discount: Number(alloc.discount ?? item.discount ?? 0),
           coupon_discount: Number(alloc.coupon_discount ?? 0),
         };
       }),
     );
-    // await applyCoupon(code, cartItems, email, shippingcost, visitor_id);
   };
 
   const clearCoupon = async () => {
     setCoupon(null);
-    await removeCoupon();
+    setCartItems((current) => {
+      const cleared = current.map((item) => ({ ...item, coupon_discount: 0 }));
+      persistGuestCart(cleared);
+      return cleared;
+    });
   };
   return (
     <CartContext.Provider

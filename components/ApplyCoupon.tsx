@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
 import { toAlertFromApiError } from "@/lib/apiCouponError";
 import AlertModal from "./AlertModal";
 
@@ -40,8 +39,6 @@ export default function ApplyCoupon({
   const closeAlert = () => setAlert((a) => ({ ...a, show: false }));
 
   const [applying, setApply] = useState(false);
-  const { user } = useAuth();
-
   const [code, setCode] = useState("");
 
   const onApply = async () => {
@@ -55,15 +52,30 @@ export default function ApplyCoupon({
     //   return;
     // }
 
+    const normalizedCode = code.trim();
+    if (!normalizedCode) {
+      openAlert({
+        title: "Enter coupon code",
+        message: "Please enter a coupon code before applying.",
+        type: "warning",
+      });
+      return;
+    }
+
     setApply(true);
     try {
-      await validateAndSetCoupon(code.trim(), email, shippingcost);
+      await validateAndSetCoupon(normalizedCode, email, shippingcost);
       setCode("");
-      setApply(false);
+      openAlert({
+        title: "Coupon applied",
+        message: `${normalizedCode.toUpperCase()} has been applied to your wholesale order.`,
+        type: "success",
+      });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       openAlert(toAlertFromApiError(e));
 
+    } finally {
       setApply(false);
     }
   };
@@ -87,7 +99,7 @@ export default function ApplyCoupon({
           />
 
           <button
-            disabled={applying}
+            disabled={applying || !code.trim()}
             className={`rounded-xl border  border-neutral-200 dark:border-neutral-800 px-4 py-2 text-sm`}
             onClick={onApply}
           >

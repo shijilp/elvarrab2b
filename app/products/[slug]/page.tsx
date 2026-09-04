@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import ProductPageClient from "@/components/ProductPageClient";
 import { Metadata } from "next";
 import Spinner from "@/components/Spinner";
+import { notFound } from "next/navigation";
+import type { Product } from "@/types";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
@@ -66,7 +68,7 @@ async function getProduct(slug: string): Promise<SeoProduct | null> {
   const res = await fetch(
     `${backendRoot()}/b2b/catalogs/${encodeURIComponent(slug)}/`,
     {
-      cache: "no-store",
+      next: { revalidate: 300 },
     },
   );
 
@@ -141,13 +143,10 @@ function publicWholesaleOffer(p: SeoProduct) {
     availability:
       Number(p.stock || 0) > 0
         ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
+        : (p as SeoProduct & { backorder_allowed?: boolean }).backorder_allowed
+          ? "https://schema.org/BackOrder"
+          : "https://schema.org/OutOfStock",
     itemCondition: "https://schema.org/NewCondition",
-    eligibleQuantity: {
-      "@type": "QuantitativeValue",
-      minValue: tier.min_qty,
-      unitText: "piece",
-    },
     seller: {
       "@type": "Organization",
       name: "Elvarra Wholesale",
@@ -161,8 +160,7 @@ function buildProductJsonLd(p: SeoProduct) {
   if (!offer) return null;
 
   const images = productImages(p);
-  const jsonLd: Record<string, unknown> = {
-    "@context": "https://schema.org",
+  const product: Record<string, unknown> = {
     "@type": "Product",
     name: p.name,
     url: `${SITE_URL}/products/${encodeURIComponent(p.slug)}`,
@@ -179,9 +177,41 @@ function buildProductJsonLd(p: SeoProduct) {
     offers: offer,
   };
 
-  return Object.fromEntries(
-    Object.entries(jsonLd).filter(([, value]) => value !== undefined),
-  );
+  const breadcrumb = {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Wholesale catalog",
+        item: `${SITE_URL}/catalog`,
+      },
+      ...(p.category?.name
+        ? [{
+            "@type": "ListItem",
+            position: 2,
+            name: p.category.name,
+            item: `${SITE_URL}/catalog?category=${encodeURIComponent(p.category.slug || "")}`,
+          }]
+        : []),
+      {
+        "@type": "ListItem",
+        position: p.category?.name ? 3 : 2,
+        name: p.name,
+        item: `${SITE_URL}/products/${encodeURIComponent(p.slug)}`,
+      },
+    ],
+  };
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      Object.fromEntries(
+        Object.entries(product).filter(([, value]) => value !== undefined),
+      ),
+      breadcrumb,
+    ],
+  };
 }
 
 function safeJsonLd(value: unknown) {
@@ -204,7 +234,9 @@ export async function generateMetadata(props: {
 
   const title = p.meta_title?.trim() || p.name;
   const description =
-    p.meta_description?.trim() || (p.description ?? "").slice(0, 160);
+    p.meta_description?.trim() ||
+    (p.description ?? "").replace(/\s+/g, " ").trim().slice(0, 160) ||
+    `Buy ${p.name} at wholesale prices from Elvarra. View trade pricing, product specifications and stock availability.`;
   const images = productImages(p);
   const canonical = `/products/${p.slug}`;
 
@@ -233,8 +265,8 @@ export default async function ProductsPage(props: {
 }) {
   const { slug } = await props.params;
   const product = await getProduct(slug);
-  const jsonLd =
-    product && product.is_active !== false ? buildProductJsonLd(product) : null;
+  if (!product || product.is_active === false) notFound();
+  const jsonLd = buildProductJsonLd(product);
 
   return (
     <>
@@ -245,7 +277,7 @@ export default async function ProductsPage(props: {
         />
       ) : null}
       <Suspense fallback={<PageFallback />}>
-        <ProductPageClient />
+        <ProductPageClient initialProduct={product as Product} />
       </Suspense>
     </>
   );

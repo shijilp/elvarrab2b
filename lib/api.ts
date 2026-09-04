@@ -71,9 +71,22 @@ type CouponAllocation = {
   line_total: string;
   coupon_discount: string;
   discount?: string;
+  unit_price?: string;
 };
 export async function validateCoupon(code: string, cart_items:CartItem[], email?: string,shippingcost?:number,visitor_id?:string) {
-  const res = await api.post("/coupons/validate/", { code, email,shippingcost,cart_items,visitor_id });
+  const items = cart_items.map((item) => ({
+    product_id: item.id,
+    variant_id: item.variant_id ?? null,
+    quantity: item.quantity,
+    discount: item.discount ?? 0,
+  }));
+  const res = await api.post("/b2b/coupons/validate/", {
+    code: code.trim().toUpperCase(),
+    email,
+    shippingcost,
+    cart_items: items,
+    visitor_id,
+  });
   return res.data as {
     coupon: { code: string; discount_type: string; value: string };
     subtotal: string;
@@ -84,17 +97,6 @@ export async function validateCoupon(code: string, cart_items:CartItem[], email?
     grand_total: string;
     allocations?: CouponAllocation[]; // ✅ add this
   };
-}
-
-
-export async function applyCoupon(code: string, email?: string) {
-  const res = await api.post("/cart/apply-coupon/", { code, email });
-  return res.data;
-}
-
-export async function removeCoupon() {
-  const res = await api.delete("/cart/coupon/");
-  return res.data;
 }
 export async function apiMe(): Promise<User> {
   const r = await api_backend.get("/auth/me/", { withCredentials: true });

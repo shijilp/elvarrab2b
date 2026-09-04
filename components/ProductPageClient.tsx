@@ -3,103 +3,143 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useParams, useRouter } from "next/navigation";
-import { api } from "@/lib/api";
-import type { Product, Variant } from "@/types";
-
-// Zoom needs CSS; keep it client-only
-import "react-medium-image-zoom/dist/styles.css";
-
-import TagBadge from "@/components/ui/TagBadge";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import {
+  ChevronLeft,
+  Minus,
+  PackageCheck,
+  Plus,
+  ShieldCheck,
+  ShoppingBag,
+  Truck,
+} from "lucide-react";
+
+import { api } from "@/lib/api";
 import { money } from "@/lib/money";
-import AddToRFQBtn from "./ui/AddToRfqBtn";
-import AddToRFQBtn2 from "./ui/AddToRfqBtn2";
-import { useRFQCart } from "@/context/RFQCartContext";
-type WholesaleTier = { min_qty: number; unit_price: number | string };
-type ProductWithTiers = Product & { wholesale_price?: WholesaleTier[] };
+import { trackEvent } from "@/lib/analytics";
+import type { Product, Variant } from "@/types";
+import AddToCartBtn from "./ui/AddToCartBtn";
+
+import "react-medium-image-zoom/dist/styles.css";
 
 const Zoom = dynamic(() => import("react-medium-image-zoom"), { ssr: false });
 
 type ParamShape = { slug: string };
-function stockLabel(p: Product) {
-  if (p.stock > 0) {
-    if (p.low_stock_threshold && p.stock <= p.low_stock_threshold)
+type WholesaleTier = { min_qty: number; unit_price: number | string };
+
+function stockLabel(product: Product) {
+  if (product.stock > 0) {
+    if (
+      product.low_stock_threshold &&
+      product.stock <= product.low_stock_threshold
+    ) {
       return "Low stock";
+    }
     return "In stock";
   }
-  if (p.stock < 1 && p.backorder_allowed) return "Backorder available";
+
+  if (product.backorder_allowed) return "Backorder available";
   return "Out of stock";
 }
-const tierForQty = (tiers: WholesaleTier[] = [], qty: number) =>
-  [...tiers]
-    .sort((a, b) => b.min_qty - a.min_qty)
-    .find((t) => qty >= t.min_qty);
 
-// Lowest “from” price
-const lowestTier = (tiers: WholesaleTier[] = []) =>
-  [...tiers].sort((a, b) => Number(a.unit_price) - Number(b.unit_price))[0];
+function stockClasses(product: Product) {
+  if (product.stock > 0) {
+    return product.low_stock_threshold &&
+      product.stock <= product.low_stock_threshold
+      ? "border-amber-400/30 bg-amber-500/10 text-amber-200"
+      : "border-emerald-400/30 bg-emerald-500/10 text-emerald-200";
+  }
 
-const ProductPageClient: React.FC = () => {
+  return product.backorder_allowed
+    ? "border-amber-400/30 bg-amber-500/10 text-amber-200"
+    : "border-rose-400/30 bg-rose-500/10 text-rose-200";
+}
+
+function cleanValue(value?: string | number | null, suffix = "") {
+  if (value === undefined || value === null || value === "") return "—";
+  return `${value}${suffix}`;
+}
+
+export default function ProductPageClient({
+  initialProduct,
+}: {
+  initialProduct?: Product;
+}) {
   const params = useParams<ParamShape>();
   const router = useRouter();
-  const { rfq /*, updateQty if you want tier buttons to bump RFQ line too*/ } =
-    useRFQCart();
   const slug = params?.slug;
-  const [product, setProduct] = useState<Product | null>(null);
 
-  const rawTiers = (product?.wholesale_price ?? []) as Array<{
-    min_qty: number;
-    unit_price: number;
-  }>;
-  const [loading, setLoading] = useState(true);
-  const [mainImage, setMainImage] = useState<string | null>(null);
+  const [product, setProduct] = useState<Product | null>(
+    initialProduct ?? null,
+  );
+  const [loading, setLoading] = useState(!initialProduct);
   const [error, setError] = useState<string | null>(null);
+  const [mainImage, setMainImage] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [orderQty, setOrderQty] = useState(1);
 
-  const tiers = useMemo(
-    () => [...rawTiers].sort((a, b) => a.min_qty - b.min_qty),
-    [rawTiers],
-  );
-  const initialMOQ = tiers.length ? tiers[0].min_qty : 1;
-  const [orderQty, setOrderQty] = useState<number>(initialMOQ);
+  const tiers = useMemo<WholesaleTier[]>(() => {
+    return [...(product?.wholesale_price ?? [])]
+      .map((tier) => ({
+        min_qty: Number(tier.min_qty),
+        unit_price: Number(tier.unit_price),
+      }))
+      .filter(
+        (tier) =>
+          Number.isFinite(tier.min_qty) &&
+          tier.min_qty > 0 &&
+          Number.isFinite(Number(tier.unit_price)),
+      )
+      .sort((a, b) => a.min_qty - b.min_qty);
+  }, [product?.wholesale_price]);
 
-  useEffect(() => {
-    if (tiers.length && orderQty < tiers[0].min_qty) {
-      setOrderQty(tiers[0].min_qty);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tiers?.[0]?.min_qty]);
-  const line = useMemo(
-    () => rfq?.items?.find((it) => it.product === product?.id) ?? null,
-    [rfq?.items, product?.id],
-  );
-  const displayQty = line?.requested_qty ?? orderQty;
   const activeTier = useMemo(() => {
     if (!tiers.length) return null;
     return (
-      [...tiers].reverse().find((t) => displayQty >= t.min_qty) ?? tiers[0]
+      [...tiers].reverse().find((tier) => orderQty >= tier.min_qty) ?? tiers[0]
     );
-  }, [tiers, displayQty]);
-  const fromTier = lowestTier(tiers);
-  const unit = Number(activeTier?.unit_price ?? product?.price ?? 0);
-  const estimate = useMemo(() => displayQty * unit, [displayQty, unit]);
+  }, [tiers, orderQty]);
 
-  // Fetch
+  const bestTier = useMemo(() => {
+    if (!tiers.length) return null;
+    return [...tiers].sort(
+      (a, b) => Number(a.unit_price) - Number(b.unit_price),
+    )[0];
+  }, [tiers]);
+
+  const unitPrice = Number(activeTier?.unit_price ?? product?.price ?? 0);
+  const estimatedTotal = orderQty * unitPrice;
+
   useEffect(() => {
     if (!slug) return;
+
+    if (initialProduct?.slug === slug) {
+      setSelectedVariant(
+        initialProduct.variants?.length === 1
+          ? initialProduct.variants[0]
+          : null,
+      );
+      return;
+    }
+
     let cancelled = false;
 
     (async () => {
       try {
-        const res = await api.get(`/b2b/catalogs/${slug}/`);
+        const response = await api.get(`/b2b/catalogs/${slug}/`);
         if (cancelled) return;
-        setProduct(res.data);
-        setSelectedVariant((res.data as Product).variants?.[0] ?? null);
 
+        const loadedProduct = response.data as Product;
+        setProduct(loadedProduct);
+        setSelectedVariant(
+          loadedProduct.variants?.length === 1
+            ? loadedProduct.variants[0]
+            : null,
+        );
         setError(null);
-      } catch (e) {
-        console.error("Product load failed:", e);
+      } catch (loadError) {
+        console.error("Product load failed:", loadError);
         if (!cancelled) {
           setProduct(null);
           setError("Product not found");
@@ -112,139 +152,194 @@ const ProductPageClient: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, initialProduct]);
 
-  // Build gallery safely
-  const gallery: string[] = useMemo(() => {
+  useEffect(() => {
+    if (!product) return;
+
+    trackEvent({
+      event_type: "product_view",
+      product_id: product.id,
+      product_slug: product.slug,
+      category: product.category?.name || "",
+      meta: {
+        ga4: {
+          currency: product.currency || "INR",
+          value: Number(
+            product.wholesale_price?.[0]?.unit_price ?? product.price ?? 0,
+          ),
+          items: [
+            {
+              item_id: product.sku || String(product.id),
+              item_name: product.name,
+              item_category: product.category?.name || "",
+            },
+          ],
+        },
+      },
+    });
+  }, [product?.id]);
+
+  const gallery = useMemo(() => {
     const primary = product?.image ? [product.image] : [];
-    const others = (product?.images || [])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((im: any) => (typeof im === "string" ? im : im?.image))
+    const additional = (product?.images ?? [])
+      .map((image) => {
+        if (typeof image === "string") return image;
+        const item = image as typeof image & { image_url?: string | null };
+        return item.image_url || item.image;
+      })
       .filter(Boolean) as string[];
-    // dedupe while preserving order
-    const seen = new Set<string>();
-    return [...primary, ...others].filter((url) =>
-      url && !seen.has(url) ? (seen.add(url), true) : false,
-    );
+
+    return Array.from(new Set([...primary, ...additional]));
   }, [product]);
 
-  // Set main image
   useEffect(() => {
-    if (gallery.length > 0) setMainImage(gallery[0]);
+    if (gallery.length) setMainImage(gallery[0]);
   }, [gallery]);
 
-  // Loading skeleton
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div className="aspect-square rounded-2xl bg-white/5 border border-[var(--border)] animate-pulse" />
-          <div className="space-y-4">
-            <div className="h-7 w-3/4 rounded bg-[var(--surface)] animate-pulse" />
-            <div className="h-5 w-1/3 rounded bg-[var(--surface)] animate-pulse" />
-            <div className="h-12 w-40 rounded bg-[var(--surface)] animate-pulse" />
-            <div className="h-24 w-full rounded bg-[var(--surface)] animate-pulse" />
+      <main className="min-h-screen bg-[#06111f] text-slate-100">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div className="aspect-square animate-pulse rounded-3xl border border-slate-800 bg-slate-900/60" />
+            <div className="space-y-4 rounded-3xl border border-slate-800 bg-slate-950/40 p-6">
+              <div className="h-5 w-28 animate-pulse rounded bg-slate-800" />
+              <div className="h-9 w-4/5 animate-pulse rounded bg-slate-800" />
+              <div className="h-7 w-40 animate-pulse rounded bg-slate-800" />
+              <div className="h-24 w-full animate-pulse rounded bg-slate-800" />
+              <div className="h-12 w-full animate-pulse rounded bg-slate-800" />
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  const isOutOfStock = product ? product.stock < 1 : false;
-
-  // Soft 404 in client (avoid server-only notFound())
-  if (!product || error) {
-    return (
-      <main className="min-h-[60vh] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        <h1 className="text-2xl font-semibold">Product not found</h1>
-        <p className="mt-2 opacity-80">
-          The item you’re looking for isn’t available.{" "}
-          <button
-            onClick={() => router.push("/products")}
-            className="underline underline-offset-4 hover:opacity-80"
-          >
-            Browse all products
-          </button>
-          .
-        </p>
       </main>
     );
   }
-  const hasCompare =
-    product.compare_at_price &&
-    Number(product.compare_at_price) > Number(product.price);
-  const currency = selectedVariant || product.currency;
+
+  if (!product || error) {
+    return (
+      <main className="min-h-[70vh] bg-[#06111f] text-slate-100">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="max-w-xl rounded-3xl border border-slate-800 bg-slate-950/60 p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
+              Elvarra Wholesale
+            </p>
+            <h1 className="mt-3 text-2xl font-semibold text-white">
+              Product not found
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              This trade product is no longer available or the product link has
+              changed.
+            </p>
+            <button
+              onClick={() => router.push("/catalog")}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/20"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back to catalog
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const isOutOfStock = product.stock < 1;
+  const hasOnlinePrice = tiers.length > 0;
+  const currency = product.currency || "INR";
 
   return (
-    <main className="min-h-screen bg-elvarra text-elvarra antialiased">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 text-xs opacity-80">
-        <ol className="flex items-center gap-2">
+    <main className="relative min-h-screen overflow-hidden bg-[#06111f] text-slate-100 antialiased">
+      <div className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(circle_at_12%_8%,rgba(37,99,235,0.14),transparent_30%),radial-gradient(circle_at_90%_18%,rgba(6,182,212,0.10),transparent_26%),linear-gradient(180deg,#06111f_0%,#071827_48%,#020617_100%)]" />
+
+      <nav className="relative z-10 mx-auto max-w-7xl px-4 pt-6 text-xs text-slate-400 sm:px-6 lg:px-8">
+        <ol className="flex flex-wrap items-center gap-2">
           <li>
-            <Link href="/products" className="hover:opacity-80">
-              Products
+            <Link href="/catalog" className="transition hover:text-cyan-300">
+              Wholesale Catalog
             </Link>
           </li>
-          <li>›</li>
-          <li>
-            <Link
-              href={`/category/${product.category?.slug}`}
-              className="hover:opacity-80"
-            >
-              {product.category?.name}
-            </Link>
+          {product.category?.name ? (
+            <>
+              <li className="text-slate-600">/</li>
+              <li>
+                <Link
+                  href={`/catalog?category=${encodeURIComponent(
+                    product.category.name,
+                  )}`}
+                  className="transition hover:text-cyan-300"
+                >
+                  {product.category.name}
+                </Link>
+              </li>
+            </>
+          ) : null}
+          <li className="text-slate-600">/</li>
+          <li className="max-w-[55vw] truncate text-slate-300">
+            {product.name}
           </li>
-          <li>›</li>
-          <li className="opacity-90">{product.name}</li>
         </ol>
       </nav>
-      {/* Product */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
-        <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-          {/* GALLERY */}
-          <div className="w-full relative">
-            {/* Main image */}
-            {mainImage && (
-              <Zoom>
-                <div className="relative w-full aspect-square rounded-2xl overflow-hidden ring-1 ring-elvarra/20">
-                  {product.tag && <TagBadge tag={product.tag} />}
-                  <Image
-                    src={mainImage}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-              </Zoom>
-            )}
-            {isOutOfStock && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-semibold text-sm z-10">
-                Out of Stock
-              </div>
-            )}
 
-            {/* Thumbs: mobile horizontal, desktop vertical left rail */}
-            {/* Desktop vertical rail */}
-            {gallery.length > 1 && (
-              <div className="mt-3 w-full overflow-x-auto">
-                <div className="   flex gap-2 pb-1 snap-x snap-mandatory">
-                  {gallery.map((img, idx) => {
-                    const active = mainImage === img;
+      <section className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+        <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+          <div className="min-w-0">
+            <div className="rounded-3xl border border-slate-800 bg-slate-950/55 p-2 shadow-[0_24px_80px_-45px_rgba(34,211,238,.45)] backdrop-blur-sm sm:p-3">
+              {mainImage ? (
+                <Zoom>
+                  <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-900">
+                    <Image
+                      src={mainImage}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 55vw"
+                      className="object-cover"
+                      priority
+                    />
+
+                    {product.tag ? (
+                      <span className="absolute left-4 top-4 rounded-full border border-cyan-300/30 bg-slate-950/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200 backdrop-blur">
+                        {product.tag}
+                      </span>
+                    ) : null}
+
+                    {isOutOfStock && !product.backorder_allowed ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-950/65 backdrop-blur-[1px]">
+                        <span className="rounded-full border border-rose-400/40 bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-100">
+                          Out of stock
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                </Zoom>
+              ) : (
+                <div className="grid aspect-square place-items-center rounded-2xl bg-slate-900 text-sm text-slate-500">
+                  Product image unavailable
+                </div>
+              )}
+            </div>
+
+            {gallery.length > 1 ? (
+              <div className="mt-3 overflow-x-auto pb-1">
+                <div className="flex gap-2">
+                  {gallery.map((image, index) => {
+                    const active = image === mainImage;
                     return (
                       <button
-                        key={idx}
-                        onClick={() => setMainImage(img)}
-                        aria-label={`View image ${idx + 1}`}
-                        className={`relative w-20 h-20 rounded-xl overflow-hidden border transition shrink-0 snap-start outline-none focus:ring-2 focus:ring-[var(--brand)] ${
+                        key={`${image}-${index}`}
+                        type="button"
+                        onClick={() => setMainImage(image)}
+                        aria-label={`View product image ${index + 1}`}
+                        className={[
+                          "relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border bg-slate-900 transition",
                           active
-                            ? "border-[var(--brand)] ring-2 ring-[var(--brand)]"
-                            : "border-[var(--border)] hover:border-[var(--brand)]/60"
-                        }`}
+                            ? "border-cyan-300 ring-2 ring-cyan-400/30"
+                            : "border-slate-800 hover:border-cyan-500/50",
+                        ].join(" ")}
                       >
                         <Image
-                          src={img}
-                          alt={`${product.name} thumbnail ${idx + 1}`}
+                          src={image}
+                          alt={`${product.name} thumbnail ${index + 1}`}
                           fill
                           sizes="80px"
                           className="object-cover"
@@ -254,414 +349,328 @@ const ProductPageClient: React.FC = () => {
                   })}
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
 
-          {/* INFO */}
-          <div className="w-full">
-            <span
-              className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider bg-elvarra/10 text-elvarra inline-block mb-2`}
-            >
-              {product?.tag}
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-semibold">
+          <div className="rounded-3xl border border-slate-800 bg-slate-950/55 p-5 shadow-[0_24px_80px_-48px_rgba(37,99,235,.7)] backdrop-blur-sm sm:p-7">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200">
+                Trade Product
+              </span>
+              {product.sku ? (
+                <span className="text-xs text-slate-500">SKU {product.sku}</span>
+              ) : null}
+            </div>
+
+            <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-4xl">
               {product.name}
             </h1>
-            {/* Price */}
-            <div className="mt-2 flex flex-wrap items-baseline gap-3">
-              {tiers.length > 0 ? (
-                <>
-                  {/* “From” price */}
-                  <span className="text-lg sm:text-xl font-medium">
-                    From{" "}
-                    {money(
-                      Number(fromTier?.unit_price ?? product.price),
-                      product.currency,
-                    )}
-                  </span>
 
-                  {/* Live price for entered qty */}
-                  {activeTier && (
-                    <span className="text-sm rounded-full px-2 py-1 bg-emerald-900/20 ring-1 ring-emerald-700/30 text-emerald-200">
-                      {orderQty} pcs →{" "}
-                      {money(Number(activeTier.unit_price), product.currency)} /
-                      pc
-                    </span>
-                  )}
+            <div className="mt-4 flex flex-wrap items-end gap-x-3 gap-y-2">
+              {hasOnlinePrice ? (
+                <>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Trade price from
+                    </p>
+                    <p className="mt-1 text-2xl font-bold text-cyan-200">
+                      {money(Number(bestTier?.unit_price ?? 0), currency)}
+                    </p>
+                  </div>
+                  <span className="mb-1 rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">
+                    {money(unitPrice, currency)} / unit at selected quantity
+                  </span>
                 </>
               ) : (
-                // Fallback to retail
-                <>
-                  <span className="text-lg sm:text-xl font-medium">
-                    {/* <p className=" text-zinc-500">Contact for Price</p> */}
-                  </span>
-                </>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Trade pricing
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-slate-200">
+                    Contact trade support
+                  </p>
+                </div>
               )}
             </div>
 
-            {/* Stock / Inventory / Backorder */}
-            <div className="mt-2 text-sm">
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <span
-                className={`inline-flex items-center rounded-lg px-2 py-1 ring-1 ${
-                  product.stock > 0
-                    ? "ring-green-500/40 text-green-400"
-                    : product.backorder_allowed
-                      ? "ring-amber-500/40 text-amber-400"
-                      : "ring-rose-500/40 text-rose-400"
-                }`}
-                title={`Inventory: ${product.stock}${
-                  product.backorder_allowed ? " (backorders allowed)" : ""
-                }`}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${stockClasses(
+                  product,
+                )}`}
               >
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
                 {stockLabel(product)}
               </span>
+
               {product.stock > 0 &&
-                product.low_stock_threshold &&
-                product.stock <= product.low_stock_threshold && (
-                  <span className="ml-2 text-xs opacity-70">
-                    Only {product.stock} left
-                  </span>
-                )}
+              product.low_stock_threshold &&
+              product.stock <= product.low_stock_threshold ? (
+                <span className="text-xs text-slate-500">
+                  Only {product.stock} currently available
+                </span>
+              ) : null}
             </div>
 
-            {product.description && (
-              <p className="mt-4 text-sm leading-6 opacity-90">
+            {product.description ? (
+              <p className="mt-5 whitespace-pre-line text-sm leading-7 text-slate-300">
                 {product.description}
               </p>
-            )}
-            <div className={`mt-3 grid grid-cols-2 gap-3 text-xs el-subfgn`}>
-              <div className={`rounded-xl el-ringn el-cardn p-3`}>
-                MOQ: <span className="font-medium text-current">3 units</span>
+            ) : null}
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
+                <div className="flex items-center gap-2 text-cyan-300">
+                  <Truck className="h-4 w-4" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em]">
+                    Lead time
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  3–10 business days
+                </p>
               </div>
 
-              <div className={`rounded-xl el-ringn el-cardn p-3`}>
-                Lead time:{" "}
-                <span className="font-medium text-current">
-                  {product?.id && `3 - 10`} days
-                </span>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
+                <div className="flex items-center gap-2 text-cyan-300">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em]">
+                    Trade checkout
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  Eligibility checked in cart
+                </p>
               </div>
             </div>
 
-            {tiers.length > 0 && (
-              <div className="mt-3 rounded-2xl ring-1 ring-neutral-800 bg-neutral-900/70 p-3">
-                <div className="mb-2 text-xs uppercase tracking-wider opacity-80">
-                  Wholesale tiers
+            {tiers.length ? (
+              <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/35 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+                      Quantity pricing
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Larger quantities can unlock lower unit prices.
+                    </p>
+                  </div>
+                  <PackageCheck className="h-5 w-5 text-cyan-300" />
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {tiers.map((t) => {
-                    const isActive =
-                      !!activeTier && activeTier.min_qty === t.min_qty;
+
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {tiers.map((tier) => {
+                    const isActive = activeTier?.min_qty === tier.min_qty;
                     return (
                       <button
-                        key={t.min_qty}
+                        key={tier.min_qty}
                         type="button"
-                        onClick={() =>
-                          setOrderQty(Math.max(orderQty, t.min_qty))
-                        }
-                        className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm
-              ${
-                isActive
-                  ? "border-amber-400 bg-amber-400/10 text-amber-200"
-                  : "el-bordern hover:bg-white/5"
-              }`}
-                        title={`${t.min_qty}+ pcs at ${money(
-                          Number(t.unit_price),
-                          product.currency,
-                        )} each`}
+                        onClick={() => setOrderQty(tier.min_qty)}
+                        className={[
+                          "rounded-xl border px-3 py-2 text-left transition",
+                          isActive
+                            ? "border-cyan-400/50 bg-cyan-500/10"
+                            : "border-slate-800 bg-slate-950/40 hover:border-blue-500/40 hover:bg-blue-500/5",
+                        ].join(" ")}
                       >
-                        <span>{t.min_qty}+ pcs</span>
-                        <span className="font-semibold">
-                          {money(Number(t.unit_price), product.currency)}
+                        <span className="block text-[10px] uppercase tracking-wider text-slate-500">
+                          {tier.min_qty}+ units
+                        </span>
+                        <span className="mt-1 block text-sm font-bold text-cyan-200">
+                          {money(Number(tier.unit_price), currency)}
                         </span>
                       </button>
                     );
                   })}
                 </div>
-                {/* Extended calc: line total at current qty */}
-                {/* Estimate (tracks tier buttons until added; RFQ +/- after added) */}
-                {tiers.length > 0 && (
-                  <div className="mt-3 text-sm flex items-center justify-between">
-                    <span className="opacity-80">
-                      Estimate ({displayQty} ×{" "}
-                      {unit.toLocaleString(undefined, {
-                        style: "currency",
-                        currency: product?.currency || "INR",
-                      })}
+              </div>
+            ) : null}
+
+            {hasOnlinePrice ? (
+              <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <label
+                    htmlFor="trade-order-qty"
+                    className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300"
+                  >
+                    Quantity
+                  </label>
+                  <span className="text-xs text-slate-500">
+                    Add the quantity you want; wholesale eligibility is checked
+                    in your cart.
+                  </span>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    onClick={() => setOrderQty((quantity) => Math.max(1, quantity - 1))}
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950 text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-200"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+
+                  <input
+                    id="trade-order-qty"
+                    type="number"
+                    min={1}
+                    max={product.stock > 0 ? product.stock : undefined}
+                    value={orderQty}
+                    onChange={(event) => {
+                      const next = Number(event.target.value);
+                      if (!Number.isFinite(next)) return;
+                      const normalized = Math.max(1, Math.floor(next));
+                      setOrderQty(
+                        product.stock > 0
+                          ? Math.min(product.stock, normalized)
+                          : normalized,
+                      );
+                    }}
+                    className="h-11 min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 text-center text-base font-semibold text-white outline-none transition focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-500/10"
+                  />
+
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    onClick={() =>
+                      setOrderQty((quantity) =>
+                        product.stock > 0
+                          ? Math.min(product.stock, quantity + 1)
+                          : quantity + 1,
                       )
-                    </span>
-                    <span className="font-medium">
-                      {(displayQty * unit).toLocaleString(undefined, {
-                        style: "currency",
-                        currency: product?.currency || "INR",
-                      })}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Options */}
-            <div className="mt-6 grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-wider opacity-80">
-                  Metal
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    className={`rounded-xl border el-bordern px-3 py-2 text-sm hover:bg-white/5`}
-                    aria-label={`Choose metal Gold`}
+                    }
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950 text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-200"
                   >
-                    {product.spec && product.spec.base_material}
+                    <Plus className="h-4 w-4" />
                   </button>
                 </div>
-              </div>
-              {/* <div>
-                <label className="mb-2 block text-xs uppercase tracking-wider opacity-80">
-                  Length
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    className={`rounded-xl border el-bordern px-3 py-2 text-sm hover:bg-white/5`}
-                    aria-label={`Choose length 16`}
-                  >
-                    16 inches
-                  </button>
+
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="text-slate-500">
+                    Unit price: {money(unitPrice, currency)}
+                  </span>
+                  <span className="font-semibold text-slate-200">
+                    Estimated total: {money(estimatedTotal, currency)}
+                  </span>
                 </div>
-              </div> */}
-            </div>
-            {/* <ul className="mt-6 list-disc space-y-1 pl-5 text-sm"> {product.details.map((d, i) => ( <li key={i}>{d}</li> ))} </ul> */}
-            <div className="mt-7 grid grid-cols-2 gap-3">
-              {/* <button
-                type="button"
-                className="col-span-2 sm:col-span-1 rounded-xl border border-elvarra px-5 py-3 text-sm hover:bg-white/5"
-              >
-                Wishlist
-              </button> */}
-            </div>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              {/* <Link
-                href="/wholesale-inquiry"
-                className={`flex-1 rounded-xl px-5 py-3 text-sm font-medium btn-gradient-accent text-center`}
-              >
-                Request Wholesale Quote
-              </Link> */}
-              <AddToRFQBtn2
-                product={product}
-                quantity={orderQty}
-                minQty={initialMOQ}
-              />
+              </div>
+            ) : null}
 
-              {/* <button
-                className={`rounded-xl border el-bordern px-4 py-3 text-sm`}
-              >
-                Download Spec Sheet
-              </button> */}
-            </div>
-
-            {/*    <div className="mt-6 space-y-3">
-              {[
-                {
-                  q: "Materials & Specs",
-                  a: "Brass base, 18k gold plating (0.3–0.5μm), lab‑grown stone. Individual polybag + insert card; retail box optional.",
-                },
-                {
-                  q: "Packaging Options",
-                  a: "Standard OPP bag, velvet pouch, or branded rigid box. Barcode & price labels available.",
-                },
-                {
-                  q: "Shipping Terms",
-                  a: "FOB, CIF, DAP available. Consolidation support for multi‑SKU POs.",
-                },
-                {
-                  q: "After‑Sales",
-                  a: "2‑year limited warranty. Batch replacement for manufacturing defects.",
-                },
-              ].map((item, i) => (
-                <details
-                  key={i}
-                  className={`group rounded-2xl el-ringn el-cardn p-4`}
+            <div className="mt-5">
+              {hasOnlinePrice ? (
+                <AddToCartBtn
+                  product={product}
+                  variant={selectedVariant}
+                  quantity={orderQty}
+                  outofStock={isOutOfStock && !product.backorder_allowed}
+                  noPrice={false}
+                />
+              ) : (
+                <Link
+                  href="/contact"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/20"
                 >
-                  <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
-                    <span>{item.q}</span>
-                    <span className="ml-4 transition group-open:rotate-45 opacity-60">
-                      ＋
-                    </span>
-                  </summary>
-                  <p className={`mt-2 text-sm el-subfgn`}>{item.a}</p>
-                </details>
-              ))}
-            </div> */}
-
-            {/* Attributes grid */}
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div className="rounded-2xl ring-1  ring-neutral-800   p-4 bg-neutral-900/70">
-                <h3 className="font-medium mb-2">Details</h3>
-                <ul className="space-y-1 opacity-90">
-                  <li>
-                    <span className="opacity-70">SKU:</span> {product.sku}
-                  </li>
-                  {product.brand && (
-                    <li>
-                      <span className="opacity-70">Brand:</span> {product.brand}
-                    </li>
-                  )}
-                  {product.gtin && (
-                    <li>
-                      <span className="opacity-70">GTIN:</span> {product.gtin}
-                    </li>
-                  )}
-                  {product.mpn && (
-                    <li>
-                      <span className="opacity-70">MPN:</span> {product.mpn}
-                    </li>
-                  )}
-                  <li>
-                    <span className="opacity-70">Category:</span>{" "}
-                    {product.category?.name}
-                  </li>
-                  <li>
-                    <span className="opacity-70">Currency:</span>{" "}
-                    {product.currency}
-                  </li>
-                  {/* {product.tag && (
-                    <li>
-                      <span className="opacity-70">Tag:</span> {product.tag}
-                    </li>
-                  )} */}
-                  <li>
-                    <span className="opacity-70">Active:</span>{" "}
-                    {product.is_active ? "Yes" : "No"}
-                  </li>
-                </ul>
-              </div>
-
-              <div className="rounded-2xl ring-1 ring-neutral-800   p-4 bg-neutral-900/70">
-                <h3 className="font-medium mb-2">Dimensions</h3>
-                <ul className="space-y-1 opacity-90">
-                  <li>
-                    <span className="opacity-70">Weight:</span>{" "}
-                    {product.weight_kg ?? "—"} kg
-                  </li>
-                  <li>
-                    <span className="opacity-70">Length:</span>{" "}
-                    {product.length_cm ?? "—"} cm
-                  </li>
-                  <li>
-                    <span className="opacity-70">Width:</span>{" "}
-                    {product.width_cm ?? "—"} cm
-                  </li>
-                  <li>
-                    <span className="opacity-70">Height:</span>{" "}
-                    {product.height_cm ?? "—"} cm
-                  </li>
-                </ul>
-              </div>
+                  <ShoppingBag className="h-4 w-4" />
+                  Contact trade support
+                </Link>
+              )}
             </div>
-
-            {/* Spec */}
-            {product.spec && (
-              <div className="mt-8 rounded-2xl ring-1 p-4 text-sm ring-neutral-800   bg-neutral-900/70">
-                <h3 className="font-medium mb-2">Material & Finish</h3>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 opacity-90">
-                  <li>
-                    <span className="opacity-70">Base material:</span>{" "}
-                    {product.spec.base_material}
-                  </li>
-                  {product.spec.silver_fineness != null && (
-                    <li>
-                      <span className="opacity-70">Silver fineness:</span>{" "}
-                      {product.spec.silver_fineness}
-                    </li>
-                  )}
-                  {product.spec.gold_karat != null && (
-                    <li>
-                      <span className="opacity-70">Gold karat:</span>{" "}
-                      {product.spec.gold_karat}K
-                    </li>
-                  )}
-                  {product.spec.plating_type && (
-                    <li>
-                      <span className="opacity-70">Plating:</span>{" "}
-                      {product.spec.plating_type}
-                    </li>
-                  )}
-                  {product.spec.plating_thickness_microns != null && (
-                    <li>
-                      <span className="opacity-70">Plating thickness:</span>{" "}
-                      {product.spec.plating_thickness_microns}μm
-                    </li>
-                  )}
-                  {product.spec.coating && (
-                    <li>
-                      <span className="opacity-70">Coating:</span>{" "}
-                      {product.spec.coating}
-                    </li>
-                  )}
-                  {product.spec.hypoallergenic != null && (
-                    <li>
-                      <span className="opacity-70">Hypoallergenic:</span>{" "}
-                      {product.spec.hypoallergenic ? "Yes" : "No"}
-                    </li>
-                  )}
-                  {product.spec.water_resistant != null && (
-                    <li>
-                      <span className="opacity-70">Water resistant:</span>{" "}
-                      {product.spec.water_resistant ? "Yes" : "No"}
-                    </li>
-                  )}
-                  {product.spec.nickel_free != null && (
-                    <li>
-                      <span className="opacity-70">Nickel-free:</span>{" "}
-                      {product.spec.nickel_free ? "Yes" : "No"}
-                    </li>
-                  )}
-                  {product.spec.lead_free != null && (
-                    <li>
-                      <span className="opacity-70">Lead-free:</span>{" "}
-                      {product.spec.lead_free ? "Yes" : "No"}
-                    </li>
-                  )}
-                  {product.spec.cadmium_free != null && (
-                    <li>
-                      <span className="opacity-70">Cadmium-free:</span>{" "}
-                      {product.spec.cadmium_free ? "Yes" : "No"}
-                    </li>
-                  )}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
-      </section>
 
-      {/* Related */}
-      {/*  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
-        <h2 className="text-lg sm:text-xl font-semibold">You may also like</h2>
-        <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="rounded-2xl ring-1 ring-neutral-800   bg-neutral-900/70 card-elvarra p-2"
-            >
-              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-xl">
-                <Image
-                  src="/images/about-1.jpg"
-                  alt="Related product"
-                  fill
-                  sizes="(max-width:1024px) 50vw, 25vw"
-                  className="object-cover"
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
+              Product details
+            </h2>
+            <dl className="mt-4 space-y-3 text-sm">
+              <InfoRow label="SKU" value={product.sku || "—"} />
+              <InfoRow label="Brand" value={product.brand || "—"} />
+              <InfoRow label="Category" value={product.category?.name || "—"} />
+              <InfoRow label="GTIN" value={product.gtin || "—"} />
+              <InfoRow label="MPN" value={product.mpn || "—"} />
+            </dl>
+          </section>
+
+          <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
+              Dimensions
+            </h2>
+            <dl className="mt-4 space-y-3 text-sm">
+              <InfoRow label="Weight" value={cleanValue(product.weight_kg, " kg")} />
+              <InfoRow label="Length" value={cleanValue(product.length_cm, " cm")} />
+              <InfoRow label="Width" value={cleanValue(product.width_cm, " cm")} />
+              <InfoRow label="Height" value={cleanValue(product.height_cm, " cm")} />
+            </dl>
+          </section>
+
+          <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
+              Material & finish
+            </h2>
+            {product.spec ? (
+              <dl className="mt-4 space-y-3 text-sm">
+                <InfoRow
+                  label="Base material"
+                  value={product.spec.base_material || "—"}
                 />
-              </div>
-              <div className="p-2">
-                <p className="text-sm font-medium">Sample Product {i}</p>
-                <span className="text-sm opacity-80">$79</span>
-              </div>
-            </div>
-          ))}
+                <InfoRow
+                  label="Plating"
+                  value={product.spec.plating_type || "—"}
+                />
+                <InfoRow
+                  label="Gold karat"
+                  value={
+                    product.spec.gold_karat != null
+                      ? `${product.spec.gold_karat}K`
+                      : "—"
+                  }
+                />
+                <InfoRow
+                  label="Coating"
+                  value={product.spec.coating || "—"}
+                />
+                <InfoRow
+                  label="Water resistant"
+                  value={
+                    product.spec.water_resistant == null
+                      ? "—"
+                      : product.spec.water_resistant
+                        ? "Yes"
+                        : "No"
+                  }
+                />
+                <InfoRow
+                  label="Hypoallergenic"
+                  value={
+                    product.spec.hypoallergenic == null
+                      ? "—"
+                      : product.spec.hypoallergenic
+                        ? "Yes"
+                        : "No"
+                  }
+                />
+              </dl>
+            ) : (
+              <p className="mt-4 text-sm text-slate-500">
+                Material specifications are not available for this product.
+              </p>
+            )}
+          </section>
         </div>
-      </section> */}
+      </section>
     </main>
   );
-};
+}
 
-export default ProductPageClient;
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-slate-800/70 pb-3 last:border-0 last:pb-0">
+      <dt className="text-slate-500">{label}</dt>
+      <dd className="max-w-[65%] text-right font-medium text-slate-200">
+        {value}
+      </dd>
+    </div>
+  );
+}
