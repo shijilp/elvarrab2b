@@ -358,7 +358,9 @@ export default function ProductPageClient({
                 Trade Product
               </span>
               {product.sku ? (
-                <span className="text-xs text-slate-500">SKU {product.sku}</span>
+                <span className="text-xs text-slate-500">
+                  SKU {product.sku}
+                </span>
               ) : null}
             </div>
 
@@ -505,7 +507,9 @@ export default function ProductPageClient({
                   <button
                     type="button"
                     aria-label="Decrease quantity"
-                    onClick={() => setOrderQty((quantity) => Math.max(1, quantity - 1))}
+                    onClick={() =>
+                      setOrderQty((quantity) => Math.max(1, quantity - 1))
+                    }
                     className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950 text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-200"
                   >
                     <Minus className="h-4 w-4" />
@@ -598,10 +602,22 @@ export default function ProductPageClient({
               Dimensions
             </h2>
             <dl className="mt-4 space-y-3 text-sm">
-              <InfoRow label="Weight" value={cleanValue(product.weight_kg, " kg")} />
-              <InfoRow label="Length" value={cleanValue(product.length_cm, " cm")} />
-              <InfoRow label="Width" value={cleanValue(product.width_cm, " cm")} />
-              <InfoRow label="Height" value={cleanValue(product.height_cm, " cm")} />
+              <InfoRow
+                label="Weight"
+                value={cleanValue(product.weight_kg, " kg")}
+              />
+              <InfoRow
+                label="Length"
+                value={cleanValue(product.length_cm, " cm")}
+              />
+              <InfoRow
+                label="Width"
+                value={cleanValue(product.width_cm, " cm")}
+              />
+              <InfoRow
+                label="Height"
+                value={cleanValue(product.height_cm, " cm")}
+              />
             </dl>
           </section>
 
@@ -613,7 +629,7 @@ export default function ProductPageClient({
               <dl className="mt-4 space-y-3 text-sm">
                 <InfoRow
                   label="Base material"
-                  value={product.spec.base_material || "—"}
+                  value={formatBaseMaterial(product.spec.base_material)}
                 />
                 <InfoRow
                   label="Plating"
@@ -627,10 +643,7 @@ export default function ProductPageClient({
                       : "—"
                   }
                 />
-                <InfoRow
-                  label="Coating"
-                  value={product.spec.coating || "—"}
-                />
+                <InfoRow label="Coating" value={product.spec.coating || "—"} />
                 <InfoRow
                   label="Water resistant"
                   value={
@@ -662,6 +675,17 @@ export default function ProductPageClient({
       </section>
     </main>
   );
+}
+
+function formatBaseMaterial(value?: string | null) {
+  if (!value) return "—";
+
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "316L_STEEL") {
+    return "Stainless Steel";
+  }
+
+  return value;
 }
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
