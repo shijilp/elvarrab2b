@@ -42,7 +42,7 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#06111f]/90 backdrop-blur-xl print:hidden">
         <div className="bg-gradient-to-r from-blue-950 via-slate-950 to-cyan-950 px-4 py-1.5 text-center text-[11px] font-medium tracking-wide text-cyan-200">
-          ELVARRA B2B TRADE PORTAL · Minimum Order {formatMoney(minOrder)} ·
+          ELVARRA B2B TRADE PORTAL · Wholesale & Resale Support Available · Minimum Order {formatMoney(minOrder)} ·
           Secure Wholesale Checkout
         </div>
 

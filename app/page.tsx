@@ -216,6 +216,46 @@ export default function Page() {
           </div>
         </section>
 
+        {/* RESALE PROGRAM */}
+        <section className="container mx-auto px-4 pt-5 sm:px-6 lg:pt-8">
+          <div className="relative overflow-hidden rounded-[2rem] border border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.08] via-slate-950/90 to-cyan-500/[0.06] p-6 sm:p-8">
+            <div className="absolute -right-12 -top-16 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" />
+            <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <div className="inline-flex rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300">
+                  Resale Program Available
+                </div>
+                <h2 className="mt-4 text-2xl font-bold text-white sm:text-3xl">
+                  Want to resell Elvarra products?
+                </h2>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+                  Elvarra also supports resale partners. If you sell through social media, your own store, marketplace, boutique or personal network, contact our Trade Support team for resale options, eligibility and program details. You can also use the chat on this site for assistance.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
+                  <span>• Resale guidance</span>
+                  <span>• Product and pricing information</span>
+                  <span>• Partner onboarding support</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+                <Link
+                  href="/contact?topic=resale"
+                  className="inline-flex items-center justify-center rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-300"
+                >
+                  Contact Trade Support
+                </Link>
+                <Link
+                  href="/contact?topic=resale&mode=chat"
+                  className="inline-flex items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/15"
+                >
+                  Chat With Us
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* VALUE PROPS */}
         <section className="container mx-auto px-4 py-12 sm:px-6 lg:py-16">
           <div className="mb-6">
@@ -434,6 +474,10 @@ export default function Page() {
             <FaqItem
               q="Can I request special pricing?"
               a="Yes. Growth and enterprise buyers can request pricing based on order volume and repeat purchase plan."
+            />
+            <FaqItem
+              q="Do you offer a resale option?"
+              a="Yes. Elvarra supports resale partners. Contact Trade Support or use the site chat for eligibility, product and program details."
             />
             <FaqItem
               q="Is this different from retail shopping?"

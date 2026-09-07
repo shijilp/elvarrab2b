@@ -1,55 +1,18 @@
 "use client";
-import { useMemo, useState } from "react";
-import axios from "axios";
+
 import GoogleButton from "@/components/GoogleButton";
-import { useRouter } from "next/navigation";
+import B2BAuthShell, {
+  tradeInputClass,
+  tradeLabelClass,
+  tradePrimaryButtonClass,
+} from "@/components/auth/B2BAuthShell";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
+import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-type ThemeMode = "dark" | "light";
-
-type Palette = {
-  bg: string;
-  fg: string;
-  subfg: string;
-  card: string;
-  border: string;
-  button: string;
-  ring: string;
-  chip: string;
-};
-
-function paletteForTheme(theme: ThemeMode): Palette {
-  return theme === "dark"
-    ? {
-        bg: "bg-neutral-950",
-        fg: "text-neutral-50",
-        subfg: "text-neutral-300",
-        card: "bg-neutral-900/70",
-        border: "border-neutral-800",
-        button:
-          "bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110",
-        ring: "ring-1 ring-neutral-800",
-        chip: "bg-yellow-500 text-neutral-900",
-      }
-    : {
-        bg: "bg-neutral-50",
-        fg: "text-neutral-900",
-        subfg: "text-neutral-600",
-        card: "bg-white/90",
-        border: "border-neutral-200",
-        button:
-          "bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110",
-        ring: "ring-1 ring-neutral-200",
-        chip: "bg-neutral-900 text-neutral-50",
-      };
-}
-
-// ---------------------------
-// Register Page
-// ---------------------------
 export default function RegisterPage() {
-  const theme: ThemeMode = "dark";
-  const palette = useMemo(() => paletteForTheme(theme), [theme]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -59,12 +22,14 @@ export default function RegisterPage() {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
+
     try {
       const res = await axios.post("/api/register", {
         first_name: name,
         username: email,
-        password: password,
+        password,
         email: email || undefined,
       });
 
@@ -76,9 +41,6 @@ export default function RegisterPage() {
         first_name: res.data.first_name,
       };
       localStorage.setItem("user", JSON.stringify(user));
-
-      setLoading(false);
-
       router.push("/");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -86,92 +48,105 @@ export default function RegisterPage() {
         err?.response?.data?.detail ||
           err?.response?.data?.error ||
           err?.message ||
-          "Registration failed"
+          "Registration failed",
       );
+    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main
-      className={`${palette.bg} ${palette.fg} min-h-[83svh] flex items-center justify-center`}
+    <B2BAuthShell
+      eyebrow="Elvarra Trade Registration"
+      title="Create your trade account"
+      description="Register for Elvarra Wholesale to access B2B pricing and place trade orders. Resellers can also contact our support team for resale program details."
+      footer={
+        <p>
+          Already registered?{" "}
+          <Link
+            href="/login"
+            className="font-semibold text-cyan-300 hover:text-cyan-200"
+          >
+            Sign in to your account
+          </Link>
+        </p>
+      }
     >
       <script src="https://accounts.google.com/gsi/client" async defer />
 
-      <form
-        onSubmit={handleRegister}
-        className={`w-full max-w-md rounded-2xl ${palette.ring} ${palette.card} p-6 space-y-4`}
-      >
-        <div className=" inset-0 -z-10 opacity-30 blur-3xl">
-          <div className="pointer-events-none absolute -inset-5 rounded-[100px] gradient-accent" />
-        </div>
-        <h1 className="text-2xl font-semibold">Register</h1>
+      <form onSubmit={handleRegister} className="space-y-5">
         <div>
-          <label className="block text-sm mb-1">Name</label>
+          <label className={tradeLabelClass}>Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+            autoComplete="name"
+            placeholder="Your name"
+            className={tradeInputClass}
           />
         </div>
+
         <div>
-          <label className="block text-sm mb-1">Email</label>
+          <label className={tradeLabelClass}>Business email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+            autoComplete="email"
+            placeholder="you@business.com"
+            className={tradeInputClass}
           />
         </div>
+
         <div>
-          <label className="block text-sm mb-1">Password</label>
+          <label className={tradeLabelClass}>Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+            autoComplete="new-password"
+            placeholder="Create a secure password"
+            className={tradeInputClass}
           />
         </div>
+
+        {error && (
+          <div className="rounded-2xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            {error}
+          </div>
+        )}
+
         <button
           type="submit"
-          className={`w-full rounded-xl px-4 py-2 font-medium ${palette.button}`}
+          disabled={loading}
+          className={tradePrimaryButtonClass}
         >
-          Register
+          {loading ? "Creating account…" : "Create Trade Account"}
         </button>
-        <p>{error}</p>
-        <GoogleButton />
-        <p className={`text-sm ${palette.subfg}`}>
-          Already have an account?{" "}
-          <a href="/login" className="underline">
-            Login
-          </a>
-        </p>
+
+        <div className="flex items-center gap-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-600">
+          <span className="h-px flex-1 bg-slate-800" />
+          or
+          <span className="h-px flex-1 bg-slate-800" />
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleButton />
+        </div>
+
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4 text-xs leading-5 text-slate-400 lg:hidden">
+          <span className="font-semibold text-emerald-300">
+            Resale program available.
+          </span>{" "}
+          Contact Trade Support or use the site chat for more details.
+        </div>
       </form>
+
       <LoadingOverlay show={loading} />
-    </main>
+    </B2BAuthShell>
   );
 }
-
-/*
-------------------------------------------------------------
-TESTS (snippets)
-
-// tests/auth-pages.test.tsx
-// it("login form renders", () => {
-//   render(<LoginPage />);
-//   expect(screen.getByText(/Login/)).toBeInTheDocument();
-// });
-// it("register form renders", () => {
-//   render(<RegisterPage />);
-//   expect(screen.getByText(/Register/)).toBeInTheDocument();
-// });
-// it("google button present", () => {
-//   render(<LoginPage />);
-//   expect(screen.getByText(/Google/)).toBeInTheDocument();
-// });
-//------------------------------------------------------------
-*/

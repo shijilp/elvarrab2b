@@ -1,84 +1,70 @@
 "use client";
-import React, { useMemo, useState } from "react";
-import { Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+
+import B2BAuthShell, {
+  tradeInputClass,
+  tradeLabelClass,
+  tradePrimaryButtonClass,
+} from "@/components/auth/B2BAuthShell";
 import axios from "axios";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useState } from "react";
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense
-      fallback={<div className="max-w-md mx-auto py-12 px-4">Loading…</div>}
-    >
+    <Suspense fallback={<ResetLoadingState />}>
       <ResetPasswordForm />
     </Suspense>
   );
 }
 
-type ThemeMode = "dark" | "light";
-type Palette = {
-  bg: string;
-  fg: string;
-  subfg: string;
-  card: string;
-  border: string;
-  button: string;
-  ring: string;
-  chip: string;
-};
-
-function paletteForTheme(theme: ThemeMode): Palette {
-  return theme === "dark"
-    ? {
-        bg: "bg-neutral-950",
-        fg: "text-neutral-50",
-        subfg: "text-neutral-300",
-        card: "bg-neutral-900/70",
-        border: "border-neutral-800",
-        button:
-          "bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110",
-        ring: "ring-1 ring-neutral-800",
-        chip: "bg-yellow-500 text-neutral-900",
-      }
-    : {
-        bg: "bg-neutral-50",
-        fg: "text-neutral-900",
-        subfg: "text-neutral-600",
-        card: "bg-white/90",
-        border: "border-neutral-200",
-        button:
-          "bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110",
-        ring: "ring-1 ring-neutral-200",
-        chip: "bg-neutral-900 text-neutral-50",
-      };
+function ResetLoadingState() {
+  return (
+    <B2BAuthShell
+      eyebrow="Trade Account Recovery"
+      title="Reset your password"
+      description="Preparing your secure password reset form."
+    >
+      <div className="space-y-3">
+        <div className="h-12 animate-pulse rounded-2xl bg-slate-800/70" />
+        <div className="h-12 animate-pulse rounded-2xl bg-slate-800/70" />
+        <div className="h-12 animate-pulse rounded-2xl bg-slate-800/70" />
+      </div>
+    </B2BAuthShell>
+  );
 }
 
 function ResetPasswordForm() {
-  const theme: ThemeMode = "dark";
-  const params = useSearchParams(); // ✅ now inside Suspense
+  const params = useSearchParams();
   const uid = params.get("uid");
   const token = params.get("token");
 
-  const palette = useMemo(() => paletteForTheme(theme), [theme]);
-  // const [token, setToken] = useState<string | null>(null);
   const [pass, setPass] = useState("");
   const [confirm, setConfirm] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
     if (!uid || !token) {
-      setError("Invalid reset link.");
+      setError("Invalid or incomplete reset link. Please request a new one.");
+      return;
+    }
+    if (pass.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
     if (pass !== confirm) {
-      setError("Passwords don't match");
+      setError("Passwords don't match.");
       return;
     }
 
+    setLoading(true);
     try {
       await axios.post("/api/reset-password/confirm", {
         uid,
@@ -98,94 +84,87 @@ function ResetPasswordForm() {
         msg = err.message;
       }
       setError(msg);
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <main
-      className={`${palette.bg} ${palette.fg} min-h-screen flex items-center justify-center`}
+    <B2BAuthShell
+      eyebrow="Trade Account Recovery"
+      title="Set a new password"
+      description="Choose a new password for your Elvarra wholesale account."
+      footer={
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link href="/login" className="font-semibold text-cyan-300 hover:text-cyan-200">
+            Back to login
+          </Link>
+          <Link href="/forgot-password" className="text-slate-300 hover:text-white">
+            Request a new link
+          </Link>
+        </div>
+      }
     >
-      <div
-        className={`w-full max-w-md rounded-2xl ${palette.ring} ${palette.card} p-6`}
-      >
-        <h1 className="text-2xl font-semibold">Reset password</h1>
-        {!done ? (
-          <>
-            <p className={`mt-1 text-sm ${palette.subfg}`}>
-              Choose a new password for your account.
-            </p>
-            <form onSubmit={submit} className="mt-4 space-y-4">
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                  New password
-                </label>
-                <div
-                  className={`flex items-stretch overflow-hidden rounded-xl border ${palette.border}`}
-                >
-                  <input
-                    type={show ? "text" : "password"}
-                    value={pass}
-                    onChange={(e) => setPass(e.target.value)}
-                    className="w-full bg-transparent px-3 py-2 outline-none"
-                    placeholder="••••••••"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShow((s) => !s)}
-                    className="px-3 text-sm opacity-80"
-                  >
-                    {show ? "Hide" : "Show"}
-                  </button>
-                </div>
-                <p className={`mt-1 text-xs ${palette.subfg}`}>
-                  Minimum 6 characters.
-                </p>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                  Confirm password
-                </label>
-                <input
-                  type={show ? "text" : "password"}
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 outline-none`}
-                  required
-                />
-              </div>
-              {error && (
-                <div className="rounded-xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-200">
-                  {error}
-                </div>
-              )}
+      {!done ? (
+        <form onSubmit={submit} className="space-y-5">
+          <div>
+            <label className={tradeLabelClass}>New password</label>
+            <div className="relative">
+              <input
+                type={show ? "text" : "password"}
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                className={`${tradeInputClass} pr-20`}
+                placeholder="Minimum 6 characters"
+                autoComplete="new-password"
+                required
+              />
               <button
-                type="submit"
-                className={`w-full rounded-xl px-4 py-2 text-sm font-medium ${palette.button}`}
+                type="button"
+                onClick={() => setShow((s) => !s)}
+                className="absolute inset-y-0 right-3 my-auto h-8 rounded-xl px-3 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/10"
               >
-                Set new password
+                {show ? "Hide" : "Show"}
               </button>
-              <div className="flex items-center justify-between text-sm">
-                <a href="/login" className="underline">
-                  Back to login
-                </a>
-                <a href="/forgot" className="underline">
-                  Resend link
-                </a>
-              </div>
-            </form>
-          </>
-        ) : (
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="rounded-xl border border-emerald-500/50 bg-emerald-500/10 p-3 text-emerald-200">
-              Your password has been updated. You can now sign in.
             </div>
-            <a href="/login" className="underline">
-              Go to login
-            </a>
           </div>
-        )}
-      </div>
-    </main>
+
+          <div>
+            <label className={tradeLabelClass}>Confirm password</label>
+            <input
+              type={show ? "text" : "password"}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className={tradeInputClass}
+              autoComplete="new-password"
+              placeholder="Re-enter your new password"
+              required
+            />
+          </div>
+
+          {error && (
+            <div className="rounded-2xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+              {error}
+            </div>
+          )}
+
+          <button type="submit" disabled={loading} className={tradePrimaryButtonClass}>
+            {loading ? "Updating…" : "Set New Password"}
+          </button>
+        </form>
+      ) : (
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm leading-6 text-emerald-100">
+            Your password has been updated successfully. You can now sign in to your trade account.
+          </div>
+          <Link
+            href="/login"
+            className="inline-flex rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/15"
+          >
+            Go to Trade Login
+          </Link>
+        </div>
+      )}
+    </B2BAuthShell>
   );
 }

@@ -1,82 +1,47 @@
 "use client";
+
 import { api } from "@/lib/api";
 import Link from "next/link";
-import React, { useMemo, useState, useEffect } from "react";
-
-// ------------------------------------------------------------
-// Elvarra / Elvara — SUPPORT / CONTACT PAGE
-// Route: app/support/page.tsx
-// Behavior: submits to your backend (e.g., POST /api/support) to send an email
-// - Client-side validation
-// - Loading & error states
-// - Success confirmation (no page reload)
-// - Resilient fetch (timeout, retry once)
-// - Honeypot anti-bot field
-// - Same visual theme as the rest of the app
-// ------------------------------------------------------------
-
-type ThemeMode = "dark" | "light";
-type Palette = {
-  bg: string;
-  fg: string;
-  subfg: string;
-  card: string;
-  border: string;
-  button: string;
-  ring: string;
-  chip: string;
-};
-
-function paletteForTheme(theme: ThemeMode): Palette {
-  return theme === "dark"
-    ? {
-        bg: "bg-neutral-950",
-        fg: "text-neutral-50",
-        subfg: "text-neutral-300",
-        card: "bg-neutral-900/70",
-        border: "border-neutral-800",
-        button:
-          "bg-gradient-to-r from-yellow-500 to-amber-500 text-neutral-900 hover:brightness-110",
-        ring: "ring-1 ring-neutral-800",
-        chip: "bg-yellow-500 text-neutral-900",
-      }
-    : {
-        bg: "bg-neutral-50",
-        fg: "text-neutral-900",
-        subfg: "text-neutral-600",
-        card: "bg-white/90",
-        border: "border-neutral-200",
-        button:
-          "bg-gradient-to-r from-rose-400 to-pink-500 text-white hover:brightness-110",
-        ring: "ring-1 ring-neutral-200",
-        chip: "bg-neutral-900 text-neutral-50",
-      };
-}
+import React, { useEffect, useState } from "react";
+import {
+  Building2,
+  Headphones,
+  MessageCircle,
+  ShieldCheck,
+} from "lucide-react";
 
 function isEmail(x: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x);
 }
 
 export default function SupportPage() {
-  const theme: ThemeMode = "dark";
-  const palette = useMemo(() => paletteForTheme(theme), [theme]);
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [orderId, setOrderId] = useState(""); // optional
+  const [orderId, setOrderId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
-  const [honeypot, setHoneypot] = useState(""); // bots fill hidden fields
+  const [honeypot, setHoneypot] = useState("");
+  const [resaleInquiry, setResaleInquiry] = useState(false);
 
-  // Prefill email from local storage if present
   useEffect(() => {
     try {
       const pre = localStorage.getItem("elvara:prefill-email");
       if (pre && typeof pre === "string" && isEmail(pre)) setEmail(pre);
     } catch {}
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("topic") === "resale") {
+      setResaleInquiry(true);
+      setSubject((current) => current || "Elvarra Resale Program Enquiry");
+      setMessage(
+        (current) =>
+          current ||
+          "I am interested in reselling Elvarra products. Please share the resale program details, eligibility, pricing information and onboarding process.",
+      );
+    }
   }, []);
 
   function validate(): string | null {
@@ -93,22 +58,20 @@ export default function SupportPage() {
     setOk(false);
 
     if (honeypot) {
-      // Likely a bot — pretend success to avoid probing
       setOk(true);
       return;
     }
 
-    const v = validate();
-    if (v) {
-      setError(v);
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setLoading(true);
-
     try {
-      const res = await api.post(
-        "/support/",
+      await api.post(
+        "api/elvarra/support/",
         {
           name,
           email,
@@ -116,13 +79,8 @@ export default function SupportPage() {
           message,
           orderId: orderId || undefined,
         },
-        { withCredentials: true }
+        { withCredentials: true },
       );
-
-      if (!res) {
-        const msg = await safeResText(res);
-        throw new Error(msg || `Request failed (${res})`);
-      }
 
       setOk(true);
       setName("");
@@ -131,46 +89,121 @@ export default function SupportPage() {
       setOrderId("");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err?.message || "Something went wrong. Please try again.");
+      setError(
+        err?.response?.data?.detail ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Something went wrong. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
-      <div className="container py-10  relative isolate">
-        <div className="absolute inset-15 -z-10 opacity-10 blur-3xl mx-auto   max-w-[100vw] overflow-hidden">
-          <div className="pointer-events-none absolute -inset-30 rounded-[100px] gradient-accent" />
-        </div>
-        <div className="mx-auto max-w-3xl">
-          <header className="mb-6">
-            <h1 className="text-2xl font-semibold">Contact support</h1>
-            <p className={`mt-1 text-sm ${palette.subfg}`}>
-              Send us a message and we&apos;ll get back within 1 business day.
-            </p>
-          </header>
+  const inputClass =
+    "w-full rounded-2xl border border-slate-700 bg-slate-950/65 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400/70 focus:ring-4 focus:ring-cyan-500/10";
+  const labelClass =
+    "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400";
 
-          <section
-            className={`rounded-2xl ${palette.ring} ${palette.card} p-6`}
+  return (
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#06111f] text-slate-100">
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.20),transparent_36%),radial-gradient(circle_at_82%_22%,rgba(14,165,233,0.12),transparent_30%),linear-gradient(180deg,#06111f_0%,#081827_50%,#020617_100%)]" />
+      <div className="absolute inset-0 -z-10 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.8)_1px,transparent_1px)] [background-size:48px_48px]" />
+
+      <div className="container mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+        <div className="mb-8 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-200">
+              <Headphones className="h-3.5 w-3.5" /> Elvarra Trade Support
+            </div>
+            <h1 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
+              {resaleInquiry
+                ? "Let’s discuss resale"
+                : "How can we help your business?"}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+              {resaleInquiry
+                ? "Tell us about how you plan to sell Elvarra products. Our team can guide you on resale options, eligibility, product information and onboarding."
+                : "Contact our trade team for wholesale orders, pricing, account access, delivery questions or resale enquiries."}
+            </p>
+          </div>
+
+          <Link
+            href="/catalog"
+            className="inline-flex items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/15"
           >
-            {ok ? (
-              <div className="space-y-4">
-                <div className="rounded-xl border border-emerald-500/50 bg-emerald-500/10 p-3 text-emerald-200 text-sm">
-                  Thank you! Your message has been sent.
+            Browse Wholesale Catalog
+          </Link>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr]">
+          <aside className="space-y-4">
+            {[
+              {
+                icon: Building2,
+                title: "Wholesale support",
+                text: "Questions about trade pricing, catalog access, MOQ rules or repeat ordering.",
+              },
+              {
+                icon: MessageCircle,
+                title: "Resale enquiries",
+                text: "Interested in reselling Elvarra? Send your details and we’ll explain the available options.",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Account assistance",
+                text: "Help with registration, login, order history or account-related issues.",
+              },
+            ].map(({ icon: Icon, title, text }) => (
+              <div
+                key={title}
+                className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5"
+              >
+                <div className="grid h-10 w-10 place-items-center rounded-2xl border border-cyan-500/25 bg-cyan-500/10 text-cyan-300">
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <Link href="/" className="underline">
+                <div className="mt-4 font-semibold text-white">{title}</div>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{text}</p>
+              </div>
+            ))}
+
+            <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/[0.06] p-5">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-300">
+                Prefer email?
+              </div>
+              <a
+                href="mailto:support@elvarra.com"
+                className="mt-2 block text-sm font-semibold text-white hover:text-cyan-200"
+              >
+                support@elvarra.com
+              </a>
+            </div>
+          </aside>
+
+          <section className="rounded-[2rem] border border-slate-800 bg-slate-950/75 p-5 shadow-2xl backdrop-blur sm:p-8">
+            {ok ? (
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm leading-6 text-emerald-100">
+                  Thank you. Your message has been sent to Elvarra Trade
+                  Support.
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/"
+                    className="rounded-2xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-cyan-500/40"
+                  >
                     Back to home
                   </Link>
-                  <Link href="/account/orders" className="underline">
-                    View my orders
+                  <Link
+                    href="/catalog"
+                    className="rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 hover:bg-cyan-400"
+                  >
+                    Browse catalog
                   </Link>
                 </div>
               </div>
             ) : (
-              <form onSubmit={submit} className="grid grid-cols-1 gap-4">
-                {/* Honeypot field (hidden visually) */}
+              <form onSubmit={submit} className="grid grid-cols-1 gap-5">
                 <div className="hidden">
                   <label>Do not fill</label>
                   <input
@@ -179,121 +212,107 @@ export default function SupportPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {resaleInquiry && (
+                  <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.07] p-4 text-sm leading-6 text-slate-300">
+                    <span className="font-semibold text-emerald-300">
+                      Resale enquiry selected.
+                    </span>{" "}
+                    We’ve pre-filled the subject and message; edit them as
+                    needed before sending.
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                      Name
-                    </label>
+                    <label className={labelClass}>Name</label>
                     <input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+                      className={inputClass}
                       placeholder="Your name"
                       required
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                      Email
-                    </label>
+                    <label className={labelClass}>Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
-                      placeholder="you@example.com"
+                      className={inputClass}
+                      placeholder="you@business.com"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                    Subject
-                  </label>
+                  <label className={labelClass}>Subject</label>
                   <input
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
+                    className={inputClass}
                     placeholder="How can we help?"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                    Message
-                  </label>
+                  <label className={labelClass}>Message</label>
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     rows={6}
-                    className={`w-full resize-y rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
-                    placeholder="Describe your issue or question..."
+                    className={`${inputClass} resize-y`}
+                    placeholder="Tell us what you need..."
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs uppercase tracking-wider opacity-80">
-                    Order ID (optional)
-                  </label>
+                  <label className={labelClass}>Order ID (optional)</label>
                   <input
                     value={orderId}
                     onChange={(e) => setOrderId(e.target.value)}
-                    className={`w-full rounded-xl border ${palette.border} bg-transparent px-3 py-2 text-sm outline-none`}
-                    placeholder="e.g., R-123456"
+                    className={inputClass}
+                    placeholder="e.g. B2B-123456"
                   />
                 </div>
 
                 {error && (
-                  <div className="rounded-xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-200">
+                  <div className="rounded-2xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
                     {error}
                   </div>
                 )}
 
-                <div className="flex items-center justify-between gap-3">
-                  <p className={`text-xs ${palette.subfg}`}>
+                <div className="flex flex-col gap-4 border-t border-slate-800 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-slate-500">
                     By submitting, you agree to our{" "}
-                    <a className="underline" href="/privacy">
+                    <Link
+                      className="text-slate-300 underline hover:text-white"
+                      href="/privacy"
+                    >
                       Privacy Policy
-                    </a>
+                    </Link>
                     .
                   </p>
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`rounded-xl px-4 py-2 text-sm font-medium btn-gradient-accent disabled:opacity-60`}
+                    className="rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {loading ? "Sending…" : "Send message"}
+                    {loading
+                      ? "Sending…"
+                      : resaleInquiry
+                        ? "Send Resale Enquiry"
+                        : "Send Message"}
                   </button>
                 </div>
               </form>
             )}
           </section>
-
-          {/* Quick links */}
-          <div className="mt-6 flex items-center justify-between text-sm">
-            <Link href="/" className="underline">
-              Home
-            </Link>
-            <Link href="/faq" className="underline">
-              FAQ
-            </Link>
-            <Link href="/policies/shipping" className="underline">
-              Shipping & Returns
-            </Link>
-          </div>
         </div>
       </div>
     </main>
   );
-}
-
-async function safeResText(res: Response) {
-  try {
-    return await res.text();
-  } catch {
-    return "";
-  }
 }
