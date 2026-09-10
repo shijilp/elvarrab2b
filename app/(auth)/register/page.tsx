@@ -11,6 +11,8 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import type { User } from "@/types";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -18,6 +20,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const { setAuthenticatedUser } = useAuth();
   const [loading, setLoading] = useState(false);
 
   async function handleRegister(e: React.FormEvent) {
@@ -33,15 +36,18 @@ export default function RegisterPage() {
         email: email || undefined,
       });
 
-      const user = {
-        username: res.data.username,
-        isAdmin: res.data.isAdmin,
-        email: res.data.email,
-        role: res.data.role,
-        first_name: res.data.first_name,
-      };
-      localStorage.setItem("user", JSON.stringify(user));
-      router.push("/");
+      const registeredUser = res.data?.user as User | undefined;
+
+      // Registration creates the auth cookies on the server. Keep the client
+      // AuthContext in sync immediately so protected B2B pages do not bounce
+      // the newly registered user back to /login.
+      if (!registeredUser || res.data?.authenticated === false) {
+        router.replace("/login?registered=1");
+        return;
+      }
+
+      setAuthenticatedUser(registeredUser);
+      router.replace("/catalog");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(

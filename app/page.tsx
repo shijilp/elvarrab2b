@@ -62,7 +62,7 @@ export default function Page() {
           ],
           cta: {
             label: "Open Trade Catalog",
-            href: "/products",
+            href: "/catalog",
           },
         };
     }
@@ -469,7 +469,7 @@ export default function Page() {
             />
             <FaqItem
               q="What is the minimum wholesale order?"
-              a="The minimum wholesale order value is ₹2,000. Orders should also meet the required Qty/SKU ratio before checkout."
+              a={`The minimum wholesale order value is ₹${minOrder.toLocaleString("en-IN")}. Orders should also meet the Qty/SKU ratio shown in the cart before checkout.`}
             />
             <FaqItem
               q="Can I request special pricing?"

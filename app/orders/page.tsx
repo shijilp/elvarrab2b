@@ -135,7 +135,7 @@ export default function CustomerOrdersPage() {
             </div>
 
             <Link
-              href="/products"
+              href="/catalog"
               className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 shadow-[0_10px_40px_-20px_rgba(34,211,238,.7)] transition hover:bg-cyan-500/20"
             >
               Continue Wholesale Shopping

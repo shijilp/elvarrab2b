@@ -85,7 +85,16 @@ export async function POST(req: Request) {
       // Registration succeeded but login failed — return 200 without cookies
       // (Client can navigate to login page)
       return NextResponse.json(
-        { user: { username: body.username, email: body.email ?? null, role: "user", isAdmin: false, first_name: body.first_name ?? null } },
+        {
+          authenticated: false,
+          user: {
+            username: body.username,
+            email: body.email ?? null,
+            role: "user",
+            isAdmin: false,
+            first_name: body.first_name ?? null,
+          },
+        },
         { status: 200 }
       );
     }
@@ -126,5 +135,5 @@ export async function POST(req: Request) {
     // ignore profile fetch errors
   }
 
-  return NextResponse.json({ user }, { status: 200 });
+  return NextResponse.json({ authenticated: true, user }, { status: 200 });
 }

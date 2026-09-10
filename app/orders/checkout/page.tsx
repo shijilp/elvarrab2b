@@ -13,6 +13,7 @@ import ApplyCoupon from "@/components/ApplyCoupon";
 import { useAuth } from "@/context/AuthContext";
 import {
   calculateWholesaleEligibility,
+  getWholesaleEligibilityFailureMessage,
   getWholesaleRules,
 } from "@/lib/wholesaleRules";
 import { api_backend } from "@/lib/api_backend";
@@ -189,7 +190,7 @@ export default function CheckoutPage() {
       discount,
       user,
     });
-  }, [cartItems, subtotal]);
+  }, [cartItems, subtotal, discount, user]);
   useEffect(() => {
     let ignore = false;
     (async () => {
@@ -249,28 +250,12 @@ export default function CheckoutPage() {
       return;
     }
 
-    const totalQty = cartItems.reduce(
-      (sum, item) => sum + Number(item.quantity || 0),
-      0,
-    );
-
-    const totalSku = cartItems.length;
-    const qtyPerSku = totalSku > 0 ? totalQty / totalSku : 0;
-
     if (!wholesaleEligibility.isWholesaleEligible) {
-      if (subtotal < wholesaleEligibility.minWholesaleValue) {
-        const alertMsg = "Minimum wholesale order value should be ₹2,000.";
-        setError(alertMsg);
-        alert(alertMsg);
-        return;
-      }
-      if (qtyPerSku < wholesaleEligibility.qtyNeededForRatio) {
-        const alertMsg =
-          "Minimum wholesale quantity ratio should be 2 or above. Please increase quantity or reduce SKUs.";
-        setError(alertMsg);
-        alert(alertMsg);
-        return;
-      }
+      const alertMsg =
+        getWholesaleEligibilityFailureMessage(wholesaleEligibility);
+      setError(alertMsg);
+      alert(alertMsg);
+      return;
     }
 
     if (addr?.full_name == null || addr.email == null || addr.phone == null) {

@@ -6,7 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { CartItem, CartProduct, Variant } from "@/types";
 import AlertModal from "@/components/AlertModal";
-import { calculateWholesaleEligibility } from "@/lib/wholesaleRules";
+import {
+  calculateWholesaleEligibility,
+  getWholesaleEligibilityFailureMessage,
+} from "@/lib/wholesaleRules";
 import WholesaleEligibilityCard from "@/components/order/WholesaleEligibilityCard";
 import { useAuth } from "@/context/AuthContext";
 
@@ -126,23 +129,6 @@ export default function CartPage() {
 
   const totalSku = cartItems.length;
 
-  // const qtyPerSku = useMemo(() => {
-  //   return totalSku > 0 ? totalQty / totalSku : 0;
-  // }, [totalQty, totalSku]);
-
-  //const minWholesaleValue = 2000;
-  //const minQtyPerSku = 2;
-
-  // const isValueEligible = wholesaleOrderValue >= minWholesaleValue;
-  // const isQtyEligible = qtyPerSku >= minQtyPerSku;
-  //const isWholesaleEligible = isValueEligible && isQtyEligible;
-
-  //const valueRequired = Math.max(0, minWholesaleValue - wholesaleOrderValue);
-  //const qtyNeededForRatio = Math.max(
-  // 0,
-  // Math.ceil(minQtyPerSku * totalSku - totalQty),
-  // );
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const decrement = (qty: number, pid: number, vid?: any) => {
@@ -257,7 +243,7 @@ export default function CartPage() {
             <p className="text-slate-300">Your wholesale cart is empty.</p>
 
             <Link
-              href="/products"
+              href="/catalog"
               className="mt-5 inline-flex items-center justify-center rounded-2xl border border-blue-500/40 bg-blue-600 px-6 py-3 font-semibold text-white shadow-[0_16px_50px_-20px_rgba(59,130,246,.9)] hover:bg-blue-500"
             >
               Browse Trade Products
@@ -439,119 +425,6 @@ export default function CartPage() {
                   className="mb-5"
                 />
               )}
-              {/*  <div
-                className={`rounded-3xl border p-4 ${
-                  isWholesaleEligible
-                    ? "border-emerald-500/40 bg-emerald-500/10"
-                    : "border-amber-500/40 bg-amber-500/10"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-semibold text-white">
-                    Wholesale Eligibility
-                  </h3>
-
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest ${
-                      isWholesaleEligible
-                        ? "bg-emerald-500 text-white"
-                        : "bg-amber-400 text-slate-950"
-                    }`}
-                  >
-                    {wholesaleEligibility.isWholesaleEligible
-                      ? "Approved"
-                      : "Pending"}
-                  </span>
-                </div>
-
-                <div className="mt-4 space-y-3 text-sm">
-                  <div className="flex justify-between gap-3">
-                    <span className="text-slate-300">Minimum order value</span>
-                    <span
-                      className={
-                        isValueEligible ? "text-emerald-300" : "text-amber-300"
-                      }
-                    >
-                      {formatMoney(wholesaleOrderValue)} / ₹2,000
-                    </span>
-                  </div>
-
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className={`h-full rounded-full ${
-                        isValueEligible ? "bg-emerald-400" : "bg-amber-400"
-                      }`}
-                      style={{
-                        width: `${Math.min(
-                          100,
-                          (wholesaleOrderValue / minWholesaleValue) * 100,
-                        )}%`,
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex justify-between gap-3">
-                    <span className="text-slate-300">Qty / SKU ratio</span>
-                    <span
-                      className={
-                        isQtyEligible ? "text-emerald-300" : "text-amber-300"
-                      }
-                    >
-                      {qtyPerSku.toFixed(2)} / {minQtyPerSku}
-                    </span>
-                  </div>
-
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className={`h-full rounded-full ${
-                        isQtyEligible ? "bg-emerald-400" : "bg-amber-400"
-                      }`}
-                      style={{
-                        width: `${Math.min(
-                          100,
-                          (qtyPerSku / minQtyPerSku) * 100,
-                        )}%`,
-                      }}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
-                      <p className="text-[11px] text-slate-400">Total Qty</p>
-                      <p className="text-lg font-bold text-white">{totalQty}</p>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
-                      <p className="text-[11px] text-slate-400">No. of SKU</p>
-                      <p className="text-lg font-bold text-white">{totalSku}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {!isWholesaleEligible && (
-                  <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-3 text-xs leading-5 text-slate-300">
-                    {!isValueEligible && (
-                      <p>
-                        Add{" "}
-                        <span className="font-semibold text-amber-300">
-                          {formatMoney(valueRequired)}
-                        </span>{" "}
-                        more to reach minimum wholesale value.
-                      </p>
-                    )}
-
-                    {!isQtyEligible && (
-                      <p className="mt-1">
-                        Add at least{" "}
-                        <span className="font-semibold text-amber-300">
-                          {qtyNeededForRatio}
-                        </span>{" "}
-                        more unit(s) to meet the Qty/SKU ratio.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div> */}
 
               <div className="space-y-3 rounded-3xl border border-slate-800 bg-slate-950/70 p-4 text-sm">
                 <div className="flex justify-between">
@@ -593,7 +466,9 @@ export default function CartPage() {
                   type="button"
                   onClick={() =>
                     alert(
-                      "Wholesale checkout is not eligible. Minimum order value should be ₹2,000 and Qty/SKU ratio should be 1.4 or above.",
+                      getWholesaleEligibilityFailureMessage(
+                        wholesaleEligibility,
+                      ),
                     )
                   }
                   className="block w-full cursor-not-allowed rounded-2xl border border-slate-700 bg-slate-800 px-5 py-3 text-center font-bold text-slate-400"
@@ -603,7 +478,7 @@ export default function CartPage() {
               )}
 
               <Link
-                href="/products"
+                href="/catalog"
                 className="block text-center text-sm font-medium text-blue-300 hover:text-blue-200"
               >
                 Continue Trade Shopping

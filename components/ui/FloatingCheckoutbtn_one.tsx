@@ -6,9 +6,12 @@ import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import { ShoppingCart, ArrowRight, PackageCheck } from "lucide-react";
+import { calculateWholesaleEligibility } from "@/lib/wholesaleRules";
+import { useAuth } from "@/context/AuthContext";
 
 export default function FloatingCheckoutButtonOne() {
   const { cartItems } = useCart();
+  const { user } = useAuth();
   const pathname = usePathname();
 
   const hiddenRoutes = [
@@ -50,10 +53,20 @@ export default function FloatingCheckoutButtonOne() {
         return sum + toPrice(priceRaw) * Number(it.quantity ?? 1);
       }, 0) ?? 0;
 
-    const eligible = subtotal >= 2000 && qtyPerSku >= 1.4;
+    const eligibility = calculateWholesaleEligibility({
+      cartItems: cartItems ?? [],
+      subtotal,
+      user,
+    });
 
-    return { count, subtotal, skuCount, qtyPerSku, eligible };
-  }, [cartItems]);
+    return {
+      count,
+      subtotal,
+      skuCount,
+      qtyPerSku,
+      eligible: eligibility.isWholesaleEligible,
+    };
+  }, [cartItems, user]);
 
   if (shouldHide) return null;
 

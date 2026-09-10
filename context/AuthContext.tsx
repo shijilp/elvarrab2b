@@ -44,6 +44,7 @@ interface AuthContextType {
   googleLogin: (idToken: string) => Promise<void>;
   refreshAccess?: () => Promise<string | null>;
   refreshUser: () => Promise<AuthUser>;
+  setAuthenticatedUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,18 +68,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {}
   };
 
-  const saveUser = (u: User | null) => {
+  const saveUser = useCallback((u: User | null) => {
     setUser(u);
     if (u) {
       localStorage.setItem("user", JSON.stringify(u));
-      // setAuthToken(u.access);
-      // scheduleRefresh(u.access);
     } else {
       localStorage.removeItem("user");
       setAuthToken(null);
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
     }
-  };
+  }, []);
   // const saveUser = (u: User | null) => {
   //   setUser(u);
   //   if (u) {
@@ -92,14 +91,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshUser = useCallback(async () => {
     try {
       const me = await apiMe();
-      setUser(me);
+      saveUser(me);
       return me;
     } catch {
       // if cookie expired / not logged in
-      setUser(null);
+      saveUser(null);
       return null;
     }
-  }, []);
+  }, [saveUser]);
 
   useEffect(() => {
     const saved = localStorage.getItem("user");
@@ -244,6 +243,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         initialized,
         googleLogin,
         refreshUser,
+        setAuthenticatedUser: (authenticatedUser: User) =>
+          saveUser(authenticatedUser),
         //refreshAccess,
       }}
     >

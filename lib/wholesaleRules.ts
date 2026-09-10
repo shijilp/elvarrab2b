@@ -8,6 +8,11 @@ export interface WholesaleRules {
   minQtyPerSku: number;
 }
 
+export const WHOLESALE_MIN_ORDER_VALUE = 1000;
+export const WHOLESALE_STANDARD_MIN_QTY_PER_SKU = 2;
+export const WHOLESALE_HIGH_VALUE_THRESHOLD = 3000;
+export const WHOLESALE_HIGH_VALUE_MIN_QTY_PER_SKU = 1.65;
+
 export type WholesaleEligibility = {
   minWholesaleValue: number;
   minQtyPerSku: number;
@@ -36,16 +41,16 @@ type CalculateWholesaleEligibilityParams = {
 };
 
 export function getWholesaleRules(orderValue: number): WholesaleRules {
-  if (orderValue > 3000) {
+  if (orderValue > WHOLESALE_HIGH_VALUE_THRESHOLD) {
     return {
-      minOrderValue: 1000,
-      minQtyPerSku: 1.65,
+      minOrderValue: WHOLESALE_MIN_ORDER_VALUE,
+      minQtyPerSku: WHOLESALE_HIGH_VALUE_MIN_QTY_PER_SKU,
     };
   }
 
   return {
-    minOrderValue: 1000,
-    minQtyPerSku: 2,
+    minOrderValue: WHOLESALE_MIN_ORDER_VALUE,
+    minQtyPerSku: WHOLESALE_STANDARD_MIN_QTY_PER_SKU,
   };
 }
 
@@ -54,8 +59,8 @@ export function calculateWholesaleEligibility({
   cartItems,
   subtotal,
   discount = 0,
-  minWholesaleValue = 1000,
-  minQtyPerSku = 2,
+  minWholesaleValue = WHOLESALE_MIN_ORDER_VALUE,
+  minQtyPerSku = WHOLESALE_STANDARD_MIN_QTY_PER_SKU,
   user,
 }: CalculateWholesaleEligibilityParams): WholesaleEligibility {
   const wholesaleOrderValue = Math.max(
@@ -71,11 +76,11 @@ export function calculateWholesaleEligibility({
   const totalSku = cartItems.length;
   const qtyPerSku = totalSku > 0 ? totalQty / totalSku : 0;
 
-  // NEW RULE
-  // Minimum order value is ₹1,000
-  // If order value is above ₹3,000, Qty/SKU ratio should be 1.75
   const requiredMinValue = minWholesaleValue;
-  const requiredQtyPerSku = wholesaleOrderValue > 3000 ? 1.65 : minQtyPerSku;
+  const requiredQtyPerSku =
+    wholesaleOrderValue > WHOLESALE_HIGH_VALUE_THRESHOLD
+      ? WHOLESALE_HIGH_VALUE_MIN_QTY_PER_SKU
+      : minQtyPerSku;
 
   const isValueEligible = wholesaleOrderValue >= requiredMinValue;
   const isQtyEligible = qtyPerSku >= requiredQtyPerSku;
@@ -109,4 +114,26 @@ export function calculateWholesaleEligibility({
     valueRequired,
     qtyNeededForRatio,
   };
+}
+
+export function getWholesaleEligibilityFailureMessage(
+  eligibility: WholesaleEligibility,
+): string {
+  const issues: string[] = [];
+
+  if (!eligibility.isValueEligible) {
+    issues.push(
+      `Minimum wholesale order value is ₹${eligibility.minWholesaleValue.toLocaleString("en-IN")}.`,
+    );
+  }
+
+  if (!eligibility.isQtyEligible) {
+    issues.push(
+      `Minimum Qty/SKU ratio is ${eligibility.minQtyPerSku}. Add ${eligibility.qtyNeededForRatio} more unit(s) or reduce the number of SKUs.`,
+    );
+  }
+
+  return issues.length > 0
+    ? issues.join(" ")
+    : "This cart is not eligible for wholesale checkout yet.";
 }
