@@ -151,7 +151,7 @@ export default function Page() {
 
               <div className="mt-7 grid max-w-xl grid-cols-1 gap-3 text-xs text-slate-300 sm:grid-cols-3">
                 {[
-                  "MOQ from 1-3 / SKU",
+                  "MOQ from 1-2 / SKU",
                   "Trade pricing slabs",
                   "Fast reorder support",
                 ].map((item) => (
@@ -229,7 +229,11 @@ export default function Page() {
                   Want to resell Elvarra products?
                 </h2>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-                  Elvarra also supports resale partners. If you sell through social media, your own store, marketplace, boutique or personal network, contact our Trade Support team for resale options, eligibility and program details. You can also use the chat on this site for assistance.
+                  Elvarra also supports resale partners. If you sell through
+                  social media, your own store, marketplace, boutique or
+                  personal network, contact our Trade Support team for resale
+                  options, eligibility and program details. You can also use the
+                  chat on this site for assistance.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
                   <span>• Resale guidance</span>
@@ -502,7 +506,6 @@ export default function Page() {
               "@type": "Country",
               name: "India",
             },
-
           }),
         }}
       />

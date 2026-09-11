@@ -9,9 +9,9 @@ export interface WholesaleRules {
 }
 
 export const WHOLESALE_MIN_ORDER_VALUE = 1000;
-export const WHOLESALE_STANDARD_MIN_QTY_PER_SKU = 2;
+export const WHOLESALE_STANDARD_MIN_QTY_PER_SKU = 1.5;
 export const WHOLESALE_HIGH_VALUE_THRESHOLD = 3000;
-export const WHOLESALE_HIGH_VALUE_MIN_QTY_PER_SKU = 1.65;
+export const WHOLESALE_HIGH_VALUE_MIN_QTY_PER_SKU = 1.35;
 
 export type WholesaleEligibility = {
   minWholesaleValue: number;
