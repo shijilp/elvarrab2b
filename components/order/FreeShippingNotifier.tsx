@@ -1,20 +1,40 @@
 "use client";
 
 import React from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 interface Props {
   subtotal: number;
 }
 
 import { useCart } from "@/context/CartContext";
 import { money } from "@/lib/money";
+import {
+  DEFAULT_B2B_SHIPPING,
+  getB2BShippingConfig,
+} from "@/lib/b2bShipping";
 const FreeShippingNotifier = ({ subtotal }: Props) => {
   const { cartItems } = useCart();
+  const [shippingConfig, setShippingConfig] = useState(DEFAULT_B2B_SHIPPING);
+
+  useEffect(() => {
+    let active = true;
+    getB2BShippingConfig()
+      .then((config) => {
+        if (active) setShippingConfig(config);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
   const hasFreeShippingItem = useMemo(
     () => cartItems.some((it) => it.is_free_shipping === true),
     [cartItems],
   );
-  const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(2500);
+  const FREE_SHIP_THRESHOLD =
+    hasFreeShippingItem || !shippingConfig.shipping_enabled
+      ? 0
+      : shippingConfig.free_shipping_min;
 
   const freeShipDiff = useMemo(
     () => Math.max(0, FREE_SHIP_THRESHOLD - subtotal),
@@ -23,7 +43,10 @@ const FreeShippingNotifier = ({ subtotal }: Props) => {
   const freeShipUnlocked = freeShipDiff === 0;
 
   const progressPct = useMemo(
-    () => Math.min(100, Math.floor((subtotal / FREE_SHIP_THRESHOLD) * 100)),
+    () =>
+      FREE_SHIP_THRESHOLD <= 0
+        ? 100
+        : Math.min(100, Math.floor((subtotal / FREE_SHIP_THRESHOLD) * 100)),
     [subtotal, FREE_SHIP_THRESHOLD],
   );
   // const shipping = useMemo(

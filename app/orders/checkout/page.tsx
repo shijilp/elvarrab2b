@@ -19,6 +19,7 @@ import {
 import { api_backend } from "@/lib/api_backend";
 import { trackEvent } from "@/lib/analytics";
 import { getVisitorId } from "@/lib/visitors";
+import { checkB2BShipping } from "@/lib/b2bShipping";
 
 // Theme palette utilities (local)
 type ThemeMode = "dark" | "light";
@@ -128,7 +129,6 @@ export default function CheckoutPage() {
     () => cartItems.some((it) => it.is_free_shipping === true),
     [cartItems],
   );
-  const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(3000) - 1;
   const shippingDiscount = Number(coupon?.shipping_discount || 0);
   // Payment (demo only)
   const [addr, setAddr] = useState<Address | null>(null);
@@ -289,7 +289,6 @@ export default function CheckoutPage() {
           pincode: addr.pincode,
           country: addr.country,
         },
-        shipping: shipping,
         coupon_code: coupon?.code || "",
         visitor_id: getVisitorId(),
         subtotal: subtotal,
@@ -377,19 +376,14 @@ export default function CheckoutPage() {
 
     const load = async () => {
       try {
-        const r = await api.get(`/api/elvarra/shipping/check/${pin}/`, {
-          signal: controller.signal,
-        });
-
-        // Axios returns JSON already in r.data
-        const data: PincodeCheck = r.data;
-
-        if (!data) throw new Error("pincode check failed");
+        const data = await checkB2BShipping(
+          pin,
+          subtotal,
+          hasFreeShippingItem,
+        );
 
         if (data.serviceable) {
-          setShipping(
-            subtotal > FREE_SHIP_THRESHOLD ? 0 : Number(data.charge || 0),
-          );
+          setShipping(Number(data.charge || 0));
           setDeliveryEta(data.delivery_days ?? null);
         } else {
           setShipping(0);
@@ -405,7 +399,7 @@ export default function CheckoutPage() {
     load();
 
     return () => controller.abort();
-  }, [addr?.pincode, subtotal, FREE_SHIP_THRESHOLD]);
+  }, [addr?.pincode, subtotal, hasFreeShippingItem]);
 
   return (
     <main className={`${palette.bg} ${palette.fg} min-h-screen antialiased`}>
@@ -645,7 +639,11 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <ApplyCoupon email={addr?.email} shippingcost={shipping} />
+              <ApplyCoupon
+                email={addr?.email}
+                shippingcost={shipping}
+                pincode={addr?.pincode}
+              />
             </div>
             <BtnElvarra
               disabled={

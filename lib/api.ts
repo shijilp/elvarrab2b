@@ -73,7 +73,7 @@ type CouponAllocation = {
   discount?: string;
   unit_price?: string;
 };
-export async function validateCoupon(code: string, cart_items:CartItem[], email?: string,shippingcost?:number,visitor_id?:string) {
+export async function validateCoupon(code: string, cart_items:CartItem[], email?: string,shippingcost?:number,visitor_id?:string,pincode?:string) {
   const items = cart_items.map((item) => ({
     product_id: item.id,
     variant_id: item.variant_id ?? null,
@@ -83,7 +83,8 @@ export async function validateCoupon(code: string, cart_items:CartItem[], email?
   const res = await api.post("/b2b/coupons/validate/", {
     code: code.trim().toUpperCase(),
     email,
-    shippingcost,
+    shippingcost, // legacy field; backend ignores this for B2B pricing
+    pincode,
     cart_items: items,
     visitor_id,
   });

@@ -454,6 +454,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     code: string,
     email?: string,
     shippingcost?: number,
+    pincode?: string,
   ) => {
     const data = await validateCoupon(
       code,
@@ -461,6 +462,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       email,
       shippingcost,
       getVisitorId(),
+      pincode,
     );
     setCoupon({
       code: data.coupon.code,

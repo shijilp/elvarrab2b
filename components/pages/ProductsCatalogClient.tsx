@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import AddToCartBtn from "../ui/AddToCartBtn";
 import { useAuth } from "@/context/AuthContext";
+import { DEFAULT_B2B_SHIPPING, getB2BShippingConfig } from "@/lib/b2bShipping";
 import {
   calculateWholesaleEligibility,
   getWholesaleRules,
@@ -89,7 +90,21 @@ export default function ProductsCatalogClient() {
 
   const [showFilters, setShowFilters] = useState(false);
   const { user, initialized } = useAuth();
-  const FREE_SHIP_THRESHOLD = 3000;
+  const [shippingConfig, setShippingConfig] = useState(DEFAULT_B2B_SHIPPING);
+
+  useEffect(() => {
+    let active = true;
+    getB2BShippingConfig()
+      .then((config) => {
+        if (active) setShippingConfig(config);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const FREE_SHIP_THRESHOLD = shippingConfig.free_shipping_min;
 
   const pageSize = 18;
   const [loading, setLoading] = useState(false);
@@ -481,10 +496,14 @@ export default function ProductsCatalogClient() {
                 </div>
                 <div className="flex items-center justify-between rounded-2xl bg-slate-900 p-4">
                   <span className="text-sm text-slate-300">
-                    Wholesale benefit
+                    {shippingConfig.shipping_enabled
+                      ? "Free shipping from"
+                      : "B2B shipping"}
                   </span>
                   <span className="font-bold text-cyan-300">
-                    {money(FREE_SHIP_THRESHOLD)}+
+                    {shippingConfig.shipping_enabled
+                      ? money(FREE_SHIP_THRESHOLD)
+                      : "Free"}
                   </span>
                 </div>
               </div>

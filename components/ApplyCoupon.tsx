@@ -9,15 +9,18 @@ import AlertModal from "./AlertModal";
 export default function ApplyCoupon({
   email,
   shippingcost,
+  pincode,
 }: {
   email?: string;
   shippingcost: number | 0;
+  pincode?: string;
 }) {
   const { validateAndSetCoupon, clearCoupon, coupon } = useCart() as {
     validateAndSetCoupon: (
       code: string,
       email?: string,
       shippingcost?: number,
+      pincode?: string,
     ) => Promise<void>;
 
     clearCoupon: () => Promise<void> | void;
@@ -64,7 +67,7 @@ export default function ApplyCoupon({
 
     setApply(true);
     try {
-      await validateAndSetCoupon(normalizedCode, email, shippingcost);
+      await validateAndSetCoupon(normalizedCode, email, shippingcost, pincode);
       setCode("");
       openAlert({
         title: "Coupon applied",

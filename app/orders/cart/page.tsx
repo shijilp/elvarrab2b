@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,6 +12,11 @@ import {
 } from "@/lib/wholesaleRules";
 import WholesaleEligibilityCard from "@/components/order/WholesaleEligibilityCard";
 import { useAuth } from "@/context/AuthContext";
+import {
+  DEFAULT_B2B_SHIPPING,
+  getB2BShippingConfig,
+  type B2BShippingConfig,
+} from "@/lib/b2bShipping";
 
 function formatMoney(n: number) {
   return Number(n || 0).toLocaleString("en-IN", {
@@ -32,6 +37,21 @@ export default function CartPage() {
   const [successItemKey, setSuccessItemKey] = useState<string | null>(null);
   const [cartNotice, setCartNotice] = useState<string | null>(null);
   const { user } = useAuth();
+  const [shippingConfig, setShippingConfig] = useState<B2BShippingConfig>(
+    DEFAULT_B2B_SHIPPING,
+  );
+
+  useEffect(() => {
+    let active = true;
+    getB2BShippingConfig()
+      .then((config) => {
+        if (active) setShippingConfig(config);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [discountInfo, setDiscountInfo] =
     useState<GuestDiscountResponse | null>(null);
@@ -88,8 +108,13 @@ export default function CartPage() {
     }
   };
 
-  const FREE_SHIP_THRESHOLD = hasFreeShippingItem ? 0 : Number(3000) - 1;
-  const SHIPPING_FEE = hasFreeShippingItem ? 0 : Number(40);
+  const FREE_SHIP_THRESHOLD = hasFreeShippingItem
+    ? 0
+    : shippingConfig.free_shipping_min;
+  const SHIPPING_FEE =
+    hasFreeShippingItem || !shippingConfig.shipping_enabled
+      ? 0
+      : shippingConfig.flat_rate;
 
   const discountTotal = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + (item.discount ?? 0), 0);
@@ -97,8 +122,8 @@ export default function CartPage() {
 
   const shipping = useMemo(() => {
     if (hasFreeShippingItem) return 0;
-    return subtotal - discountTotal > FREE_SHIP_THRESHOLD ? 0 : SHIPPING_FEE;
-  }, [subtotal, discountTotal, FREE_SHIP_THRESHOLD, hasFreeShippingItem]);
+    return subtotal >= FREE_SHIP_THRESHOLD ? 0 : SHIPPING_FEE;
+  }, [subtotal, FREE_SHIP_THRESHOLD, SHIPPING_FEE, hasFreeShippingItem]);
 
   const discount = discountTotal;
 
