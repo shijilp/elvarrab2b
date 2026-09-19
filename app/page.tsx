@@ -232,8 +232,8 @@ export default function Page() {
                   Elvarra also supports resale partners. If you sell through
                   social media, your own store, marketplace, boutique or
                   personal network, contact our Trade Support team for resale
-                  options, eligibility and program details. You can also use the
-                  chat on this site for assistance.
+                  options, eligibility and program details. You can also chat
+                  with us directly on WhatsApp for assistance.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
                   <span>• Resale guidance</span>
@@ -249,12 +249,14 @@ export default function Page() {
                 >
                   Contact Trade Support
                 </Link>
-                <Link
-                  href="/contact?topic=resale&mode=chat"
+                <a
+                  href="https://wa.me/918921531209?text=Hi%20Elvarra%2C%20I%27m%20interested%20in%20your%20resale%20program.%20Please%20share%20more%20details."
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/15"
                 >
-                  Chat With Us
-                </Link>
+                  Chat With Us on WhatsApp
+                </a>
               </div>
             </div>
           </div>
