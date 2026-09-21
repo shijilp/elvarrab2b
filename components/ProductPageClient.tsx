@@ -56,8 +56,14 @@ function stockClasses(product: Product) {
     : "border-rose-400/30 bg-rose-500/10 text-rose-200";
 }
 
+function hasDisplayValue(value: unknown) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  return true;
+}
+
 function cleanValue(value?: string | number | null, suffix = "") {
-  if (value === undefined || value === null || value === "") return "—";
+  if (!hasDisplayValue(value)) return "";
   return `${value}${suffix}`;
 }
 
@@ -247,6 +253,61 @@ export default function ProductPageClient({
   const isOutOfStock = product.stock < 1;
   const hasOnlinePrice = tiers.length > 0;
   const currency = product.currency || "INR";
+
+  const productDetailRows = [
+    { label: "SKU", value: product.sku },
+    { label: "Brand", value: product.brand },
+    { label: "Category", value: product.category?.name },
+    { label: "GTIN", value: product.gtin },
+    { label: "MPN", value: product.mpn },
+  ].filter((row) => hasDisplayValue(row.value));
+
+  const dimensionRows = [
+    { label: "Weight", value: cleanValue(product.weight_kg, " kg") },
+    { label: "Length", value: cleanValue(product.length_cm, " cm") },
+    { label: "Width", value: cleanValue(product.width_cm, " cm") },
+    { label: "Height", value: cleanValue(product.height_cm, " cm") },
+  ].filter((row) => hasDisplayValue(row.value));
+
+  const materialRows: Array<{ label: string; value: React.ReactNode }> = [];
+
+  if (product.spec) {
+    if (hasDisplayValue(product.spec.base_material)) {
+      materialRows.push({
+        label: "Base material",
+        value: formatBaseMaterial(product.spec.base_material),
+      });
+    }
+
+    if (hasDisplayValue(product.spec.plating_type)) {
+      materialRows.push({ label: "Plating", value: product.spec.plating_type });
+    }
+
+    if (hasDisplayValue(product.spec.gold_karat)) {
+      materialRows.push({
+        label: "Gold karat",
+        value: `${product.spec.gold_karat}K`,
+      });
+    }
+
+    if (hasDisplayValue(product.spec.coating)) {
+      materialRows.push({ label: "Coating", value: product.spec.coating });
+    }
+
+    if (product.spec.water_resistant !== null && product.spec.water_resistant !== undefined) {
+      materialRows.push({
+        label: "Water resistant",
+        value: product.spec.water_resistant ? "Yes" : "No",
+      });
+    }
+
+    if (product.spec.hypoallergenic !== null && product.spec.hypoallergenic !== undefined) {
+      materialRows.push({
+        label: "Hypoallergenic",
+        value: product.spec.hypoallergenic ? "Yes" : "No",
+      });
+    }
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#06111f] text-slate-100 antialiased">
@@ -583,95 +644,48 @@ export default function ProductPageClient({
           </div>
         </div>
 
-        <div className="mt-8 grid gap-4 lg:grid-cols-3">
-          <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
-              Product details
-            </h2>
-            <dl className="mt-4 space-y-3 text-sm">
-              <InfoRow label="SKU" value={product.sku || "—"} />
-              <InfoRow label="Brand" value={product.brand || "—"} />
-              <InfoRow label="Category" value={product.category?.name || "—"} />
-              <InfoRow label="GTIN" value={product.gtin || "—"} />
-              <InfoRow label="MPN" value={product.mpn || "—"} />
-            </dl>
-          </section>
+        {productDetailRows.length || dimensionRows.length || materialRows.length ? (
+          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+            {productDetailRows.length ? (
+              <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
+                  Product details
+                </h2>
+                <dl className="mt-4 space-y-3 text-sm">
+                  {productDetailRows.map((row) => (
+                    <InfoRow key={row.label} label={row.label} value={row.value} />
+                  ))}
+                </dl>
+              </section>
+            ) : null}
 
-          <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
-              Dimensions
-            </h2>
-            <dl className="mt-4 space-y-3 text-sm">
-              <InfoRow
-                label="Weight"
-                value={cleanValue(product.weight_kg, " kg")}
-              />
-              <InfoRow
-                label="Length"
-                value={cleanValue(product.length_cm, " cm")}
-              />
-              <InfoRow
-                label="Width"
-                value={cleanValue(product.width_cm, " cm")}
-              />
-              <InfoRow
-                label="Height"
-                value={cleanValue(product.height_cm, " cm")}
-              />
-            </dl>
-          </section>
+            {dimensionRows.length ? (
+              <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
+                  Dimensions
+                </h2>
+                <dl className="mt-4 space-y-3 text-sm">
+                  {dimensionRows.map((row) => (
+                    <InfoRow key={row.label} label={row.label} value={row.value} />
+                  ))}
+                </dl>
+              </section>
+            ) : null}
 
-          <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
-              Material & finish
-            </h2>
-            {product.spec ? (
-              <dl className="mt-4 space-y-3 text-sm">
-                <InfoRow
-                  label="Base material"
-                  value={formatBaseMaterial(product.spec.base_material)}
-                />
-                <InfoRow
-                  label="Plating"
-                  value={product.spec.plating_type || "—"}
-                />
-                <InfoRow
-                  label="Gold karat"
-                  value={
-                    product.spec.gold_karat != null
-                      ? `${product.spec.gold_karat}K`
-                      : "—"
-                  }
-                />
-                <InfoRow label="Coating" value={product.spec.coating || "—"} />
-                <InfoRow
-                  label="Water resistant"
-                  value={
-                    product.spec.water_resistant == null
-                      ? "—"
-                      : product.spec.water_resistant
-                        ? "Yes"
-                        : "No"
-                  }
-                />
-                <InfoRow
-                  label="Hypoallergenic"
-                  value={
-                    product.spec.hypoallergenic == null
-                      ? "—"
-                      : product.spec.hypoallergenic
-                        ? "Yes"
-                        : "No"
-                  }
-                />
-              </dl>
-            ) : (
-              <p className="mt-4 text-sm text-slate-500">
-                Material specifications are not available for this product.
-              </p>
-            )}
-          </section>
-        </div>
+            {materialRows.length ? (
+              <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
+                  Material & finish
+                </h2>
+                <dl className="mt-4 space-y-3 text-sm">
+                  {materialRows.map((row) => (
+                    <InfoRow key={row.label} label={row.label} value={row.value} />
+                  ))}
+                </dl>
+              </section>
+            ) : null}
+          </div>
+        ) : null}
       </section>
     </main>
   );
@@ -681,7 +695,7 @@ function formatBaseMaterial(value?: string | null) {
   if (!value) return "—";
 
   const normalized = value.trim().toUpperCase();
-  if (normalized === "316L_STEEL") {
+  if (normalized === "316L_STEEL" || normalized === "316L_STEE") {
     return "Stainless Steel";
   }
 
