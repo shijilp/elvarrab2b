@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
+  BadgePercent,
   ChevronLeft,
   Minus,
   PackageCheck,
@@ -63,7 +64,7 @@ function hasDisplayValue(value: unknown) {
 }
 
 function cleanValue(value?: string | number | null, suffix = "") {
-  if (!hasDisplayValue(value)) return "";
+  if (!hasDisplayValue(value)) return null;
   return `${value}${suffix}`;
 }
 
@@ -254,6 +255,20 @@ export default function ProductPageClient({
   const hasOnlinePrice = tiers.length > 0;
   const currency = product.currency || "INR";
 
+  const suggestedRetailPrice = Number(product.price ?? 0);
+  const resaleProfitPerUnit = suggestedRetailPrice - unitPrice;
+  const resaleMarginPercent =
+    suggestedRetailPrice > 0 && resaleProfitPerUnit > 0
+      ? (resaleProfitPerUnit / suggestedRetailPrice) * 100
+      : null;
+  const showResaleEconomics =
+    hasOnlinePrice &&
+    Number.isFinite(suggestedRetailPrice) &&
+    suggestedRetailPrice > unitPrice &&
+    unitPrice > 0;
+
+  const materialBenefits = buildMaterialBenefits(product);
+
   const productDetailRows = [
     { label: "SKU", value: product.sku },
     { label: "Brand", value: product.brand },
@@ -269,45 +284,53 @@ export default function ProductPageClient({
     { label: "Height", value: cleanValue(product.height_cm, " cm") },
   ].filter((row) => hasDisplayValue(row.value));
 
-  const materialRows: Array<{ label: string; value: React.ReactNode }> = [];
-
-  if (product.spec) {
-    if (hasDisplayValue(product.spec.base_material)) {
-      materialRows.push({
-        label: "Base material",
-        value: formatBaseMaterial(product.spec.base_material),
-      });
-    }
-
-    if (hasDisplayValue(product.spec.plating_type)) {
-      materialRows.push({ label: "Plating", value: product.spec.plating_type });
-    }
-
-    if (hasDisplayValue(product.spec.gold_karat)) {
-      materialRows.push({
-        label: "Gold karat",
-        value: `${product.spec.gold_karat}K`,
-      });
-    }
-
-    if (hasDisplayValue(product.spec.coating)) {
-      materialRows.push({ label: "Coating", value: product.spec.coating });
-    }
-
-    if (product.spec.water_resistant !== null && product.spec.water_resistant !== undefined) {
-      materialRows.push({
-        label: "Water resistant",
-        value: product.spec.water_resistant ? "Yes" : "No",
-      });
-    }
-
-    if (product.spec.hypoallergenic !== null && product.spec.hypoallergenic !== undefined) {
-      materialRows.push({
-        label: "Hypoallergenic",
-        value: product.spec.hypoallergenic ? "Yes" : "No",
-      });
-    }
-  }
+  const materialRows = product.spec
+    ? [
+        {
+          label: "Base material",
+          value: hasDisplayValue(product.spec.base_material)
+            ? formatBaseMaterial(product.spec.base_material)
+            : null,
+        },
+        {
+          label: "Plating",
+          value: hasDisplayValue(product.spec.plating_type)
+            ? formatPlating(product.spec.plating_type, product.spec.gold_karat)
+            : null,
+        },
+        {
+          label: "Gold karat",
+          value:
+            product.spec.gold_karat != null
+              ? `${product.spec.gold_karat}K`
+              : null,
+        },
+        {
+          label: "Coating",
+          value: hasDisplayValue(product.spec.coating)
+            ? humanizeSpecValue(product.spec.coating)
+            : null,
+        },
+        {
+          label: "Water resistant",
+          value:
+            product.spec.water_resistant == null
+              ? null
+              : product.spec.water_resistant
+                ? "Yes"
+                : "No",
+        },
+        {
+          label: "Hypoallergenic",
+          value:
+            product.spec.hypoallergenic == null
+              ? null
+              : product.spec.hypoallergenic
+                ? "Yes"
+                : "No",
+        },
+      ].filter((row) => hasDisplayValue(row.value))
+    : [];
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#06111f] text-slate-100 antialiased">
@@ -455,6 +478,57 @@ export default function ProductPageClient({
                 </div>
               )}
             </div>
+
+            {showResaleEconomics ? (
+              <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.07] p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 text-emerald-300">
+                      <BadgePercent className="h-4 w-4" />
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em]">
+                        Resale potential
+                      </p>
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Based on the suggested retail price and your selected trade
+                      unit price.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/45 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Suggested retail
+                    </p>
+                    <p className="mt-1 text-sm font-bold text-white">
+                      {money(suggestedRetailPrice, currency)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/45 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Potential profit / unit
+                    </p>
+                    <p className="mt-1 text-sm font-bold text-emerald-300">
+                      {money(resaleProfitPerUnit, currency)}
+                    </p>
+                  </div>
+                  <div className="col-span-2 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] p-3 sm:col-span-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Potential gross margin
+                    </p>
+                    <p className="mt-1 text-sm font-bold text-emerald-300">
+                      {resaleMarginPercent?.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-[10px] leading-4 text-slate-600">
+                  Indicative gross margin before taxes, shipping, marketplace
+                  fees and other selling costs.
+                </p>
+              </div>
+            ) : null}
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span
@@ -622,6 +696,27 @@ export default function ProductPageClient({
               </div>
             ) : null}
 
+            {materialBenefits.length ? (
+              <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/35 p-4">
+                <div className="flex items-center gap-2 text-cyan-300">
+                  <ShieldCheck className="h-4 w-4" />
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em]">
+                    Product highlights
+                  </p>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {materialBenefits.map((benefit) => (
+                    <span
+                      key={benefit}
+                      className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-500/[0.07] px-3 py-1.5 text-xs font-medium text-cyan-100"
+                    >
+                      {benefit}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-5">
               {hasOnlinePrice ? (
                 <AddToCartBtn
@@ -644,45 +739,18 @@ export default function ProductPageClient({
           </div>
         </div>
 
-        {productDetailRows.length || dimensionRows.length || materialRows.length ? (
+        {(productDetailRows.length || dimensionRows.length || materialRows.length) ? (
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
             {productDetailRows.length ? (
-              <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
-                  Product details
-                </h2>
-                <dl className="mt-4 space-y-3 text-sm">
-                  {productDetailRows.map((row) => (
-                    <InfoRow key={row.label} label={row.label} value={row.value} />
-                  ))}
-                </dl>
-              </section>
+              <SpecSection title="Product details" rows={productDetailRows} />
             ) : null}
 
             {dimensionRows.length ? (
-              <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
-                  Dimensions
-                </h2>
-                <dl className="mt-4 space-y-3 text-sm">
-                  {dimensionRows.map((row) => (
-                    <InfoRow key={row.label} label={row.label} value={row.value} />
-                  ))}
-                </dl>
-              </section>
+              <SpecSection title="Dimensions" rows={dimensionRows} />
             ) : null}
 
             {materialRows.length ? (
-              <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
-                  Material & finish
-                </h2>
-                <dl className="mt-4 space-y-3 text-sm">
-                  {materialRows.map((row) => (
-                    <InfoRow key={row.label} label={row.label} value={row.value} />
-                  ))}
-                </dl>
-              </section>
+              <SpecSection title="Material & finish" rows={materialRows} />
             ) : null}
           </div>
         ) : null}
@@ -691,15 +759,88 @@ export default function ProductPageClient({
   );
 }
 
+function humanizeSpecValue(value?: string | null) {
+  if (!value) return "";
+  return value
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
 function formatBaseMaterial(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "";
 
   const normalized = value.trim().toUpperCase();
   if (normalized === "316L_STEEL" || normalized === "316L_STEE") {
     return "Stainless Steel";
   }
 
-  return value;
+  return humanizeSpecValue(value);
+}
+
+function formatPlating(value?: string | null, goldKarat?: number | null) {
+  if (!value) return "";
+
+  const normalized = value.trim().toUpperCase();
+  const goldMatch = normalized.match(/GOLD[_\s-]?(\d+)K?/);
+  if (goldMatch) return `${goldMatch[1]}K Gold Plated`;
+  if (normalized === "GOLD" && goldKarat) return `${goldKarat}K Gold Plated`;
+  if (normalized === "GOLD") return "Gold Plated";
+
+  return humanizeSpecValue(value);
+}
+
+function buildMaterialBenefits(product: Product) {
+  const spec = product.spec;
+  if (!spec) return [];
+
+  const benefits: string[] = [];
+  const add = (value?: string | null) => {
+    const cleaned = value?.trim();
+    if (cleaned && !benefits.some((item) => item.toLowerCase() === cleaned.toLowerCase())) {
+      benefits.push(cleaned);
+    }
+  };
+
+  if (hasDisplayValue(spec.base_material)) {
+    add(formatBaseMaterial(spec.base_material));
+  }
+  if (hasDisplayValue(spec.plating_type)) {
+    add(formatPlating(spec.plating_type, spec.gold_karat));
+  }
+  if (hasDisplayValue(spec.coating)) {
+    add(humanizeSpecValue(spec.coating));
+  }
+  if (spec.water_resistant === true) add("Water Resistant");
+  if (spec.hypoallergenic === true) add("Hypoallergenic");
+  if (spec.nickel_free === true) add("Nickel Free");
+  if (spec.lead_free === true) add("Lead Free");
+  if (spec.cadmium_free === true) add("Cadmium Free");
+
+  return benefits.slice(0, 6);
+}
+
+function SpecSection({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: Array<{ label: string; value: React.ReactNode }>;
+}) {
+  return (
+    <section className="rounded-3xl border border-slate-800 bg-slate-950/50 p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-200">
+        {title}
+      </h2>
+      <dl className="mt-4 space-y-3 text-sm">
+        {rows.map((row) => (
+          <InfoRow key={row.label} label={row.label} value={row.value} />
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
