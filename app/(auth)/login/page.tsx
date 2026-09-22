@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <B2BAuthShell
       title="Trade account login"
-      description="Sign in to access your Elvarra wholesale catalog, trade pricing, orders and account support."
+      description="Sign in to manage your Elvarra wholesale account, orders and account support. The catalog and trade pricing can be browsed without login."
       footer={
         <p>
           New to Elvarra Wholesale?{" "}

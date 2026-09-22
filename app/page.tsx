@@ -136,7 +136,7 @@ export default function Page() {
                   href="/login"
                   className="rounded-2xl border border-slate-700 bg-slate-950/60 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-blue-400/70 hover:bg-blue-500/10 hover:text-white"
                 >
-                  Request Trade Access
+                  Trade Login
                 </Link>
 
                 <Link
@@ -250,7 +250,7 @@ export default function Page() {
                   Contact Trade Support
                 </Link>
                 <a
-                  href="https://wa.me/918921531209?text=Hi%20Elvarra%2C%20I%27m%20interested%20in%20your%20resale%20program.%20Please%20share%20more%20details."
+                  href="https://wa.me/919074180381?text=Hi%20Elvarra%2C%20I%27m%20interested%20in%20your%20resale%20program.%20Please%20share%20more%20details."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/15"
@@ -420,15 +420,15 @@ export default function Page() {
         >
           <B2BSectionTitle>How Wholesale Works</B2BSectionTitle>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-            A simple trade flow from account access to bulk dispatch.
+            A simple trade flow from catalog browsing to bulk dispatch.
           </p>
 
           <div className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-3">
             {[
               {
                 step: "01",
-                title: "Apply / Login",
-                desc: "Trade buyers access the wholesale catalog after login or inquiry approval.",
+                title: "Browse Catalog",
+                desc: "Browse the wholesale catalog and trade pricing freely. Sign in when you need account-specific services.",
               },
               {
                 step: "02",
@@ -471,7 +471,7 @@ export default function Page() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FaqItem
               q="Do users need to login?"
-              a="Yes. Wholesale pages can be protected so only logged-in trade users can access catalog and checkout."
+              a="No. Anyone can browse the wholesale catalog and view trade pricing. Login is only required for account-specific services where applicable."
             />
             <FaqItem
               q="What is the minimum wholesale order?"

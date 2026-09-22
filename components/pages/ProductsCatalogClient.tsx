@@ -21,7 +21,6 @@ import {
   BadgePercent,
 } from "lucide-react";
 import AddToCartBtn from "../ui/AddToCartBtn";
-import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_B2B_SHIPPING, getB2BShippingConfig } from "@/lib/b2bShipping";
 import {
   calculateWholesaleEligibility,
@@ -89,7 +88,6 @@ export default function ProductsCatalogClient() {
   const [occasions, setOccasions] = useState<Ocassion[]>([]);
 
   const [showFilters, setShowFilters] = useState(false);
-  const { user, initialized } = useAuth();
   const [shippingConfig, setShippingConfig] = useState(DEFAULT_B2B_SHIPPING);
 
   useEffect(() => {
@@ -201,13 +199,6 @@ export default function ProductsCatalogClient() {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (!initialized) return;
-    // console.log("user from ad", user);
-
-    if (!user) router.replace("/login");
-  }, [initialized, user, router]);
 
   useEffect(() => {
     let cancelled = false;
