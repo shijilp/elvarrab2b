@@ -7,6 +7,7 @@ import SectionTitle from "@/components/SectionTitle";
 import { trackEvent } from "@/lib/analytics";
 import { getWholesaleRules } from "@/lib/wholesaleRules";
 import { formatMoney, money } from "@/lib/utils";
+import { getResaleWhatsAppUrl } from "@/lib/contact";
 
 export default function Page() {
   const [tier, setTier] = useState<"starter" | "growth" | "enterprise">(
@@ -250,7 +251,9 @@ export default function Page() {
                   Contact Trade Support
                 </Link>
                 <a
-                  href="https://wa.me/919074180381?text=Hi%20Elvarra%2C%20I%27m%20interested%20in%20your%20resale%20program.%20Please%20share%20more%20details."
+                  href={getResaleWhatsAppUrl(
+                    "Hi Elvarra, I'm interested in your resale program. Please share more details.",
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/15"
