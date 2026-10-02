@@ -118,8 +118,10 @@ export interface CartItem   {
   images?: { id: number; image: string }[]
   discount:number |0
   variant_id:number |null
+  variant?: Variant | null
   coupon_discount:number |0
   is_free_shipping: boolean;
+  // For variant lines this is the selected variant inventory, not product total stock.
   stock: number
 
   //in_stock: boolean

@@ -27,6 +27,7 @@ const AddToCartBtn = ({
   const { cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
 
   const [showAlert, setShowAlert] = useState(false);
+  const [alertStock, setAlertStock] = useState<number | null>(null);
   const [showVariantPopup, setShowVariantPopup] = useState(false);
 
   const variants = product.variants ?? [];
@@ -106,6 +107,7 @@ const AddToCartBtn = ({
 
   const increment = () => {
     if (qty + 1 > stockAvailable) {
+      setAlertStock(stockAvailable);
       setShowAlert(true);
       return;
     }
@@ -131,7 +133,8 @@ const AddToCartBtn = ({
       return;
     }
 
-    if (stockAvailable > 0 && quantity > stockAvailable) {
+    if (quantity > stockAvailable) {
+      setAlertStock(stockAvailable);
       setShowAlert(true);
       return;
     }
@@ -157,8 +160,16 @@ const AddToCartBtn = ({
 
   const handleVariantAdd = (selectedVariant: Variant) => {
     const selectedStock = getVariantStock(selectedVariant);
+    const existingVariantQty = Number(
+      cartItems?.find((it) =>
+        (it.product?.id === product.id || it.id === product.id) &&
+        Number(it.variant_id) === Number(selectedVariant.id),
+      )?.quantity ?? 0,
+    );
 
-    if (selectedStock <= 0) {
+    // Never use parent/combined stock for a selected variant.
+    if (selectedStock <= 0 || existingVariantQty + quantity > selectedStock) {
+      setAlertStock(selectedStock);
       setShowAlert(true);
       return;
     }
@@ -415,9 +426,9 @@ const AddToCartBtn = ({
         show={showAlert}
         title="Stock Warning"
         message={
-          stockAvailable > 0
-            ? `Only ${stockAvailable} item(s) available in stock.`
-            : "This item is currently out of stock."
+          Number(alertStock ?? stockAvailable) > 0
+            ? `Only ${Number(alertStock ?? stockAvailable)} item(s) available for this selected option.`
+            : "This selected option is currently out of stock."
         }
         type="warning"
         autoCloseMs={0}

@@ -140,6 +140,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         category: i.category,
         discount: i.discount ?? 0,
         variant_id: i.variant_id ?? null,
+        variant: i.variant ?? null,
+        stock: Number(i.stock ?? 0),
         coupon_discount: i.coupon_discount ?? 0,
       }));
       localStorage.setItem("wcart", JSON.stringify(payload));
@@ -234,7 +236,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               variant: item.variant || null,
               variant_id: normalizeVariantId(variantId),
               coupon_discount: 0,
-              stock: item.stock ?? p?.stock ?? 0,
+              stock:
+                item.stock ??
+                item.variant?.inventory ??
+                p?.stock ??
+                0,
               is_free_shipping: p?.is_free_shipping ?? false,
             };
           });
@@ -265,8 +271,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             category: x.category || "", // add category with default value
             discount: x.disount || 0,
             variant_id: x.variant_id || null,
+            variant: x.variant ?? null,
             coupon_discount: x.coupon_discount ?? 0,
-            stock: x.stock || 0,
+            stock: Number(x.stock ?? x.variant?.inventory ?? 0),
             // in_stock: x.in_stock || false, // add in_stock with default value
           }));
           //await syncComboDiscounts(items);
@@ -294,9 +301,25 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const variant =
       product.variants?.find((v) => v.id === normalizedVariantId) ?? null;
 
+    const availableStock = Number(
+      variant ? (variant.inventory ?? 0) : (product.stock ?? 0),
+    );
+    const targetQuantity = Number(exists?.quantity || 0) + requestedQty;
+
+    // Cart safety: variant lines are capped by that variant's own inventory.
+    if (targetQuantity > availableStock) {
+      console.warn("B2B cart stock limit reached", {
+        productId: product.id,
+        variantId: normalizedVariantId,
+        requested: targetQuantity,
+        available: availableStock,
+      });
+      return;
+    }
+
     const priceTier = [...(product.wholesale_price || [])]
       .sort((a, b) => b.min_qty - a.min_qty)
-      .find((tier) => requestedQty >= tier.min_qty);
+      .find((tier) => targetQuantity >= tier.min_qty);
     const price = Number(
       priceTier?.unit_price ?? product.wholesale_price?.[0]?.unit_price ?? 0,
     );
@@ -313,9 +336,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       is_free_shipping: product.is_free_shipping,
       category: product.category,
       discount: 0,
+      variant: variant ?? null,
       variant_id: normalizedVariantId,
       coupon_discount: 0,
-      stock: variant ? (variant.inventory ?? 0) : (product.stock ?? 0),
+      stock: availableStock,
     };
 
     const newItems = (exists
@@ -351,6 +375,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       } catch (err) {
+        // Backend stock is authoritative. Roll back an optimistic cart change
+        // if inventory changed after the product page was loaded.
+        setCartItems(cartItems);
         console.error("Backend cart sync failed:", err);
       }
     }
@@ -362,6 +389,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     const normalizedVariantId = normalizeVariantId(variant_id);
     const safeQty = Math.max(1, Number(quantity || 1));
+    const currentLine = cartItems.find((item) =>
+      isSameCartLine(item, productId, normalizedVariantId),
+    );
+    const availableStock = Number(currentLine?.stock ?? 0);
+
+    // The stock stored on a variant cart line is variant-specific.
+    if (currentLine && safeQty > availableStock) {
+      console.warn("B2B cart stock limit reached", {
+        productId,
+        variantId: normalizedVariantId,
+        requested: safeQty,
+        available: availableStock,
+      });
+      return;
+    }
 
     const updated = cartItems.map((item) =>
       isSameCartLine(item, productId, normalizedVariantId)
@@ -380,6 +422,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           variant_id: normalizedVariantId,
         });
       } catch (err) {
+        setCartItems(cartItems);
         console.error("Failed to update quantity", err);
       }
     }

@@ -33,6 +33,9 @@ type GuestDiscountResponse = {
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
   const [showAlert, setShowAlert] = useState(false);
+  const [stockAlertMessage, setStockAlertMessage] = useState(
+    "Not enough items available in stock.",
+  );
   const [busyItemKey, setBusyItemKey] = useState<string | null>(null);
   const [successItemKey, setSuccessItemKey] = useState<string | null>(null);
   const [cartNotice, setCartNotice] = useState<string | null>(null);
@@ -168,28 +171,48 @@ export default function CartPage() {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const increment = (product: CartProduct, qty: number, vid?: any) => {
-    if (qty + 1 > product.stock) {
+  const increment = (item: CartItem) => {
+    const available = Number(item.stock ?? 0);
+    if (item.quantity + 1 > available) {
+      setStockAlertMessage(
+        available > 0
+          ? `Only ${available} item(s) are available for this selected option.`
+          : "This selected option is currently out of stock.",
+      );
       setShowAlert(true);
       return;
     }
 
-    const variantId = cleanVariantId(vid);
-    updateQuantity(product.id, qty + 1, variantId);
+    const variantId = cleanVariantId(item.variant_id);
+    updateQuantity(item.id, item.quantity + 1, variantId ?? null);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const changeQuantity = (pid: number, value: number, vid?: any) => {
-    const key = getItemKey(pid, vid);
+  const changeQuantity = (item: CartItem, value: number) => {
+    const key = getItemKey(item.id, item.variant_id);
     const nextQty = Math.max(1, Number(value) || 1);
+    const available = Number(item.stock ?? 0);
+
+    if (nextQty > available) {
+      setStockAlertMessage(
+        available > 0
+          ? `Only ${available} item(s) are available for this selected option.`
+          : "This selected option is currently out of stock.",
+      );
+      setShowAlert(true);
+      return;
+    }
 
     runCartAction(key, "Cart quantity updated.", () =>
-      updateQuantity(pid, nextQty, vid ?? null),
+      updateQuantity(item.id, nextQty, cleanVariantId(item.variant_id) ?? null),
     );
   };
 
   const getCartItemVariant = (item: CartItem): Variant | null => {
     if (!item.variant_id) return null;
+    if (item.variant && Number(item.variant.id) === Number(item.variant_id)) {
+      return item.variant;
+    }
 
     return (
       item.product?.variants?.find(
@@ -330,6 +353,9 @@ export default function CartPage() {
                                 {variantName}
                               </div>
                             )}
+                            <div className="mt-1 text-[11px] font-medium text-slate-400">
+                              {selectedVariant ? "Variant stock" : "Available stock"}: {Number(it.stock ?? 0)}
+                            </div>
                           </div>
 
                           <button
@@ -390,25 +416,18 @@ export default function CartPage() {
                                 value={it.quantity}
                                 min={1}
                                 disabled={isBusy}
+                                max={Math.max(1, Number(it.stock ?? 0))}
                                 onChange={(e) =>
-                                  updateQuantity(
-                                    it.id,
-                                    Number(e.target.value) || 1,
-                                    cleanVariantId(it.variant_id),
-                                  )
+                                  changeQuantity(it, Number(e.target.value) || 1)
                                 }
                                 className="w-16 bg-transparent text-center text-base font-bold text-blue-300 outline-none disabled:cursor-wait disabled:opacity-60"
                               />
                               <button
                                 type="button"
-                                disabled={isBusy}
-                                onClick={() =>
-                                  increment(
-                                    it.product as CartProduct,
-                                    it.quantity,
-                                    it.variant_id,
-                                  )
+                                disabled={
+                                  isBusy || it.quantity >= Number(it.stock ?? 0)
                                 }
+                                onClick={() => increment(it)}
                                 className="grid h-9 w-9 place-items-center rounded-xl border border-blue-700/50 bg-blue-950/40 text-blue-200 transition active:scale-95 hover:border-blue-400 hover:bg-blue-500/15 hover:text-white disabled:cursor-wait disabled:opacity-60"
                               >
                                 {isBusy ? "…" : "+"}
@@ -515,7 +534,7 @@ export default function CartPage() {
       <AlertModal
         show={showAlert}
         title="Stock Warning"
-        message={`No enough items available in stock.`}
+        message={stockAlertMessage}
         type="warning"
         autoCloseMs={0}
         onClose={() => setShowAlert(false)}
