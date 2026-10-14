@@ -245,6 +245,12 @@ export default function Page() {
 
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                 <Link
+                  href="/partner-program"
+                  className="inline-flex items-center justify-center rounded-2xl border border-emerald-400/35 bg-emerald-500/10 px-5 py-3 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300/60 hover:bg-emerald-500/15"
+                >
+                  View General Terms
+                </Link>
+                <Link
                   href="/contact?topic=resale"
                   className="inline-flex items-center justify-center rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-300"
                 >
