@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { Product, Variant } from "@/types";
 
@@ -14,6 +15,8 @@ interface Props {
   noPrice?: boolean;
   variant: Variant | null;
   quantity?: number;
+  /** Product detail has its own quantity input; never replace its cart CTA with a +/- stepper. */
+  alwaysShowAction?: boolean;
 }
 
 const AddToCartBtn = ({
@@ -23,6 +26,7 @@ const AddToCartBtn = ({
   noPrice,
   variant,
   quantity = 1,
+  alwaysShowAction = false,
 }: Props) => {
   const { cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
 
@@ -66,7 +70,8 @@ const AddToCartBtn = ({
         const variantId = directVariant?.id ?? null;
 
         return (
-          it.product?.id === product.id && (it.variant_id ?? null) === variantId
+          (it.product?.id === product.id || it.id === product.id) &&
+          (it.variant_id ?? null) === variantId
         );
       }),
     [cartItems, product.id, directVariant?.id],
@@ -133,7 +138,8 @@ const AddToCartBtn = ({
       return;
     }
 
-    if (quantity > stockAvailable) {
+    // Check the combined cart quantity, not just the new amount being added.
+    if (qty + quantity > stockAvailable) {
       setAlertStock(stockAvailable);
       setShowAlert(true);
       return;
@@ -198,7 +204,7 @@ const AddToCartBtn = ({
 
   return (
     <div>
-      {!inCart || hasMultipleVariants ? (
+      {alwaysShowAction || !inCart || hasMultipleVariants ? (
         <button
           onClick={handleAddToCart}
           disabled={outofStock || noPrice}
@@ -250,11 +256,13 @@ const AddToCartBtn = ({
               ? "Out of Stock"
               : noPrice
                 ? "Request Quote"
-                : hasMultipleVariants && totalProductQty > 0
-                  ? `Added Qty: ${totalProductQty}`
-                  : hasMultipleVariants
-                    ? "Choose Variant"
-                    : "Add to Wholesale Order"}
+                : alwaysShowAction
+                  ? "Add to Wholesale Order"
+                  : hasMultipleVariants && totalProductQty > 0
+                    ? `Added Qty: ${totalProductQty}`
+                    : hasMultipleVariants
+                      ? "Choose Variant"
+                      : "Add to Wholesale Order"}
 
             {!outofStock && !noPrice && (
               <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] uppercase tracking-widest text-blue-300">
@@ -331,6 +339,13 @@ const AddToCartBtn = ({
             </button>
           </div>
         </div>
+      )}
+
+      {alwaysShowAction && totalProductQty > 0 && (
+        <p className="mt-2 text-center text-xs text-slate-400" aria-live="polite">
+          Already in cart: {totalProductQty} {totalProductQty === 1 ? "unit" : "units"}.
+          {" "}<Link href="/orders/cart" className="font-semibold text-cyan-300 hover:underline">View cart</Link>
+        </p>
       )}
 
       {/* VARIANT SELECTION POPUP */}

@@ -172,10 +172,10 @@ export default function SupportPage() {
                 Prefer email?
               </div>
               <a
-                href="mailto:support@elvarra.com"
+                href="mailto:support@elvarra.in"
                 className="mt-2 block text-sm font-semibold text-white hover:text-cyan-200"
               >
-                support@elvarra.com
+                support@elvarra.in
               </a>
             </div>
           </aside>
