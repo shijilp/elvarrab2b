@@ -8,7 +8,9 @@ import { useParams, useRouter } from "next/navigation";
 import {
   BadgePercent,
   ChevronLeft,
+  Minus,
   PackageCheck,
+  Plus,
   ShieldCheck,
   ShoppingBag,
   Truck,
@@ -631,18 +633,27 @@ export default function ProductPageClient({
                     Quantity
                   </label>
                   <span className="text-xs text-slate-500">
-                    Enter quantity, then select Add to Wholesale Order below.
+                    Add the quantity you want; wholesale eligibility is checked
+                    in your cart.
                   </span>
                 </div>
 
-                {/* One clearly labelled quantity input; cart changes happen only
-                    through the Add to Wholesale Order button below. */}
-                <div className="mt-3">
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    onClick={() =>
+                      setOrderQty((quantity) => Math.max(1, quantity - 1))
+                    }
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950 text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-200"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+
                   <input
                     id="trade-order-qty"
                     type="number"
                     min={1}
-                    step={1}
                     max={product.stock > 0 ? product.stock : undefined}
                     value={orderQty}
                     onChange={(event) => {
@@ -655,8 +666,23 @@ export default function ProductPageClient({
                           : normalized,
                       );
                     }}
-                    className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-center text-base font-semibold text-white outline-none transition focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-500/10"
+                    className="h-11 min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 text-center text-base font-semibold text-white outline-none transition focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-500/10"
                   />
+
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    onClick={() =>
+                      setOrderQty((quantity) =>
+                        product.stock > 0
+                          ? Math.min(product.stock, quantity + 1)
+                          : quantity + 1,
+                      )
+                    }
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950 text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-200"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -697,7 +723,6 @@ export default function ProductPageClient({
                   product={product}
                   variant={selectedVariant}
                   quantity={orderQty}
-                  alwaysShowAction
                   outofStock={isOutOfStock && !product.backorder_allowed}
                   noPrice={false}
                 />

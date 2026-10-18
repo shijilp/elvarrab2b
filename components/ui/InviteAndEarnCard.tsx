@@ -1,5 +1,8 @@
+"use client";
+
 import { api } from "@/lib/api";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 type LinkKind = "REF" | "AFF";
 export type ReferralLink = {
@@ -72,29 +75,46 @@ async function apiCreateReferralLink(body: {
 }
 
 export function InviteAndEarnCard() {
+  const { user, initialized } = useAuth();
   const [links, setLinks] = useState<ReferralLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
+  // Wait for auth hydration, and never ask for private referral links as a guest.
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const data = await apiListReferralLinks();
-        setLinks(data);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
-        setErr(e?.message || "Unable to load referral links");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    if (!initialized) return;
+    if (!user) {
+      setLinks([]);
+      setErr(null);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    apiListReferralLinks()
+      .then((data) => {
+        if (!cancelled) setLinks(data);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setErr(e instanceof Error ? e.message : "Unable to load referral links");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [initialized, user?.username]);
 
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   async function create(kind: LinkKind) {
+    if (!initialized || !user) {
+      setErr("Please sign in to create a referral link.");
+      return;
+    }
     setErr(null);
     setCreating(true);
     try {

@@ -16,6 +16,18 @@ async function handle(req: NextRequest, ctx: Ctx) {
 const access = cookieStore.get("access")?.value;
 
   const joined = path.join("/");
+  // This is an authenticated Django endpoint. Do not forward guest requests
+  // to Django: they cause noisy `Unauthorized: /api/elvarra/referrals/mine/` logs.
+  const normalizedPath = joined.replace(/^\/+|\/+$/g, "").toLowerCase();
+  if (!access && (
+    normalizedPath === "referrals/mine" ||
+    normalizedPath === "api/elvarra/referrals/mine"
+  )) {
+    return NextResponse.json(
+      { detail: "Authentication required" },
+      { status: 401, headers: { "Cache-Control": "no-store" } },
+    );
+  }
 const qs = req.nextUrl.search ?? "";
 const needsSlash = joined.length > 0 && !joined.endsWith("/");
 const targetUrl = `${BACKEND}/${joined}${needsSlash ? "/" : ""}${qs}`;
